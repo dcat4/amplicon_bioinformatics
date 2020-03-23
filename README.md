@@ -1,4 +1,4 @@
-# 18sV9_amplicon_sequencing
+# amplicon_bioinformatics
 
 This repository includes data and code with applications to amplicon sequencing assessments of marine protist communities. My work so far has relied exclusively on the V9 hypervariable region of the 18S rRNA gene, but a lot of the code included here is likely generalizable to other genes and hypervariable regions. 
 
