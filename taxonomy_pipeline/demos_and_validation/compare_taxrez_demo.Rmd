@@ -1,0 +1,111 @@
+---
+title: "compare_taxrez Demo"
+author: "D Catlett & C Liang"
+date: "3/14/2020"
+output: github_document
+---
+
+## Overview
+
+Here we step through an example use of the compare_taxrez.R function. It provides a convenient 1-liner to compare and plot the resolutions of taxonomic annotations across multiple taxonomy tables. Requires that all taxonomy tables follow the same taxonomic ranking conventions, that the order of columns in each taxonomy table follows the taxonomic ranking heirarchy (e.g., Kingdom = taxtable[,1], Species = taxtable[,ncol(taxtable)]), and that the order of rows (ASVs) in each of the input taxonomy tables is the same. Importantly, compare_taxrez also assumes that *unassigned* is indicated by *NA*
+
+### Start 'er up:
+We'll clear out our environment, set our wd, and read in taxonomy tables:
+The taxonomy tables used here come from implementations of the RDP Bayesian classifier, the new idtaxa algorithm, and MEGAN's LCA algorithm against both the Silva and pr2 reference databases. Our amplicon data set is an 18S-V9 tag sequencing project from the coastal ocean.
+
+You can do this with any taxonomy tables assuming you format them properly. To follow along with this demo, grab the taxonomy tables in the "test_data" directory of this repository and follow the code below.
+```{r echo = TRUE, results = 'hide', message = FALSE, warning=FALSE, message=FALSE}
+rm(list = ls())
+
+# setwd and read in your datasets:
+setwd("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/demos_and_validation")
+
+idtax.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
+bayes.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
+bayes.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+idtax.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+lca.pr2 <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+lca.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
+                    stringsAsFactors = FALSE)
+```
+
+### Arranging and formatting our taxonomy tables:
+
+The data we're using was pulled slightly haphazardly, so here we'll use some bootstrapping estimates to NA-out low-confidence assignments, reformat our taxonomy tables as dataframes, and sort them alphabetically by ASV sequences so that the order of rows/ASVs is the same across all taxonomy tables.
+
+```{r , echo=TRUE}
+# convert tax tables to dataframes as needed and sort by seq's to get the same order..:
+conf <- as.data.frame(bayes.pr2$boot, stringsAsFactors = FALSE)
+bayes.pr2 <- as.data.frame(bayes.pr2$tax, stringsAsFactors = FALSE)
+bayes.pr2[conf < 60] <- NA
+
+source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/helper_fcns/idtax2df.R")
+idtax.pr2 <- idtax2df(idtax.pr2, boot = 60)
+
+# sorting each dataframe by DNA sequences:
+ii <- sort(rownames(bayes.pr2), index.return = TRUE)
+bayes.pr2 <- bayes.pr2[ii$ix,]
+idtax.pr2 <- idtax.pr2[ii$ix,]
+jj <- sort(bayes.silva$DNASeq, index.return = TRUE)
+bayes.silva <- bayes.silva[jj$ix,2:9]
+kk <- sort(idtax.silva$Sequence, index.return = TRUE)
+idtax.silva <- idtax.silva[kk$ix,3:10]
+ll <- sort(lca.silva$Sequence, index.return = TRUE)
+lca.silva <- lca.silva[ll$ix,3:10]
+mm <- sort(lca.pr2$Sequence, index.return = TRUE)
+lca.pr2 <- lca.pr2[mm$ix,3:10]
+```
+You can run this for a sanity check:
+```{r , echo=TRUE, results = 'hide', message = FALSE, warning=FALSE}
+# compare the sorted sequence arrays to ensure they're all =:
+identical(ii$x, jj$x)
+identical(jj$x, kk$x)
+identical(kk$x, ll$x)
+identical(ll$x,mm$x)
+```
+...and this to see what the data sets look like. These data sets are available in the test-data directory.
+```{r , echo=TRUE, results = 'hide', message = FALSE, warning=FALSE}
+# one more check:
+head(bayes.pr2, n = 10)
+head(bayes.silva, n = 10)
+head(idtax.pr2, n = 10)
+head(idtax.silva, n = 10)
+head(lca.pr2, n = 10)
+head(lca.silva, n = 10)
+```
+
+## Run compare_taxrez to compare assignment resolutions across our 6 taxonomy tables:
+
+Let's run the function. We first have to read it into this R section. We have to supply a name for each of our taxonomy tables, as well as for each of our taxonomic ranks. We'll specify pltfile = "none" to indicate we do not want to save a copy of our plot within the function call (specifying any other character vector will save a pdf with the character vector).
+
+```{r , echo=TRUE, results = 'hide', message = FALSE, warning=FALSE}
+
+source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/tax_table_comparisons/compare_taxrez.R")
+
+pf <- "none"
+tblnam <- c("bayes-pr2", "bayes-silva", "idtax-pr2", "idtax-silva", "lca-pr2", "lca-silva")
+
+test1 <- compare_taxrez(bayes.pr2, bayes.silva, idtax.pr2, idtax.silva, lca.pr2, lca.silva,
+                        pltfile = pf,
+                        tablenames = tblnam)
+```
+
+The output is a list containing the dataframe that was used for plotting, and the plot stored as a ggplot2 object. We can look at the dataframe summarizing the taxonomic resolution comparisons by doing:
+
+```{r , echo=TRUE}
+test1[[1]]
+```
+
+And we can display our plot using:
+
+```{r , echo=TRUE}
+print(test1[[2]])
+```
+
+If you just want to save a plot for later, change *pltfile* to any character vector that's not "none". This will be the name of a pdf file containing your plot. Returning the plots allows you to add layers to the ggplot object and further customize your plot. 
+
+Yarg :)
+

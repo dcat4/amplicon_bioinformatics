@@ -1,0 +1,269 @@
+consensus\_tax\_LCAlike Demo
+================
+D Catlett
+3/15/2020
+
+Overview
+--------
+
+Here, we step through implementations of the consensus\_tax\_LCAlike.R algorithm to demonstrate proper uses and anticipated results. This algorithm is built to utilize information from multiple taxonomy tables (defined here as a table of ASVs and corresponding taxonomic assignments) in order to improve the resolution and/or accuracy of taxonomic annotations of amplicon sequences. It incorporates information from multiple taxonomy tables and determines a "consensus taxonomy" for each ASV in your data set. The algorithm requires that all taxonomy tables follow the same taxonomic naming and ranking conventions, that the order of columns in each taxonomy table follows the taxonomic ranking heirarchy (e.g., Kingdom = taxtable\[,1\], Species = taxtable\[,ncol(taxtable)\]), and that the order of rows (ASVs) in each of the input taxonomy tables is the same. If these rules are not followed, spurious results are likely.
+
+### consensus\_tax\_LCAlike Algorithm Description
+
+consensus\_tax\_LCAlike was inspired by the LCA algorithm set forth by Huson et al 2007. It looks across all input taxonomy tables and, for each ASV (row), finds the lowest rank at which all input taxonomy tables agree. The output consensus taxonomy is assigned to this rank, and all lower ranks are left unassigned. Note that this means if any of the input taxonomy tables have poor resolution in their assignment for a particular ASV, this will limit the resolution of the output consensus assignment.
+
+### Start 'er up:
+
+We'll clear out our environment, load in the reshape2 package for later, set our wd, and read in taxonomy tables: The taxonomy tables used here come from implementations of the RDP Bayesian classifier, the new idtaxa algorithm, and MEGAN's LCA algorithm against both the Silva and pr2 reference databases. Our amplicon data set is an 18S-V9 tag sequencing project from the coastal ocean.
+
+You can do this with any taxonomy tables assuming you format them properly. To follow along with this demo, grab the taxonomy tables in the "test\_data" directory of this repository and follow the code below.
+
+``` r
+rm(list = ls())
+
+# load up reshape2:
+.cran_packages <- c("reshape2")
+.inst <- .cran_packages %in% installed.packages()
+if(any(!.inst)) {
+  install.packages(.cran_packages[!.inst])
+}
+sapply(c(.cran_packages), require, character.only = TRUE)
+
+# setwd and read in your datasets:
+setwd("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/demos_and_validation")
+
+idtax.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
+bayes.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
+bayes.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+idtax.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+lca.pr2 <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+lca.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
+                    stringsAsFactors = FALSE)
+```
+
+### Arranging and formatting our taxonomy tables for running the algorithm:
+
+The data we're using was pulled slightly haphazardly, so here we'll use some bootstrapping estimates to NA-out low-confidence assignments, reformat our taxonomy tables as dataframes, and sort them alphabetically by ASV sequences so that the order of rows/ASVs is the same across all taxonomy tables.
+
+``` r
+# convert tax tables to dataframes as needed and sort by seq's to get the same order..:
+conf <- as.data.frame(bayes.pr2$boot, stringsAsFactors = FALSE)
+bayes.pr2 <- as.data.frame(bayes.pr2$tax, stringsAsFactors = FALSE)
+bayes.pr2[conf < 60] <- NA
+
+source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/helper_fcns/idtax2df.R")
+idtax.pr2 <- idtax2df(idtax.pr2, boot = 60)
+
+# sorting each dataframe by DNA sequences:
+ii <- sort(rownames(bayes.pr2), index.return = TRUE)
+bayes.pr2 <- bayes.pr2[ii$ix,]
+idtax.pr2 <- idtax.pr2[ii$ix,]
+jj <- sort(bayes.silva$DNASeq, index.return = TRUE)
+bayes.silva <- bayes.silva[jj$ix,2:9]
+kk <- sort(idtax.silva$Sequence, index.return = TRUE)
+idtax.silva <- idtax.silva[kk$ix,3:10]
+ll <- sort(lca.silva$Sequence, index.return = TRUE)
+lca.silva <- lca.silva[ll$ix,3:10]
+mm <- sort(lca.pr2$Sequence, index.return = TRUE)
+lca.pr2 <- lca.pr2[mm$ix,3:10]
+```
+
+You can run this for a sanity check:
+
+``` r
+# compare the sorted sequence arrays to ensure they're all =:
+identical(ii$x, jj$x)
+identical(jj$x, kk$x)
+identical(kk$x, ll$x)
+identical(ll$x,mm$x)
+```
+
+...and this to see what the data sets look like. These data sets are available in the test-data directory.
+
+``` r
+# one more check:
+head(bayes.pr2, n = 10)
+head(bayes.silva, n = 10)
+head(idtax.pr2, n = 10)
+head(idtax.silva, n = 10)
+head(lca.pr2, n = 10)
+head(lca.silva, n = 10)
+```
+
+### First run
+
+Our data should be good to go, so let's run the algorithm. We have to specify names for our taxonomy tables in a character vector (*tblnam* below - note they match the order in which we've supplied them to the algorithm). We won't specify rank names b/c the defaults work for us (see the function documentation).
+
+First we'll tell R where to find the algorithm and load it into our session. In our first run, we'll find consensus LCA assignments across 6 different taxonomy tables.
+
+``` r
+source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/consensus_taxonomies/consensus_tax_LCAlike.R")
+
+tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2", "bayes-silva", "idtax-silva", "lca-silva")
+test1 <- consensus_tax_LCAlike(bayes.pr2, idtax.pr2, lca.pr2, bayes.silva, idtax.silva, lca.silva,
+                        tablenames = tblnam)
+```
+
+The output is a list with 2 elements. The 1st element is the consensus taxonomy table, the 2nd element is a list of all the input taxonomies. The below code chunk will manipulate the outputs to create a more manageable subset of outputs we can use for qualitative QC to ensure the algorithm works properly.
+
+``` r
+allt <- test1[[2]] # all input taxonomy tables
+# assign same rank names to all input tables:
+ranknamez <- c("Kingdom","Supergroup","Division","Class","Order","Family","Genus","Species") 
+ah <- function(x) {
+  colnames(x) <- ranknamez
+  return(x)
+}
+subber <- 1:5000
+allt <- lapply(allt, ah) 
+alltsub <- lapply(allt, function(x) x[subber,]) # subset a smaller number of rows for QC
+eh <- melt(alltsub) # pops it all into a dataframe...
+# adds table names to indicate which taxtable each row came from
+for (i in 1:length(tblnam)) {
+  eh$L1[eh$L1 == i] <- tblnam[i]
+}
+# add in merged tax to your QC df and write out a csv that you can QC manually...
+mt <- test1[[1]]
+mt$L1 <- "merged"
+QCer <- rbind(eh,mt[subber,],stringsAsFactors = FALSE)
+# below rearranges the combined df by ASV rather than by taxtable...
+tot <- max(subber)
+strt <- min(subber)
+yy <- c()
+for (i in strt:tot) {
+  xx <- seq(from = i, to = tot * (length(tblnam)+1), by = tot)
+  yy <- append(yy,xx)
+}
+QCer <- QCer[yy,]
+```
+
+Above we've created a dataframe, *QCer*, that has chunked out each ASV's taxonomic assignments from each of our 6 input taxonomy tables, as well as our consensus taxonomy table, and put them in consecutive rows. This way, we can look at chunks of assignments for the same ASV to QC the algorithm and ensure it's doing what we think. I did this by saving QCer to a csv file and flipping through the outputs, as below:
+
+``` r
+write.csv(QCer, file = "~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/QCme_LCA_6tables.csv")
+```
+
+Here I'll pop out a few good examples I found from my .csv file:
+
+``` r
+ii <- which(rownames(QCer) %in% "1")
+QCer[seq(ii,ii+6,1),]
+```
+
+    ##         Kingdom Supergroup   Division       Class          Order
+    ## 1     Eukaryota       <NA>       <NA>        <NA>           <NA>
+    ## 5001       <NA>       <NA>       <NA>        <NA>           <NA>
+    ## 10001      <NA>       <NA>       <NA>        <NA>           <NA>
+    ## 15001 Eukaryota   Excavata Metamonada Parabasalia Trichomonadida
+    ## 20001      <NA>       <NA>       <NA>        <NA>           <NA>
+    ## 25001      <NA>       <NA>       <NA>        <NA>           <NA>
+    ## 30001      <NA>       <NA>       <NA>        <NA>           <NA>
+    ##                            Family       Genus Species          L1
+    ## 1                            <NA>        <NA>    <NA>   bayes-pr2
+    ## 5001                         <NA>        <NA>    <NA>   idtax-pr2
+    ## 10001                        <NA>        <NA>    <NA>     lca-pr2
+    ## 15001 Trichomitus-Hypotrichomonas Trichomitus    <NA> bayes-silva
+    ## 20001                        <NA>        <NA>    <NA> idtax-silva
+    ## 25001                        <NA>        <NA>    <NA>   lca-silva
+    ## 30001                        <NA>        <NA>    <NA>      merged
+
+Here we see our *bayes-silva* taxonomy table had pretty good resolution, but b/c several of the other taxonomy tables were entirely unassigned, there is no real LCA here and our consensus taxonomy (*merged*) is left unassigned. Another example:
+
+``` r
+ii <- which(rownames(QCer) %in% "2535")
+QCer[seq(ii,ii+6,1),]
+```
+
+    ##         Kingdom    Supergroup   Division          Class            Order
+    ## 2535  Eukaryota Stramenopiles Ochrophyta Raphidophyceae Raphidophyceae_X
+    ## 7535  Eukaryota Stramenopiles Ochrophyta Raphidophyceae Raphidophyceae_X
+    ## 12535 Eukaryota Stramenopiles Ochrophyta Raphidophyceae Raphidophyceae_X
+    ## 17535 Eukaryota Stramenopiles Ochrophyta Raphidophyceae Raphidophyceae_X
+    ## 22535 Eukaryota Stramenopiles Ochrophyta Raphidophyceae Raphidophyceae_X
+    ## 27535 Eukaryota Stramenopiles Ochrophyta Raphidophyceae Raphidophyceae_X
+    ## 32535 Eukaryota Stramenopiles Ochrophyta Raphidophyceae Raphidophyceae_X
+    ##                  Family       Genus              Species          L1
+    ## 2535  Raphidophyceae_XX Heterosigma Heterosigma_carterae   bayes-pr2
+    ## 7535  Raphidophyceae_XX        <NA>                 <NA>   idtax-pr2
+    ## 12535 Raphidophyceae_XX Heterosigma                 <NA>     lca-pr2
+    ## 17535 Raphidophyceae_XX Heterosigma                 <NA> bayes-silva
+    ## 22535 Raphidophyceae_XX Heterosigma                 <NA> idtax-silva
+    ## 27535 Raphidophyceae_XX Heterosigma                 <NA>   lca-silva
+    ## 32535 Raphidophyceae_XX        <NA>                 <NA>      merged
+
+Here all of our taxonomy tables had pretty nicely resolved assignments. The limiting taxonomy is *lca-pr2*, and b/c *lca-pr2* is only assigned to Family, this is all we can assign for our consensus taxonomy (*merged*).
+
+``` r
+ii <- which(rownames(QCer) %in% "2803")
+QCer[seq(ii,ii+6,1),]
+```
+
+    ##         Kingdom   Supergroup Division    Class      Order      Family Genus
+    ## 2803  Eukaryota Opisthokonta  Metazoa Annelida Annelida_X Annelida_XX  <NA>
+    ## 7803  Eukaryota         <NA>     <NA>     <NA>       <NA>        <NA>  <NA>
+    ## 12803 Eukaryota Opisthokonta  Metazoa Annelida       <NA>        <NA>  <NA>
+    ## 17803 Eukaryota Opisthokonta  Metazoa Annelida       <NA>        <NA>  <NA>
+    ## 22803 Eukaryota Opisthokonta  Metazoa Annelida       <NA>        <NA>  <NA>
+    ## 27803 Eukaryota Opisthokonta  Metazoa Annelida       <NA>        <NA>  <NA>
+    ## 32803 Eukaryota         <NA>     <NA>     <NA>       <NA>        <NA>  <NA>
+    ##       Species          L1
+    ## 2803     <NA>   bayes-pr2
+    ## 7803     <NA>   idtax-pr2
+    ## 12803    <NA>     lca-pr2
+    ## 17803    <NA> bayes-silva
+    ## 22803    <NA> idtax-silva
+    ## 27803    <NA>   lca-silva
+    ## 32803    <NA>      merged
+
+And again, we see that most of our input tables agreed in their assignments down to the Class rank, but b/c *lca-pr2* is only resolved at Kingdom, we can only make our consensus assignment (*merged*) to the Kingdom rank.
+
+### Second Run
+
+We'll do a second example with only 3 of the original 6 input tables for fun.
+
+``` r
+tblnam <- c("bayes-silva", "idtax-silva", "lca-silva")
+test3 <- consensus_tax_LCAlike(bayes.silva, idtax.silva, lca.silva,
+                               tablenames = tblnam)
+```
+
+After re-arranging the output as above (not shown for brevity), we can look at a few more examples:
+
+``` r
+ii <- which(rownames(QCer) %in% "2785")
+QCer[seq(ii,ii+3,1),]
+```
+
+    ##         Kingdom Supergroup       Division               Class        Order
+    ## 2785  Eukaryota   Rhizaria       Cercozoa Filosa-Thecofilosea Cryomonadida
+    ## 7785  Eukaryota   Rhizaria       Cercozoa Filosa-Thecofilosea Cryomonadida
+    ## 12785 Eukaryota  Alveolata Dinoflagellata         Dinophyceae Peridiniales
+    ## 17785 Eukaryota       <NA>           <NA>                <NA>         <NA>
+    ##                   Family      Genus Species          L1
+    ## 2785  Rhogostoma-lineage Rhogostoma      NA bayes-silva
+    ## 7785                <NA>       <NA>      NA idtax-silva
+    ## 12785    Amphidomataceae  Azadinium      NA   lca-silva
+    ## 17785               <NA>       <NA>      NA      merged
+
+``` r
+ii <- which(rownames(QCer) %in% "1942")
+QCer[seq(ii,ii+3,1),]
+```
+
+    ##         Kingdom Supergroup       Division       Class        Order
+    ## 1942  Eukaryota  Alveolata Dinoflagellata Dinophyceae Peridiniales
+    ## 6942  Eukaryota  Alveolata Dinoflagellata Syndiniales         <NA>
+    ## 11942 Eukaryota  Alveolata Dinoflagellata Syndiniales         <NA>
+    ## 16942 Eukaryota  Alveolata Dinoflagellata        <NA>         <NA>
+    ##               Family      Genus Species          L1
+    ## 1942  Peridiniales_X Hemidinium      NA bayes-silva
+    ## 6942            <NA>       <NA>      NA idtax-silva
+    ## 11942           <NA>       <NA>      NA   lca-silva
+    ## 16942           <NA>       <NA>      NA      merged
+
+In the above 2 examples, we see that disagreements across our 3 taxonomy tables are forcing the algorithm to only assign consensus taxonomies at high ranks, despite the fact that each of our input taxonomy tables were highly resolved for this particular ASV.
+
+k, byeeeee.

@@ -1,0 +1,158 @@
+---
+title: "compare_assignments_2way Demo"
+author: "D Catlett & C Liang"
+date: "3/17/2020"
+output: github_document
+---
+
+Bugs seem fixed -- could still add numbers on top of bars to improve the plots, and needs a little more detailed QC
+
+## Overview
+
+Here we step through an example use of the compare_assignments_2way.R function. It provides a convenient 1-liner to compare and plot detailed comparisons of taxonomic annotations across two taxonomy tables. Requires that all taxonomy tables follow the same taxonomic naming and ranking conventions, that the order of columns in each taxonomy table follows the taxonomic ranking heirarchy (e.g., Kingdom = taxtable[,1], Species = taxtable[,ncol(taxtable)]), and that the order of rows (ASVs) in each of the input taxonomy tables is the same. Importantly, compare_assignments_2way also assumes that *unassigned* is indicated by *NA*, and requires the *ggplot2* package be installed prior to running. 
+
+### Start 'er up:
+We'll clear out our environment, set our wd, and read in taxonomy tables:
+The taxonomy tables used here come from implementations of the RDP Bayesian classifier, the newer idtaxa algorithm, and MEGAN's LCA algorithm against both the Silva and pr2 reference databases. Our amplicon data set is an 18S-V9 tag sequencing project from the coastal ocean.
+
+You can do this with any taxonomy tables assuming you format them properly. To follow along with this demo, grab the taxonomy tables in the "test_data" directory of this repository and follow the code below.
+```{r echo = TRUE, results = 'hide', message = FALSE, warning=FALSE, message=FALSE}
+rm(list = ls())
+
+# setwd and read in your datasets:
+setwd("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/demos_and_validation")
+
+idtax.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
+bayes.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
+bayes.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+idtax.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+lca.pr2 <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+lca.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
+                    stringsAsFactors = FALSE)
+```
+
+### Arranging and formatting our taxonomy tables:
+
+The data we're using was pulled slightly haphazardly, so here we'll use some bootstrapping estimates to NA-out low-confidence assignments, reformat our taxonomy tables as dataframes, and sort them alphabetically by ASV sequences so that the order of rows/ASVs is the same across all taxonomy tables.
+
+```{r , echo=TRUE}
+# convert tax tables to dataframes as needed and sort by seq's to get the same order..:
+conf <- as.data.frame(bayes.pr2$boot, stringsAsFactors = FALSE)
+bayes.pr2 <- as.data.frame(bayes.pr2$tax, stringsAsFactors = FALSE)
+bayes.pr2[conf < 60] <- NA
+
+source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/helper_fcns/idtax2df.R")
+idtax.pr2 <- idtax2df(idtax.pr2, boot = 60)
+
+# sorting each dataframe by DNA sequences:
+ii <- sort(rownames(bayes.pr2), index.return = TRUE)
+bayes.pr2 <- bayes.pr2[ii$ix,]
+idtax.pr2 <- idtax.pr2[ii$ix,]
+jj <- sort(bayes.silva$DNASeq, index.return = TRUE)
+bayes.silva <- bayes.silva[jj$ix,2:9]
+kk <- sort(idtax.silva$Sequence, index.return = TRUE)
+idtax.silva <- idtax.silva[kk$ix,3:10]
+ll <- sort(lca.silva$Sequence, index.return = TRUE)
+lca.silva <- lca.silva[ll$ix,3:10]
+mm <- sort(lca.pr2$Sequence, index.return = TRUE)
+lca.pr2 <- lca.pr2[mm$ix,3:10]
+```
+You can run this for a sanity check:
+```{r , echo=TRUE, results = 'hide', message = FALSE, warning=FALSE}
+# compare the sorted sequence arrays to ensure they're all =:
+identical(ii$x, jj$x)
+identical(jj$x, kk$x)
+identical(kk$x, ll$x)
+identical(ll$x,mm$x)
+```
+...and this to see what the data sets look like. These data sets are available in the test-data directory.
+```{r , echo=TRUE, results = 'hide', message = FALSE, warning=FALSE}
+# one more check:
+head(bayes.pr2, n = 10)
+head(bayes.silva, n = 10)
+head(idtax.pr2, n = 10)
+head(idtax.silva, n = 10)
+head(lca.pr2, n = 10)
+head(lca.silva, n = 10)
+```
+
+## Run compare_assignments_2way to compare assignment resolutions and identities across 2 of the above taxonomy tables:
+
+Here we'll do an example run and see what the inputs and outputs look like. The function counts the number of rows that (1) agree completely in identity and resolution; (2) disagree completely in that they have no non-NA names in common; (3, 4) agree completely where named, with table 1 (or 2) having higher resolution; or (5) agree where named to a particular rank, with 1 or more disagreements in non-NA names at subsequent ranks. The function will create two plots of the number and proportion of ASVs satisfying each of these conditions in your data set. We're setting *pltfilez = "none"* because we don't want to save our output plots as pdf files, but you can enter any 2 file names ending in *.pdf* to save the plots to your working directory if you prefer.
+
+In this example, we'll compare bayes-pr2 and bayes-silva:
+
+```{r , echo=TRUE}
+# make sure R can see the function:
+source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/tax_table_comparisons/compare_assignments_2way.R")
+# we'll compare these 2 to start:
+tblnam <- c("bayes-pr2", "bayes-silva")
+test1 <- compare_assignments_2way(bayes.pr2,bayes.silva, tablenames = tblnam, pltfilez = "none")
+```
+
+*test1* is a list containing our outputs, which include a dataframe of the row indices within each of the input taxonomy tables that satisfy each of the above 5 conditions described above, a second dataframe containing the data used for plotting, and two *ggplot2* objects that you can print and further customize to your liking. Let's look at the outputs, starting with the plots:
+
+```{r , echo=TRUE}
+p.prop <- test1[[3]] # proportion plot
+p.abs <- test1[[4]] # number of ASV plot
+
+print(p.prop)
+print(p.abs)
+```
+
+Here we see blah
+
+Let's look at our indexing dataframe and sanity-check some of the comparisons:
+
+```{r , echo=TRUE}
+indexDF <- test1[[1]]
+head(indexDF,10) # look at the dataframe
+
+# de-cluttering rownames:
+rownames(bayes.pr2) <- NULL
+
+# Look at 5 entries flagged as "disagreeing":
+ii <- indexDF$Disagree[1:5]
+bayes.pr2[ii,]
+bayes.silva[ii,]
+
+# Look at 10 entries flagged as "partial agreements":
+ii <- indexDF$pAgree.i[1:10]
+bayes.pr2[ii,]
+bayes.silva[ii,]
+
+```
+
+WE see something
+
+Let's do another example:
+
+```{r , echo=TRUE}
+# we'll compare these 2 to start:
+tblnam <- c("bayes-pr2", "idtax-pr2")
+test2 <- compare_assignments_2way(bayes.pr2,idtax.pr2, tablenames = tblnam, pltfilez = "none")
+
+# plot it up:
+p.prop <- test2[[3]] # proportion plot
+p.abs <- test2[[4]] # number of ASV plot
+
+print(p.prop)
+print(p.abs)
+
+indexDF <- test2[[1]]
+head(indexDF,10) # look at the dataframe
+
+# Look at 5 entries flagged as "agreeing":
+ii <- indexDF$Agree[1:5]
+bayes.pr2[ii,]
+idtax.pr2[ii,]
+
+# Look at 10 entries flagged as "partial agreements":
+ii <- indexDF$pAgree.i[1:5]
+bayes.pr2[ii,]
+idtax.pr2[ii,]
+```
+
