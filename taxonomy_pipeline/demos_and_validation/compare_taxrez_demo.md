@@ -18,17 +18,17 @@ You can do this with any taxonomy tables assuming you format them properly. To f
 rm(list = ls())
 
 # setwd and read in your datasets:
-setwd("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/demos_and_validation")
+setwd("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/demos_and_validation")
 
-idtax.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
-bayes.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
-bayes.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
+idtax.pr2 <- readRDS("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
+bayes.pr2 <- readRDS("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
+bayes.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-idtax.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
+idtax.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-lca.pr2 <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
+lca.pr2 <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-lca.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
+lca.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
                     stringsAsFactors = FALSE)
 ```
 
@@ -42,7 +42,7 @@ conf <- as.data.frame(bayes.pr2$boot, stringsAsFactors = FALSE)
 bayes.pr2 <- as.data.frame(bayes.pr2$tax, stringsAsFactors = FALSE)
 bayes.pr2[conf < 60] <- NA
 
-source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/helper_fcns/idtax2df.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/helper_fcns/idtax2df.R")
 idtax.pr2 <- idtax2df(idtax.pr2, boot = 60)
 
 # sorting each dataframe by DNA sequences:
@@ -87,7 +87,7 @@ Run compare\_taxrez to compare assignment resolutions across our 6 taxonomy tabl
 Let's run the function. We first have to read it into this R section. We have to supply a name for each of our taxonomy tables, as well as for each of our taxonomic ranks. We'll specify pltfile = "none" to indicate we do not want to save a copy of our plot within the function call (specifying any other character vector will save a pdf with the character vector).
 
 ``` r
-source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/tax_table_comparisons/compare_taxrez.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_comparisons/compare_taxrez.R")
 
 pf <- "none"
 tblnam <- c("bayes-pr2", "bayes-silva", "idtax-pr2", "idtax-silva", "lca-pr2", "lca-silva")

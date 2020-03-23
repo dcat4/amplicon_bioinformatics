@@ -30,17 +30,17 @@ if(any(!.inst)) {
 sapply(c(.cran_packages), require, character.only = TRUE)
 
 # setwd and read in your datasets:
-setwd("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/demos_and_validation")
+setwd("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/demos_and_validation")
 
-idtax.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
-bayes.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
-bayes.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
+idtax.pr2 <- readRDS("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
+bayes.pr2 <- readRDS("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
+bayes.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-idtax.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
+idtax.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-lca.pr2 <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
+lca.pr2 <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-lca.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
+lca.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
                     stringsAsFactors = FALSE)
 ```
 
@@ -54,7 +54,7 @@ conf <- as.data.frame(bayes.pr2$boot, stringsAsFactors = FALSE)
 bayes.pr2 <- as.data.frame(bayes.pr2$tax, stringsAsFactors = FALSE)
 bayes.pr2[conf < 60] <- NA
 
-source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/helper_fcns/idtax2df.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/helper_fcns/idtax2df.R")
 idtax.pr2 <- idtax2df(idtax.pr2, boot = 60)
 
 # sorting each dataframe by DNA sequences:
@@ -100,7 +100,7 @@ Our data should be good to go, so let's run the algorithm. We have to specify na
 First we'll tell R where to find the algorithm and load it into our session. In our first run, we'll find consensus LCA assignments across 6 different taxonomy tables.
 
 ``` r
-source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/consensus_taxonomies/consensus_tax_LCAlike.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_LCAlike.R")
 
 tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2", "bayes-silva", "idtax-silva", "lca-silva")
 test1 <- consensus_tax_LCAlike(bayes.pr2, idtax.pr2, lca.pr2, bayes.silva, idtax.silva, lca.silva,
