@@ -20,7 +20,6 @@ compare_assignments_3way <- function(..., pltfilez = c("prop_2wayplt.pdf", "abs_
                                      tablenames = c("bayes", "idtax"), 
                                      ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species")) {
   library("ggplot2")
-  
   x <- list(...)
   notuz <- nrow(x[[1]]) # number of ASVs/OTUs/rows in each tax table
   table1 <- x[[1]]
@@ -28,7 +27,7 @@ compare_assignments_3way <- function(..., pltfilez = c("prop_2wayplt.pdf", "abs_
   table3 <- x[[3]]
   
   # read in the 2-way comparison function:
-  source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/tax_table_comparisons/compare_assignments_2way.R")
+  source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_comparisons/compare_assignments_2way.R")
   # we'll compare these 2 to start:
   tblnam <- c("t1", "t2")
   c2.12 <- compare_assignments_2way(table1, table2, tablenames = tblnam, pltfilez = "none")

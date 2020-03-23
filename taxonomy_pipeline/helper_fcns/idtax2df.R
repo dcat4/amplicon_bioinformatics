@@ -3,7 +3,6 @@
 # regardless, the below will convert the taxon object returned by idtaxa (tt) into a dataframe, and will
 # NA out any assignments with a confidence value less than boot (use 0 or no input [default=0] for no NA'ing)
 
-
 # code written by Connie Liang (most) and Dylan Catlett (just polishing)
 
 idtax2df <- function(tt, boot = 0){

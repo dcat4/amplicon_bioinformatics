@@ -22,15 +22,15 @@ rm(list = ls())
 # setwd and read in your datasets:
 setwd("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/demos_and_validation")
 
-idtax.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
-bayes.pr2 <- readRDS("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
-bayes.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
+idtax.pr2 <- readRDS("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
+bayes.pr2 <- readRDS("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
+bayes.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-idtax.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
+idtax.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-lca.pr2 <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
+lca.pr2 <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
                         stringsAsFactors = FALSE)
-lca.silva <- read.csv("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
+lca.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
                     stringsAsFactors = FALSE)
 ```
 
@@ -44,7 +44,7 @@ conf <- as.data.frame(bayes.pr2$boot, stringsAsFactors = FALSE)
 bayes.pr2 <- as.data.frame(bayes.pr2$tax, stringsAsFactors = FALSE)
 bayes.pr2[conf < 60] <- NA
 
-source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/helper_fcns/idtax2df.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/helper_fcns/idtax2df.R")
 idtax.pr2 <- idtax2df(idtax.pr2, boot = 60)
 
 # sorting each dataframe by DNA sequences:
@@ -92,7 +92,7 @@ In this example, we'll compare bayes-pr2 and bayes-silva:
 
 ``` r
 # make sure R can see the function:
-source("~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/taxonomy_pipeline/tax_table_comparisons/compare_assignments_2way.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_comparisons/compare_assignments_2way.R")
 # we'll compare these 2 to start:
 tblnam <- c("bayes-pr2", "bayes-silva")
 test1 <- compare_assignments_2way(bayes.pr2,bayes.silva, tablenames = tblnam, pltfilez = "none")
@@ -124,17 +124,28 @@ indexDF <- test1[[1]]
 head(indexDF,10) # look at the dataframe
 ```
 
-    ##    Agree Disagree Agree.T1.more.rez Agree.T2.more.rez pAgree.i pAgree.rank
-    ## 1    135        5               127                 1        6           1
-    ## 2    238        7               645                 2       25           1
-    ## 3   1914        8              1936                 3       26           1
-    ## 4   1941        9              2535                 4       27           1
-    ## 5   2742       10              2747                11       28           2
-    ## 6   2753       12              2755                15       37           1
-    ## 7   2767       13              2756                16       47           1
-    ## 8   2769       14              2768                17       59           1
-    ## 9   2771       19              2770                18       60           1
-    ## 10  2804       20              2775                21       68           1
+    ##    Agree Disagree Agree.T1.more.rez T1.more.rez.t2rank Agree.T2.more.rez
+    ## 1    135        5               127                  7                 1
+    ## 2    238        7               645                  6                 2
+    ## 3   1914        8              1936                  3                 3
+    ## 4   1941        9              2535                  7                 4
+    ## 5   2742       10              2747                  5                11
+    ## 6   2753       12              2755                  5                15
+    ## 7   2767       13              2756                  5                16
+    ## 8   2769       14              2768                  6                17
+    ## 9   2771       19              2770                  6                18
+    ## 10  2804       20              2775                  6                21
+    ##    T2.more.rez.t1rank pAgree.i pAgree.rank
+    ## 1                   1        6           1
+    ## 2                   1       25           1
+    ## 3                   1       26           1
+    ## 4                   1       27           1
+    ## 5                   3       28           2
+    ## 6                   1       37           1
+    ## 7                   1       47           1
+    ## 8                   1       59           1
+    ## 9                   1       60           1
+    ## 10                  1       68           1
 
 ``` r
 # de-cluttering rownames:
@@ -237,17 +248,28 @@ indexDF <- test2[[1]]
 head(indexDF,10) # look at the dataframe
 ```
 
-    ##    Agree Disagree Agree.T1.more.rez Agree.T2.more.rez pAgree.i pAgree.rank
-    ## 1    128       NA                 1              2418     2746           2
-    ## 2    237       NA                 2              2536     2761           1
-    ## 3    238       NA                 3              2751     2775           5
-    ## 4    257       NA                 4              2765     2797           6
-    ## 5    508       NA                 5              2769     2857           6
-    ## 6    509       NA                 6              2787     2867           3
-    ## 7    528       NA                 7              2795     3088           1
-    ## 8   1938       NA                 8              2800     3371           2
-    ## 9   1942       NA                 9              2804     3395           6
-    ## 10  2285       NA                10              2860     3407           3
+    ##    Agree Disagree Agree.T1.more.rez T1.more.rez.t2rank Agree.T2.more.rez
+    ## 1    128       NA                 1                  0              2418
+    ## 2    237       NA                 2                  0              2536
+    ## 3    238       NA                 3                  0              2751
+    ## 4    257       NA                 4                  0              2765
+    ## 5    508       NA                 5                  0              2769
+    ## 6    509       NA                 6                  0              2787
+    ## 7    528       NA                 7                  0              2795
+    ## 8   1938       NA                 8                  0              2800
+    ## 9   1942       NA                 9                  0              2804
+    ## 10  2285       NA                10                  0              2860
+    ##    T2.more.rez.t1rank pAgree.i pAgree.rank
+    ## 1                   1     2746           2
+    ## 2                   2     2761           1
+    ## 3                   2     2775           5
+    ## 4                   1     2797           6
+    ## 5                   6     2857           6
+    ## 6                   1     2867           3
+    ## 7                   1     3088           1
+    ## 8                   6     3371           2
+    ## 9                   1     3395           6
+    ## 10                  3     3407           3
 
 ``` r
 # Look at 5 entries flagged as "agreeing":
@@ -287,67 +309,42 @@ idtax.pr2[ii,]
 
 ``` r
 # Look at 10 entries flagged as "partial agreements":
-ii <- indexDF$pAgree.i[1:10]
+ii <- indexDF$pAgree.i[1:5]
 bayes.pr2[ii,]
 ```
 
-    ##        Kingdom     Supergroup        Division               Class
-    ## 2746 Eukaryota   Opisthokonta         Metazoa                <NA>
-    ## 2761 Eukaryota   Opisthokonta         Metazoa                <NA>
-    ## 2775 Eukaryota   Opisthokonta           Fungi          Ascomycota
-    ## 2797 Eukaryota       Hacrobia         Picozoa           Picozoa_X
-    ## 2857 Eukaryota Archaeplastida     Chlorophyta Chlorodendrophyceae
-    ## 2867 Eukaryota      Alveolata  Dinoflagellata         Dinophyceae
-    ## 3088 Eukaryota  Stramenopiles Stramenopiles_X                MAST
-    ## 3371 Eukaryota  Stramenopiles Stramenopiles_X                MAST
-    ## 3395 Eukaryota  Stramenopiles      Ochrophyta    Dictyochophyceae
-    ## 3407 Eukaryota  Stramenopiles      Ochrophyta    Dictyochophyceae
-    ##                   Order           Family       Genus               Species
-    ## 2746               <NA>             <NA>        <NA>                  <NA>
-    ## 2761               <NA>             <NA>        <NA>                  <NA>
-    ## 2775     Pezizomycotina   Eurotiomycetes  Rasamsonia Rasamsonia_argillacea
-    ## 2797         Picozoa_XX      Picozoa_XXX   Picomonas  Picomonas_judraskeda
-    ## 2857    Chlorodendrales Chlorodendraceae Tetraselmis                  <NA>
-    ## 2867      Gymnodiniales   Gymnodiniaceae  Gyrodinium   Gyrodinium_dominans
-    ## 3088             MAST-1          MAST-1C   MAST-1C_X         MAST-1C_X_sp.
-    ## 3371             MAST-9          MAST-9D   MAST-9D_X         MAST-9D_X_sp.
-    ## 3395 Dictyochophyceae_X     Pedinellales   Pedinella         Pedinella_sp.
-    ## 3407 Dictyochophyceae_X     Pedinellales        <NA>                  <NA>
+    ##        Kingdom     Supergroup    Division               Class           Order
+    ## 2746 Eukaryota   Opisthokonta     Metazoa                <NA>            <NA>
+    ## 2761 Eukaryota   Opisthokonta     Metazoa                <NA>            <NA>
+    ## 2775 Eukaryota   Opisthokonta       Fungi          Ascomycota  Pezizomycotina
+    ## 2797 Eukaryota       Hacrobia     Picozoa           Picozoa_X      Picozoa_XX
+    ## 2857 Eukaryota Archaeplastida Chlorophyta Chlorodendrophyceae Chlorodendrales
+    ##                Family       Genus               Species
+    ## 2746             <NA>        <NA>                  <NA>
+    ## 2761             <NA>        <NA>                  <NA>
+    ## 2775   Eurotiomycetes  Rasamsonia Rasamsonia_argillacea
+    ## 2797      Picozoa_XXX   Picomonas  Picomonas_judraskeda
+    ## 2857 Chlorodendraceae Tetraselmis                  <NA>
 
 ``` r
 idtax.pr2[ii,]
 ```
 
-    ##              X2             X3             X4                  X5
-    ## 18047 Eukaryota   Opisthokonta          Fungi     Chytridiomycota
-    ## 21154 Eukaryota       Rhizaria       Cercozoa   Filosa-Imbricatea
-    ## 10221 Eukaryota   Opisthokonta          Fungi          Ascomycota
-    ## 11206 Eukaryota       Hacrobia        Picozoa           Picozoa_X
-    ## 17371 Eukaryota Archaeplastida    Chlorophyta Chlorodendrophyceae
-    ## 15442 Eukaryota      Alveolata Dinoflagellata         Syndiniales
-    ## 7426  Eukaryota      Alveolata Dinoflagellata                <NA>
-    ## 15389 Eukaryota  Stramenopiles     Ochrophyta       Chrysophyceae
-    ## 4529  Eukaryota  Stramenopiles     Ochrophyta    Dictyochophyceae
-    ## 547   Eukaryota  Stramenopiles     Ochrophyta       Chrysophyceae
-    ##                        X6                    X7                      X8
-    ## 18047   Chytridiomycotina      Chytridiomycetes      Chytridiomycetes_X
-    ## 21154 Filosa-Imbricatea_X         Novel-clade-2         Novel-clade-2_X
-    ## 10221      Pezizomycotina       Dothideomycetes                    <NA>
-    ## 11206          Picozoa_XX           Picozoa_XXX            Picozoa_XXXX
-    ## 17371     Chlorodendrales      Chlorodendraceae      Chlorodendrales_XX
-    ## 15442                <NA>                  <NA>                    <NA>
-    ## 7426                 <NA>                  <NA>                    <NA>
-    ## 15389     Chrysophyceae_X Chrysophyceae_Clade-H Chrysophyceae_Clade-H_X
-    ## 4529   Dictyochophyceae_X          Pedinellales          Pedinellales_X
-    ## 547       Chrysophyceae_X Chrysophyceae_Clade-G Chrysophyceae_Clade-G_X
-    ##                                X9
-    ## 18047      Chytridiomycetes_X_sp.
-    ## 21154         Novel-clade-2_X_sp.
-    ## 10221                        <NA>
-    ## 11206            Picozoa_XXXX_sp.
-    ## 17371      Chlorodendrales_XX_sp.
-    ## 15442                        <NA>
-    ## 7426                         <NA>
-    ## 15389 Chrysophyceae_Clade-H_X_sp.
-    ## 4529           Pedinellales_X_sp.
-    ## 547   Chrysophyceae_Clade-G_X_sp.
+    ##              X2             X3          X4                  X5
+    ## 18047 Eukaryota   Opisthokonta       Fungi     Chytridiomycota
+    ## 21154 Eukaryota       Rhizaria    Cercozoa   Filosa-Imbricatea
+    ## 10221 Eukaryota   Opisthokonta       Fungi          Ascomycota
+    ## 11206 Eukaryota       Hacrobia     Picozoa           Picozoa_X
+    ## 17371 Eukaryota Archaeplastida Chlorophyta Chlorodendrophyceae
+    ##                        X6               X7                 X8
+    ## 18047   Chytridiomycotina Chytridiomycetes Chytridiomycetes_X
+    ## 21154 Filosa-Imbricatea_X    Novel-clade-2    Novel-clade-2_X
+    ## 10221      Pezizomycotina  Dothideomycetes               <NA>
+    ## 11206          Picozoa_XX      Picozoa_XXX       Picozoa_XXXX
+    ## 17371     Chlorodendrales Chlorodendraceae Chlorodendrales_XX
+    ##                           X9
+    ## 18047 Chytridiomycetes_X_sp.
+    ## 21154    Novel-clade-2_X_sp.
+    ## 10221                   <NA>
+    ## 11206       Picozoa_XXXX_sp.
+    ## 17371 Chlorodendrales_XX_sp.
