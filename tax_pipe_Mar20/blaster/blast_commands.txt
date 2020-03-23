@@ -1,0 +1,17 @@
+# these are commands executed at the command line to make the pr2 and silva databases into 
+# blast-formatted databases and the blast+ executables
+
+# make blast databases from pr2 and silva:
+makeblastdb -in ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/databases/pr2_version_4.12.0_18S_dada2.fasta -dbtype nucl 
+
+makeblastdb -in ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/databases/silva_nr_v138_train_set.fa -dbtype nucl 
+
+# blasting:
+# pr2 - CAREFUL, this is a big output... >10GB, gonna have to chunk the queries up for this one.
+blastn -db ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/databases/pr2_version_4.12.0_18S_dada2.fasta -query ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/blaster/half1ASVs4blast.fasta -out ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/blaster/half1raw_blast_pr2_Mar20.xml -outfmt "5 qseqid sseqid qstart qend sstart send evalue bitscore length pident mismatch gapopen" 
+blastn -db ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/databases/pr2_version_4.12.0_18S_dada2.fasta -query ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/blaster/half2ASVs4blast.fasta -out ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/blaster/half2raw_blast_pr2_Mar20.xml -outfmt "5 qseqid sseqid qstart qend sstart send evalue bitscore length pident mismatch gapopen" 
+# Silva
+blastn -db ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/databases/silva_nr_v138_train_set.fa -query ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/blaster/allASVs4blast.fasta -out ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/18sV9_amplicon_sequencing/tax_pipe_Mar20/blaster/raw_blast_silva_Mar20.xml -outfmt "5 qseqid sseqid qstart qend sstart send evalue bitscore length pident mismatch gapopen" 
+
+
+## I'm deleting raw blast xml's after running thru MEGAN b/c they're f*cking huge
