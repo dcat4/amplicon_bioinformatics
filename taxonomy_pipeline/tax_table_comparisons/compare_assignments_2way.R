@@ -123,7 +123,6 @@ compare_assignments_2way <- function(..., pltfilez = c("prop_2wayplt.pdf", "abs_
   plotDF[,"comp.val"] <- c("Total Agreement", "Total Disagreement", 
                            paste0("Names Agree,\n", tablenames[1], " - Higher Rez"), paste0("Names Agree,\n", tablenames[2], " - Higher Rez"), 
                            "Partial Agreement")
-  
   # plotting with ggplot2:
   library("ggplot2")
   # proportional number of ASVs
