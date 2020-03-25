@@ -16,15 +16,8 @@ compare_byRank_2way <- function(table1, table2,
     i.t1N.t2na <- intersect(which(!is.na(table1[,i])), which(is.na(table2[,i])))
     i.t1na.t2N <- intersect(which(is.na(table1[,i])), which(!is.na(table2[,i])))
     i.bothN <- intersect(which(!is.na(table1[,i])), which(!is.na(table2[,i])))
-    i.bothN.a <- c()
-    i.bothN.d <- c()
-    for (j in 1:length(i.bothN)) {
-      if (length(intersect(table1[i.bothN[j],i], table2[i.bothN[j],i])) > 0) {
-        i.bothN.a <- append(i.bothN.a, i.bothN[j])
-      } else if (length(intersect(table1[i.bothN[j],i], table2[i.bothN[j],i])) == 0) {
-        i.bothN.d <- append(i.bothN.d, i.bothN[j])
-      }
-    } 
+    i.bothN.a <- intersect(i.bothN, which(table1[,i] == table2[,i]))
+    i.bothN.d <- intersect(i.bothN, which(table1[,i] != table2[,i]))
     # prob merge these into a dataframe and make each entry in index list correspond to a rank...
     nr <- max(c(length(i.bothna),length(i.t1N.t2na),length(i.t1na.t2N),length(i.bothN.a),length(i.bothN.d)))
     indexDF <-  data.frame(matrix(NA, nrow = nr, ncol = 5))

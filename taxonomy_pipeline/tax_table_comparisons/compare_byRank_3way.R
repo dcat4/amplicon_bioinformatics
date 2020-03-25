@@ -1,11 +1,5 @@
-# under construction
-
-# trying to do rank-wise comparisons for 3 tax tables
-
-# almost there, just gotta add where all named and 2 agree + 1 don't
-
 compare_byRank_3way <- function(table1, table2, table3,
-                                pltfilez = c("prop_2wayplt.pdf", "abs_2wayplt.pdf"),
+                                pltfilez = "none",
                                 tablenames = c("bayes", "idtax"), 
                                 ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species")) {
   notuz <- nrow(table1) # number of ASVs/OTUs/rows in each tax table
@@ -103,13 +97,11 @@ compare_byRank_3way <- function(table1, table2, table3,
     if (length(i.allN.23a) > 0){
       indexDF[1:length(i.allN.23a), "allN.t23same.t1diff"] <- i.allN.23a
     }
-    
-    # below is copy/pasted from 2-way:
     pp <- apply(indexDF, MARGIN = 2, function(x) length(which(!is.na(x)))) # one rank's worth of numbers you can plot
     if (i == 1) {
-      plotDF <- data.frame(comp = names(pp), count = pp, rank = rep(ranknamez[i], times = length(pp)))
+      plotDF <- data.frame(comp = names(pp), count = pp, rank = rep(ranknamez[i], times = length(pp)), stringsAsFactors = FALSE)
     } else {
-      plotDF <- rbind(plotDF, data.frame(comp = names(pp), count = pp, rank = rep(ranknamez[i], times = length(pp))))
+      plotDF <- rbind(plotDF, data.frame(comp = names(pp), count = pp, rank = rep(ranknamez[i], times = length(pp))), stringsAsFactors = FALSE)
     }
     # return(list(indexDF, pp, table1, table2))
     allofit[[i]] <- indexDF
@@ -117,40 +109,10 @@ compare_byRank_3way <- function(table1, table2, table3,
   # outside the loop now
   # move to plotting:
   plotDF[,"count"] <- plotDF[,"count"] / notuz
-  
   # plotting with ggplot2:
   library("ggplot2")
-  # proportional number of ASVs
-  p1 <- ggplot(plotDF, aes(x = rank, y = count, fill = comp)) +
-    geom_bar(stat="identity", color = "black", position=position_dodge()) +
-    labs(x = "", y = "Proportion of ASVs") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
-          axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
-          panel.background = element_rect(fill = "white",
-                                          colour = "white",
-                                          linetype = "solid"),
-          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
-                                          colour = "white"),
-          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
-                                          colour = "white"),
-          axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) +
-    scale_fill_discrete(name = "Comparison", labels = c(all.na = "All 3 NA", 
-                                                        t1named.t23NA = paste0(tablenames[1], " named,\n", tablenames[2], ", ", tablenames[3], " NA"), 
-                                                        t2named.t13NA = paste0(tablenames[2], " named,\n", tablenames[1],", ", tablenames[3], " NA"), 
-                                                        t3named.t12NA = paste0(tablenames[3], " named,\n", tablenames[1],", ", tablenames[2], " NA"), 
-                                                        t12named.same.t3NA = paste0(tablenames[1],", ",tablenames[2], " same name,\n", tablenames[3], " NA"),
-                                                        t13named.same.t2NA = paste0(tablenames[1],", ",tablenames[3], " same name,\n", tablenames[2], " NA"),
-                                                        t23named.same.t1NA = paste0(tablenames[2],", ",tablenames[3], " same name,\n", tablenames[1], " NA"),
-                                                        t12named.diff.t3NA = paste0(tablenames[1],", ",tablenames[2], " diff. name,\n", tablenames[3], " NA"),
-                                                        t13named.diff.t2NA = paste0(tablenames[1],", ",tablenames[3], " diff. name,\n", tablenames[2], " NA"),
-                                                        t23named.diff.t1NA = paste0(tablenames[2],", ",tablenames[3], " diff. name,\n", tablenames[1], " NA"),
-                                                        allN.t12same.t3diff = paste0(tablenames[1],", ",tablenames[2], " same name,\n", tablenames[3], " diff. name"),
-                                                        allN.t13same.t2diff = paste0(tablenames[1],", ",tablenames[3], " same name,\n", tablenames[2], " diff. name"),
-                                                        allN.t23same.t1diff = paste0(tablenames[2],", ",tablenames[3], " same name,\n", tablenames[1], " diff. name"),
-                                                        all.same.name = "All same name", all.diff.name = "All diff. name")) +
-    ggtitle(paste0(tablenames[1], ", ",  tablenames[2], ", ",  tablenames[3]))
-  
-  # absolute number of ASVs:
+  # comparison on the x, rank on  the legend
+  plotDF$rank <- factor(plotDF$rank, levels = ranknamez) # this makes the order of grouped bars follow that of ranknamez
   p2 <- ggplot(plotDF, aes(x = comp, y = count, fill = rank)) + 
     geom_bar(stat="identity", color = "black", position=position_dodge()) + 
     labs(x = "", y = "Proportion of ASVs") + 
@@ -164,7 +126,7 @@ compare_byRank_3way <- function(table1, table2, table3,
           panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
                                           colour = "white"),
           axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) +
-    scale_fill_discrete(name = "Rank") +
+    scale_fill_discrete(name = "Rank", breaks = ranknamez) +
     scale_x_discrete(labels = c(all.na = "All 3 NA", 
                                 t1named.t23NA = paste0(tablenames[1], " named,\n", tablenames[2], ", ", tablenames[3], " NA"), 
                                 t2named.t13NA = paste0(tablenames[2], " named,\n", tablenames[1],", ", tablenames[3], " NA"), 
@@ -178,15 +140,69 @@ compare_byRank_3way <- function(table1, table2, table3,
                                 allN.t12same.t3diff = paste0(tablenames[1],", ",tablenames[2], " same name,\n", tablenames[3], " diff. name"),
                                 allN.t13same.t2diff = paste0(tablenames[1],", ",tablenames[3], " same name,\n", tablenames[2], " diff. name"),
                                 allN.t23same.t1diff = paste0(tablenames[2],", ",tablenames[3], " same name,\n", tablenames[1], " diff. name"),
-                                all.same.name = "All same name", all.diff.name = "All diff. name"))
+                                all.same.name = "All same name", all.diff.name = "All diff. name")) +
+  ggtitle(paste0(tablenames[1], ", ",  tablenames[2], ", ",  tablenames[3]))
+  
+  # Here I'm creating a more general plot with broader comparison groupings:
+  # below, gname is the consolidated grouping names, 
+  # subg is a list with subgroups being combined for each gname
+  gname <- c("all.na", "n1na2", "n2.same.na1", "n2.diff.na1","n3.2same", "n3.allsame", "n3.alldiff")
+  subg <- list(c("all.na"), 
+               c("t1named.t23NA", "t2named.t13NA", "t3named.t12NA"), 
+               c("t12named.same.t3NA","t13named.same.t2NA","t23named.same.t1NA"),
+               c("t12named.diff.t3NA","t13named.diff.t2NA","t23named.diff.t1NA"),
+               c("allN.t12same.t3diff","allN.t13same.t2diff","allN.t23same.t1diff"),
+               c("all.same.name"), 
+               c("all.diff.name"))
+  # loop to consolidate groups
+  plotDF2 <- data.frame(matrix(NA, nrow = length(ranknamez) * length(gname), ncol = 3))
+  colnames(plotDF2) <- colnames(plotDF)
+  plotDF2$comp <- rep(gname, length(ranknamez))
+  ii <- sort(plotDF2$comp, index.return = TRUE)
+  plotDF2 <- plotDF2[ii$ix,]
+  plotDF2$rank <- rep(ranknamez, length(gname))
+  
+  for (i in 1:length(ranknamez)) {
+    r <- ranknamez[i]
+    for (j in 1:length(gname)) {
+      gn <- gname[j]
+      sg <- subg[[j]]
+      idx <- intersect(which(plotDF$rank == r), which(plotDF$comp %in% sg))
+      xx <- sum(plotDF$count[idx])
+      plotDF2$count[intersect(which(plotDF2$comp == gn), which(plotDF2$rank == r))] <- xx
+    }
+  }
+  # more broad comparison groupings:
+  plotDF2$rank <- factor(plotDF2$rank, levels = ranknamez) # this makes the order of grouped bars follow that of ranknamez
+  p1 <- ggplot(plotDF2, aes(x = comp, y = count, fill = rank)) + 
+    geom_bar(stat="identity", color = "black", position=position_dodge()) + 
+    labs(x = "", y = "Proportion of ASVs") + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
+          axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
+          panel.background = element_rect(fill = "white",
+                                          colour = "white",
+                                          linetype = "solid"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                          colour = "white"),
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                          colour = "white"),
+          axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) +
+    scale_fill_discrete(name = "Rank", breaks = ranknamez) +
+    scale_x_discrete(labels = c(all.na = "All 3 NA", 
+                                n1na2 = "1 named, 2 NA", 
+                                n2.same.na1 = "2 names agree,\n 1 NA",
+                                n2.diff.na1 = "2 names disagree,\n 1 NA",
+                                n3.2same = "2 names agree,\n 1 disagrees",
+                                n3.allsame = "all 3 named & agree",
+                                n3.alldiff = "all 3 named & disagree")) +
   ggtitle(paste0(tablenames[1], ", ",  tablenames[2], ", ",  tablenames[3]))
   
   if (length(grep(pltfilez, "none")) == 1){
     # don't save anything
   } else {
-    ggsave(filename = pltfile, plot = p1, device = "pdf")
-    ggsave(filename = pltfile, plot = p2, device = "pdf")
+    ggsave(filename = pltfilez[1], plot = p1, device = "pdf")
+    ggsave(filename = pltfilez[2], plot = p2, device = "pdf")
   }
-  return(list(indexDF, plotDF, p1, p2))
+  return(list(allofit, plotDF, plotDF2, p1, p2))
 }
   
