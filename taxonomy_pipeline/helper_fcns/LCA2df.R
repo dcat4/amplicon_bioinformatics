@@ -21,10 +21,12 @@ LCA2df <- function(lcaer, rubric) {
       # leave it as all NA
     }
   }
-  lcadf$svN <- la$V1 # append the SV numbers to your output dataframe
+  lcadf$svN <- lcaer$V1 # append the SV numbers to your output dataframe
   rubdf <- data.frame(svN = names(rubric), ASV = as.character(rubric, use.names = FALSE))
   lcadf <- merge(lcadf, rubdf, by.x = "svN", by.y = "svN") # merging to add ASV sequences
   lcadf <- lcadf[,c(1,ncol(lcadf), 2:(ncol(lcadf)-1))] # rearranging columns -- svN, ASV, taxonomy....
+  xx <- which(colSums(is.na(lcadf)) == nrow(lcadf)) # remove columns that are all NA
+  lcadf <- lcadf[,-xx]
   return(lcadf)
 }
   

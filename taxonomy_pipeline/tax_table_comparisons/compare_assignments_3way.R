@@ -40,6 +40,11 @@ compare_assignments_3way <- function(..., pltfilez = c("prop_2wayplt.pdf", "abs_
   # get perfect indices by intersecting agreement indices in the 1-2 and 2-3 comparisons:
   perf3 <- intersect(idf.12$Agree, idf.23$Agree)
   
+  sameN.varrez.t1mo <- intersect(idf.12$Agree.T1.more.rez, idf.13$Agree.T1.more.rez)
+  sameN.varrez.t2mo <- intersect(idf.12$Agree.T2.more.rez, idf.23$Agree.T1.more.rez)
+  sameN.varrez.t3mo <- intersect(idf.13$Agree.T2.more.rez, idf.23$Agree.T2.more.rez)
+  
+  
   return(list(x, idf.12, idf.13, idf.23))
   # LEFT OFF HERE IN BUILDING...
   
