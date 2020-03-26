@@ -94,5 +94,5 @@ compare_byRank_2way <- function(table1, table2,
     ggsave(filename = pltfile, plot = p1, device = "pdf")
     ggsave(filename = pltfile, plot = p2, device = "pdf")
   }
-  return(list(indexDF, plotDF, p1, p2))
+  return(list(allofit, plotDF, p1, p2))
 }

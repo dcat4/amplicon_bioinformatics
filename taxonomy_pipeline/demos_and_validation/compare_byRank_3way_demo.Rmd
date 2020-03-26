@@ -1,15 +1,15 @@
 ---
-title: "compare_assignments_2way Demo"
-author: "D Catlett & C Liang"
-date: "3/17/2020"
+title: "compare_byRank_3way Demo.Rmd"
+author: "D Catlett"
+date: "3/25/2020"
 output: github_document
 ---
 
-Bugs seem fixed -- could still add numbers on top of bars to improve the plots, and needs a little more detailed QC
+Still working on this one....
 
 ## Overview
 
-Here we step through an example use of the compare_assignments_2way.R function. It provides a convenient 1-liner to compare and plot detailed comparisons of taxonomic annotations across two taxonomy tables. Requires that all taxonomy tables follow the same taxonomic naming and ranking conventions, that the order of columns in each taxonomy table follows the taxonomic ranking heirarchy (e.g., Kingdom = taxtable[,1], Species = taxtable[,ncol(taxtable)]), and that the order of rows (ASVs) in each of the input taxonomy tables is the same. Importantly, compare_assignments_2way also assumes that *unassigned* is indicated by *NA*, and requires the *ggplot2* package be installed prior to running. 
+Here we step through an example use of the compare_byRank_3way function. It provides a convenient 1-liner to compare and plot results of detailed, rank-wise comparisons of taxonomic annotations across three taxonomy tables. Requires that all taxonomy tables follow the same taxonomic naming and ranking conventions, that the order of columns in each taxonomy table follows the taxonomic ranking heirarchy (e.g., Kingdom = taxtable[,1], Species = taxtable[,ncol(taxtable)]), and that the order of rows (ASVs) in each of the input taxonomy tables is the same. Importantly, compare_byRank_3way also assumes that *unassigned* is indicated by *NA*, and requires the *ggplot2* package be installed prior to running. 
 
 ### Start 'er up:
 We'll clear out our environment, set our wd, and read in taxonomy tables:
@@ -79,80 +79,44 @@ head(lca.pr2, n = 10)
 head(lca.silva, n = 10)
 ```
 
-## Run compare_assignments_2way to compare assignment resolutions and identities across 2 of the above taxonomy tables:
-
-Here we'll do an example run and see what the inputs and outputs look like. The function counts the number of rows that (1) agree completely in identity and resolution; (2) disagree completely in that they have no non-NA names in common; (3, 4) agree completely where named, with table 1 (or 2) having higher resolution; or (5) agree where named to a particular rank, with 1 or more disagreements in non-NA names at subsequent ranks. The function will create two plots of the number and proportion of ASVs satisfying each of these conditions in your data set. We're setting *pltfilez = "none"* because we don't want to save our output plots as pdf files, but you can enter any 2 file names ending in *.pdf* to save the plots to your working directory if you prefer.
-
-In this example, we'll compare bayes-pr2 and bayes-silva:
+### First run
+Here we'll run the function and print out the 2 pre-made plots:
 
 ```{r , echo=TRUE}
 # make sure R can see the function:
-source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_comparisons/compare_assignments_2way.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_comparisons/compare_byRank_3way.R")
 # we'll compare these 2 to start:
-tblnam <- c("bayes-pr2", "bayes-silva")
-test1 <- compare_assignments_2way(bayes.pr2,bayes.silva, tablenames = tblnam, pltfilez = "none")
+tblnam <- c("bayes-pr2", "idtax-pr2","lca-pr2")
+test1 <- compare_byRank_3way(bayes.pr2, idtax.pr2, lca.pr2, tablenames = tblnam, pltfilez = "none")
+p1 <- test1[[4]]
+print(p1)
+p2 <- test1[[5]]
+print(p2)
 ```
 
-*test1* is a list containing our outputs, which include a dataframe of the row indices within each of the input taxonomy tables that satisfy each of the above 5 conditions described above, a second dataframe containing the data used for plotting, and two *ggplot2* objects that you can print and further customize to your liking. Let's look at the outputs, starting with the plots:
+The two plots show essentially the same suite of comparisons, but with varying specificity. The first plot is more broad, with more general comparisons. We see that in general, the 3 taxonomy tables we chose agreed where they were named at most ranks, with discrepancies explained largely by variable taxonomic resolution rather than varying taxon names across the tables.
+
+The second plot (sorry for the cluttering) breaks down the results shown in the first plot with more specificity - for example, rather than looking at the proportion of classifications where 1 table was named and the other two were unassigned with no specifics about which table included the name, we break this classification down into things like *bayes-pr2 was named while the other 2 were not*. 
+
+We can also look at the dataframes used in creating these 2 plots, in case you want to customize the ggplots shown above:
+```{r , echo=TRUE}
+plotDF1 <- test1[[2]]
+head(plotDF1)
+plotDF2 <- test1[[3]]
+head(plotDF2)
+```
+
+And finally, we can pull the indices corresponding to each of our comparison metrics (in the 2nd plot only, since those in the 1st can be computed by summing components shown in the 2nd plot):
 
 ```{r , echo=TRUE}
-p.prop <- test1[[3]] # proportion plot
-p.abs <- test1[[4]] # number of ASV plot
-
-print(p.prop)
-print(p.abs)
+indexlister <- test1[[1]]
+kingdom.idx <- indexlister[[1]]
+head(kingdom.idx)
 ```
 
-Here we see blah
+There are obviously a lot of different comparison outcomes, but we can look at a few:
 
-Let's look at our indexing dataframe and sanity-check some of the comparisons:
 
-```{r , echo=TRUE}
-indexDF <- test1[[1]]
-head(indexDF,10) # look at the dataframe
 
-# de-cluttering rownames:
-rownames(bayes.pr2) <- NULL
 
-# Look at 5 entries flagged as "disagreeing":
-ii <- indexDF$Disagree[1:5]
-bayes.pr2[ii,]
-bayes.silva[ii,]
-
-# Look at 10 entries flagged as "partial agreements":
-ii <- indexDF$pAgree.i[1:10]
-bayes.pr2[ii,]
-bayes.silva[ii,]
-
-```
-
-WE see something
-
-Let's do another example:
-
-```{r , echo=TRUE}
-# we'll compare these 2 to start:
-tblnam <- c("bayes-pr2", "idtax-pr2")
-test2 <- compare_assignments_2way(bayes.pr2,idtax.pr2, tablenames = tblnam, pltfilez = "none")
-
-# plot it up:
-p.prop <- test2[[3]] # proportion plot
-p.abs <- test2[[4]] # number of ASV plot
-
-print(p.prop)
-print(p.abs)
-
-indexDF <- test2[[1]]
-head(indexDF,10) # look at the dataframe
-
-# Look at 5 entries flagged as "agreeing":
-ii <- indexDF$Agree[1:5]
-bayes.pr2[ii,]
-idtax.pr2[ii,]
-
-# Look at 10 entries flagged as "partial agreements":
-ii <- indexDF$pAgree.i[1:5]
-bayes.pr2[ii,]
-idtax.pr2[ii,]
-```
 
