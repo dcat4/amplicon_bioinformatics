@@ -1,10 +1,12 @@
 # UNDER Construction
 
+# seems to work for the most part for number/proportion of ASVs and otu.table (tested for several traits)
+# haven't really QC'ed for accuracy at all for anything so need to do that...
+
 # analyzes trait mapping outputs to determine the number of ASVs and distribution of read abundances/sample
 # that can be mapped to each categorization within a user-specified trait. Optimized for categorical traits
 
-# seems to work for number/proportion of ASVs (it runs for several traits I tested)
-# need to check that ^that's accurate and add otu-table analysis
+# requires stringr, ggplot2, and reshape2
 
 # map.result should be a df of output of traitmapper_Ramond
 # trait.name is length 1 character vector with the name of trait (one colname of map.result) you want to analyze
@@ -25,6 +27,7 @@
 analyze_traitmap_byTrait <- function(map.result, trait.name, trait.options, otu.table = "none", plotfilez = "none") {
   library("stringr")
   library("ggplot2")
+  library("reshape2")
   tvec <- map.result[,trait.name]
   tvec.na <- is.na(tvec) # where the name was mapped directly to NA, and nothing else
   tvec.containa <- str_which(tvec, "NA") # where the hit was NA in some instances but something else in others...
@@ -61,9 +64,9 @@ analyze_traitmap_byTrait <- function(map.result, trait.name, trait.options, otu.
                            nASV = apply(indexDF, MARGIN = 2, function(x) nrow(indexDF) - sum(is.na(x))), 
                            pASV = apply(indexDF, MARGIN = 2, function(x) (nrow(indexDF) - sum(is.na(x)))/nrow(indexDF)))
   # Plot mapping results in terms of Number (maybe change to proportion) of ASVs in each classification
-  p1 <- ggplot(plotDF.asv[!plotDF.asv$trait.ass %in% c("Assigned", "Ambiguous"),], aes(x = trait.ass, y = nASV)) + 
+  p1 <- ggplot(plotDF.asv[!plotDF.asv$trait.ass %in% c("Assigned", "Ambiguous"),], aes(x = trait.ass, y = pASV)) + 
     geom_bar(stat="identity", color = "black", position=position_dodge()) + 
-    labs(x = "Trait Assignment", y = "Number of ASVs") + 
+    labs(x = "Trait Assignment", y = "Proportion of ASVs") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
           panel.background = element_rect(fill = "white",
@@ -75,9 +78,68 @@ analyze_traitmap_byTrait <- function(map.result, trait.name, trait.options, otu.
                                           colour = "white"),
           axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) +
     ggtitle(paste0("Trait mapping results for ", trait.name))
-  
-  
-  
-  return(list(p1,indexDF, plotDF.asv))
+  # if an otu-table was provided, compute the sample-wise proportion of seq reads mapped to each trait category
+  if (!identical(otu.table, "none")) {
+    if (any(rowSums(otu.table) > 1)){
+      # compute relative read abundances if raw reads were supplied
+      otu.table <- otu.table / rowSums(otu.table)
+    }
+    # return(list(otu.table, map.result, indexDF))
+    raDF <- data.frame(matrix(NA, nrow = nrow(otu.table), ncol = ncol(indexDF))) # an nsample x ntrait.category matrix for storing relative abundances
+    colnames(raDF) <- colnames(indexDF)
+    # return(list(otu.table, indexDF, raDF))
+    for (i in 1:ncol(indexDF)) {
+      cidx <- indexDF[,i]
+      cidx <- cidx[!is.na(cidx)]
+      # cidx is the col indices of ASVs w/ the ith trait classification in indexDF
+      if (length(cidx) > 1) {
+        raDF[,i] <- rowSums(otu.table[,cidx])
+      } else if (length(cidx) == 1) {
+        raDF[,i] <- otu.table[,cidx]
+      } 
+    }
+    # raDF now contains the summed relative read abundances of all ASVs within each trait classification (cols) for each sample (rows)
+    
+    # boxplot cumulative read abundances across all samples 
+    plotDF2 <- melt(raDF)
+    p2 <- ggplot(plotDF2[!plotDF2$variable %in% c("Assigned", "Ambiguous"),]) + 
+      geom_boxplot(stat="boxplot", aes(x=variable, y=value), position=position_dodge()) + 
+      labs(x = "Trait Assignment", y = "Cumulative Rel. Abundace Across Samples") + 
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
+            axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
+            panel.background = element_rect(fill = "white",
+                                            colour = "white",
+                                            linetype = "solid"),
+            panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                            colour = "white"),
+            panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                            colour = "white"),
+            axis.line = element_line(size = 0.5, linetype = "solid", colour = "black"),
+            legend.position = "none") + 
+      stat_summary(fun = "mean", aes(x=variable, y=value), geom = "crossbar", colour = "red", width = 0.75)
+
+    # histogram of rel. read abundances across samples that did not have definitive trait classifications
+    p3 <- ggplot(raDF, aes(x = Ambiguous)) + 
+      geom_histogram()  + 
+      labs(x = "Rel. Read Abundance of ASVs w/ Unknown Trait Assignment", y = "N Samples") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
+          axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
+          panel.background = element_rect(fill = "white",
+                                          colour = "white",
+                                          linetype = "solid"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                          colour = "white"),
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                          colour = "white"),
+          axis.line = element_line(size = 0.5, linetype = "solid", colour = "black"))
+    
+  } else {
+    # all variables returned when otu.table is provided are returned as NULL
+    raDF <- NULL
+    plotDF2 <- NULL
+    p2 <- NULL
+    p3 <- NULL
+  }
+  return(list(p1, p2, p3, indexDF, plotDF.asv, raDF))
 }
 
