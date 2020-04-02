@@ -1,1 +1,3 @@
 Implementing the pipeline I'm building on my data...
+
+Everything prior to this point was run on Anvil, seqtab moved over manually from ~/dada2_ML_Mar20/all18s_Mar20/chimera_removal/seqtab.rds and renamed seqtab_nochime_Mar20.rds for clarity

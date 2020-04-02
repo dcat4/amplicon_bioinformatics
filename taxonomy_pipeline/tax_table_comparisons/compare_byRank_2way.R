@@ -53,7 +53,7 @@ compare_byRank_2way <- function(table1, table2,
   
   # plotting with ggplot2:
   library("ggplot2")
-  # proportional number of ASVs
+  # comp on x, rank on color
   p1 <- ggplot(plotDF, aes(x = rank, y = count, fill = comp)) +
     geom_bar(stat="identity", color = "black", position=position_dodge()) +
     labs(x = "", y = "Proportion of ASVs") +
@@ -70,7 +70,7 @@ compare_byRank_2way <- function(table1, table2,
     scale_fill_discrete(name = "Comparison", labels = c("Both NA", "Different Name", "Same Name", paste0(tablenames[1], " named,\n", tablenames[2], " NA"), paste0(tablenames[2], " named,\n", tablenames[1], " NA"))) +
     ggtitle(paste0(tablenames[1], " vs. ",  tablenames[2]))
   
-  # absolute number of ASVs:
+  # comp on color, rank on x
   p2 <- ggplot(plotDF, aes(x = comp, y = count, fill = rank)) + 
     geom_bar(stat="identity", color = "black", position=position_dodge()) + 
     labs(x = "", y = "Proportion of ASVs") + 
