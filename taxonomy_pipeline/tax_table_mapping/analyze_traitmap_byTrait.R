@@ -1,30 +1,4 @@
-# UNDER Construction
-
-# seems to work for the most part for number/proportion of ASVs and otu.table (tested for several traits)
-# haven't really QC'ed for accuracy at all for anything so need to do that...
-
-# analyzes trait mapping outputs to determine the number of ASVs and distribution of read abundances/sample
-# that can be mapped to each categorization within a user-specified trait. Optimized for categorical traits
-
-# requires stringr, ggplot2, and reshape2
-
-# map.result should be a df of output of traitmapper_Ramond
-# trait.name is length 1 character vector with the name of trait (one colname of map.result) you want to analyze
-# trait.options is a character vector with all possible assignments for the trait.name
-# otu.table is a dataframe of sequence read counts for each ASV according to sample name 
-# (^similar to phyloseq otu_table but should be a dataframe or matrix)
-
-# outputs:
-# 1. index array of ASVs with:
-#   a. ambiguous trait assignments
-#   b. unambiguous trait assignments
-#   c. etc. each unique type of assignment for that trait (a breakdown of both am and unam assignments)
-# 2. plots:
-#   a. % of ASVs assigned to each trait, and ambiguous...
-#   b. % of reads in each sample that is abiguous vs. unambiguous
-#   c. % of reads in each sample assigned to each trait
-
-analyze_traitmap_byTrait <- function(map.result, trait.name, trait.options, otu.table = "none", plotfilez = "none") {
+analyze_traitmap_byTrait <- function(map.result, trait.name, otu.table = "none", plotfilez = "none") {
   library("stringr")
   library("ggplot2")
   library("reshape2")
