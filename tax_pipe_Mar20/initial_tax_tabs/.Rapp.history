@@ -1,0 +1,2 @@
+load("/Users/dylancatlett/Documents/R/amplicon_bioinformatics/tax_pipe_Mar20/initial_tax_tabs/LCA_pr2_rawdf_Mar20.rds")
+load("/Users/dylancatlett/Documents/R/amplicon_bioinformatics/tax_pipe_Mar20/initial_tax_tabs/LCA_pr2_rawdf_Mar20.rds")
