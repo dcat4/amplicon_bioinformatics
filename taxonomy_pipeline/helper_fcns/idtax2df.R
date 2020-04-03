@@ -5,7 +5,7 @@
 
 # code written by Connie Liang (most) and Dylan Catlett (just polishing)
 
-idtax2df <- function(tt, boot = 0){
+idtax2df <- function(tt, boot = 0, return.conf = "no"){
   taxonomy<-c()
   conf <- c()
   notu <- length(tt)
@@ -17,8 +17,11 @@ idtax2df <- function(tt, boot = 0){
   yydf <- yydf[,-1]
   confdf <- data.frame(matrix(unlist(conf), nrow=notu, byrow=TRUE))
   confdf <- confdf[,-1]
-  
   yydf[confdf < boot] <- NA
   
-  return(yydf)
+  if (return.conf == "no") {
+    return(yydf)
+  } else if (return.conf == "yes") {
+    return(list(yydf, confdf))
+  }
 }
