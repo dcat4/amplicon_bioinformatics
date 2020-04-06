@@ -5,13 +5,13 @@ bayestax2df <- function(tt, boot = 0, rubric = NULL, return.conf = FALSE){
   notu <- nrow(taxonomy)
   taxdf <- data.frame(taxonomy, stringsAsFactors = FALSE)
   
-  confdf <- data.frame(conf)
-  yydf[confdf < boot] <- NA
+  confdf <- data.frame(conf, stringsAsFactors = FALSE)
+  taxdf[confdf < boot] <- NA
   
-  yydf$ASV <- rownames(yydf)
+  taxdf$ASV <- rownames(taxdf)
   rubdf <- data.frame(svN = names(rubric), ASV = as.character(rubric, use.names = FALSE), stringsAsFactors = FALSE)
   
-  yydf <- merge(yydf, rubdf, by.x = "ASV", by.y = "ASV")
+  taxdf <- merge(taxdf, rubdf, by.x = "ASV", by.y = "ASV")
   if (return.conf) {
     return(list(yydf, confdf))
   } else if (!return.conf) {
