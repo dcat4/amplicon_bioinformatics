@@ -18,7 +18,7 @@ idtax2df <- function(tt, boot = 0, rubric = NULL, return.conf = FALSE){
   confdf <- data.frame(matrix(unlist(conf), nrow=notu, byrow=TRUE))
   confdf <- confdf[,-1]
   yydf[confdf < boot] <- NA
-  
+
   rubdf <- data.frame(svN = names(rubric), ASV = as.character(rubric, use.names = FALSE), stringsAsFactors = FALSE)
   yydf <- cbind(rubdf, yydf)
   
