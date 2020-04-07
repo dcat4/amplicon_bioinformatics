@@ -1,8 +1,6 @@
 # UNDER CONSTRUCTION
 
 # up next:
-# 1. I think the confidence dataframes might get shuffled when you merge since the merging sorts
-# ... need to fix that... in bayes + idtax2df fcns...
 # 2. add idtax2df_silva to helper_fcns so the changes propagate in both places
 
 # this is a shell script that executes the functions I (+Kevin +Connie) written for my ensemble taxonomy pipeline
@@ -93,7 +91,7 @@ idtax.silva.conf <- idtax.silva.conf[ii$ix,]
 ii <- base::sort(lca.silva$ASV, index.return = TRUE)
 lca.silva <- lca.silva[ii$ix,]
 # no confidence for lca tax assignments...
-
+feck
 identical(bayes.pr2$ASV, bayes.pr2$ASV)
 identical(bayes.pr2$ASV, idtax.pr2$ASV)
 identical(idtax.pr2$ASV, idtax.silva$ASV)  

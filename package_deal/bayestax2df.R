@@ -14,6 +14,10 @@ bayestax2df <- function(tt, boot = 0, rubric = NULL, return.conf = FALSE){
   taxdf <- merge(taxdf, rubdf, by.x = "ASV", by.y = "ASV")
   taxdf <- taxdf[,c(ncol(taxdf), 1:(ncol(taxdf)-1))]
   if (return.conf) {
+    ii <- base::sort(taxdf$ASV, index.return = TRUE)
+    taxdf <- taxdf[ii$ix,]
+    ii <- base::sort(rownames(confdf), index.return = TRUE)
+    confdf <- confdf[ii$ix,]
     return(list(taxdf, confdf))
   } else if (!return.conf) {
     return(taxdf)
