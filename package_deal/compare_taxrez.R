@@ -10,15 +10,8 @@ compare_taxrez <- function(..., pltfile = "rezplt.pdf",
                            tablenames = c("bayes", "idtax"), 
                            ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species")){
   # package download/loading/updating:
-  .cran_packages <- c("ggplot2", "reshape2")
-  .inst <- .cran_packages %in% installed.packages()
-  if(any(!.inst)) {
-    install.packages(.cran_packages[!.inst])
-  }
-  
-  # Load packages into session, and print package version
-  sapply(c(.cran_packages), require, character.only = TRUE)
-  
+  library("ggplot2") 
+  library("reshape2")
   # a helper function for computing proportion unassigned
   nasum <- function(taxdf){
     notuz <- nrow(taxdf)

@@ -1,10 +1,7 @@
 # this function compares two taxonomy tables in a rank-wise fashion. 
-# I think it's mostly good -- need to test it out and add plotting capabilities
-
-# clean this up by removing the 2nd for loop and doing more intersections as in 3way byRank
 
 compare_byRank_2way <- function(table1, table2,
-                                pltfilez = c("prop_2wayplt.pdf", "abs_2wayplt.pdf"),
+                                pltfilez = "none",
                                 tablenames = c("bayes", "idtax"), 
                                 ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species")) {
   notuz <- nrow(table1) # number of ASVs/OTUs/rows in each tax table
@@ -43,7 +40,6 @@ compare_byRank_2way <- function(table1, table2,
     } else {
       plotDF <- rbind(plotDF, data.frame(comp = names(pp), count = pp, rank = rep(ranknamez[i], times = length(pp))))
     }
-    # return(list(indexDF, pp, table1, table2))
     allofit[[i]] <- indexDF
   }
   # outside the loop now

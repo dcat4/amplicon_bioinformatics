@@ -1,7 +1,7 @@
 # UNDER CONSTRUCTION
 
 # up next:
-# 2. add idtax2df_silva to helper_fcns so the changes propagate in both places
+# 1. figure out how to store ggplots within a list (starting point from stack on line 156 below)
 
 # this is a shell script that executes the functions I (+Kevin +Connie) written for my ensemble taxonomy pipeline
 # also using it as an outline to track where I'm at from start to finish..
@@ -24,7 +24,7 @@
 # 5. MEGAN_LCA vs. Silva --> get_seqs4blast.R, bring_lca2R.R, files in /blaster
 # 6. MEGAN_LCA vs. pr2 [in 2 chunks] --> gethalf_seqs4blast.R, bring_lca2R.R, files in /blaster
 
-#### Step 1: Preliminary mapping of individual tax tables onto trait database 
+#### Step 0: formatting taxonomy tables for analysis
 
 # clear your workspace, setwd, read in your fcns:
 rm(list=ls())
@@ -91,14 +91,15 @@ idtax.silva.conf <- idtax.silva.conf[ii$ix,]
 ii <- base::sort(lca.silva$ASV, index.return = TRUE)
 lca.silva <- lca.silva[ii$ix,]
 # no confidence for lca tax assignments...
-feck
-identical(bayes.pr2$ASV, bayes.pr2$ASV)
+
+# check that they're all in the same order
+identical(bayes.pr2$ASV, bayes.silva$ASV)
 identical(bayes.pr2$ASV, idtax.pr2$ASV)
 identical(idtax.pr2$ASV, idtax.silva$ASV)  
 identical(idtax.silva$ASV, lca.pr2$ASV)
 identical(lca.pr2$ASV, lca.silva$ASV)
 
-# let's peak at everything to make sure it's all good:
+# another peak b/c i'm ocd:
 head(bayes.pr2)
 head(bayes.silva)
 head(idtax.pr2)
@@ -107,18 +108,148 @@ head(lca.pr2)
 head(lca.silva)
 # Noice.
 
-# ok they look good. Remove ASV and svN col's from temp arrays of each
+#### Step 1: boot threshold sensitivity analysis and preliminary mapping/comparisons
+
+### 1a. bootstrap threshold comparison
+## Here loop thru a gradient of bootstrapping thresholds and compare:
+# resolution of assignments across the data set
+# pairwise comparisons of =thresholds for idtaxa vs. bayes of each ref db
+
+tmp <- bayes.pr2[,c("svN", "ASV")]
+bayes.silva <- bayes.silva[, -which(colnames(bayes.silva) %in% c("svN", "ASV"))]
+bayes.pr2 <- bayes.pr2[, -which(colnames(bayes.pr2) %in% c("svN", "ASV"))]
+idtax.silva <- idtax.silva[, -which(colnames(idtax.silva) %in% c("svN", "ASV"))]
+idtax.pr2 <- idtax.pr2[, -which(colnames(idtax.pr2) %in% c("svN", "ASV"))]
 # little bootstrap threshold optimization:
-bootvec <- seq(from = 10, to = 90, by = 10)
+bootvec <- seq(from = 40, to = 80, by = 10)
+bootvec.str <- vector(mode = "character")
+bayes.pr2.list <- rep(list(bayes.pr2), length(bootvec))
+idtax.pr2.list <- rep(list(idtax.pr2), length(bootvec))
+bayes.silva.list <- rep(list(bayes.silva), length(bootvec))
+idtax.silva.list <- rep(list(idtax.silva), length(bootvec))
+
+# for storing ggplots
+plot.list.pr2 <- list()
+plot.list.silva <- list()
+# this loop NAs-out assignments based on thresholds in boot. plots 2-way comparisons of pr2 and silva tax tabs at each boot thresholds
 for (i in 1:length(bootvec)) {
   
+  bootvec.str <- append(bootvec.str, paste0("boot = ",toString(bootvec[i]),"%")) # for plot titles below...
+  
+  x1 <- bayes.pr2.list[[i]]
+  x1[bayes.pr2.conf < bootvec[i]] <- NA
+  bayes.pr2.list[[i]] <- x1
+  
+  x2 <- idtax.pr2.list[[i]]
+  x2[idtax.pr2.conf < bootvec[i]] <- NA
+  idtax.pr2.list[[i]] <- x2
+  # 2-way comparison of pr2 tables
+  r2way.pr2 <- compare_byRank_2way(x1, x2,
+                                  pltfilez = "none",
+                                  tablenames = c("bayes-pr2", "idtax-pr2"), 
+                                  ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+  # if (i == 1) {
+  #   plot.list.pr2 <- list(r2way.pr2[[4]])
+  # }
+  # else {
+  #   feck
+  #   plot.list.pr2 <- c(plot.list.pr2, r2way.pr2[[4]])
+  # }
+  # 
+  # from stack, apparently allows you to store ggplots in lists...
+  myplots[[i]] <- local({
+    i <- i
+    p1 <- ggplot(data2, aes(x = data2[[i]])) +
+      geom_histogram(fill = "lightgreen") +
+      xlab(colnames(data2)[i])
+    print(p1)
+  })
+  
+  x3 <- bayes.silva.list[[i]]
+  x3[bayes.silva.conf < bootvec[i]] <- NA
+  bayes.silva.list[[i]] <- x3
+  
+  x4 <- idtax.silva.list[[i]]
+  x4[idtax.silva.conf < bootvec[i]] <- NA
+  idtax.silva.list[[i]] <- x4
+  
+  # 2-way comparison of pr2 tables
+  r2way.silva <- compare_byRank_2way(x3, x4,
+                                   pltfilez = "none",
+                                   tablenames = c("bayes-silva","idtax-silva"), 
+                                   ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+  if (i == 1) {
+    plot.list.silva <- list(r2way.silva[[4]])
+  }
+  else {
+    plot.list.silva <- c(plot.list.silva, r2way.silva[[4]])
+  }
 }
 
-# make sure boot-strapping thresholds are honored here...
-# remove non-protists...
+# # create table names and compare the resolution of all flavors of the pr2 taxonomy tables:
+# bnam.pr2 <- sapply(bootvec.str, paste0, " bayes-pr2") # bayes pr2 table names...
+# inam.pr2 <- sapply(bootvec.str, paste0, " idtax-pr2") # idtax pr2 names...
+# tblnam <- c(bnam.pr2, inam.pr2)
+
+# pr2 - bayes vs. idtax
+rezcomp.bayes.pr2 <- compare_taxrez(bayes.pr2.list[[1]], bayes.pr2.list[[2]], bayes.pr2.list[[3]], bayes.pr2.list[[4]], bayes.pr2.list[[5]], 
+                          pltfile = "none",
+                          tablenames = bootvec.str,
+                          ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+rezcomp.idtax.pr2 <- compare_taxrez(idtax.pr2.list[[1]], idtax.pr2.list[[2]], idtax.pr2.list[[3]], idtax.pr2.list[[4]], idtax.pr2.list[[5]],
+                                    pltfile = "none",
+                                    tablenames = bootvec.str,
+                                    ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+# silva - bayes vs. idtax
+rezcomp.bayes.silva <- compare_taxrez(bayes.silva.list[[1]], bayes.silva.list[[2]], bayes.silva.list[[3]], bayes.silva.list[[4]], bayes.silva.list[[5]], 
+                                    pltfile = "none",
+                                    tablenames = bootvec.str,
+                                    ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+rezcomp.idtax.silva <- compare_taxrez(idtax.silva.list[[1]], idtax.silva.list[[2]], idtax.silva.list[[3]], idtax.silva.list[[4]], idtax.silva.list[[5]],
+                                    pltfile = "none",
+                                    tablenames = bootvec.str,
+                                    ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+
+# stitch your plots together (with cowplot) and save
+library("cowplot")
+# pr2 comparisons:
+legend_b <- get_legend(plot.list.pr2[[1]])
+p.2way.byRank.bootgradient.pr2 <- plot_grid(
+  plot.list.pr2[[1]] + ggtitle(bootvec.str[1]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[2]] + ggtitle(bootvec.str[2]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[3]] + ggtitle(bootvec.str[3]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[4]] + ggtitle(bootvec.str[4]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[5]] + ggtitle(bootvec.str[5]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  legend_b,
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D.", "E.",""),
+  axis = 'l',
+  hjust=-1,
+  nrow=2
+)
+ggsave("bayesVidtax_boot_threshold/pr2_2way_byRank_boot40to80.pdf", p.2way.byRank.bootgradient.pr2, width = 15, height = 12, units = "in", device="pdf")
+
+# silva comparisons
+legend_b <- get_legend(plot.list.silva[[1]])
+p.2way.byRank.bootgradient.silva <- plot_grid(
+  plot.list.silva[[1]] + ggtitle(bootvec.str[1]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[2]] + ggtitle(bootvec.str[2]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[3]] + ggtitle(bootvec.str[3]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[4]] + ggtitle(bootvec.str[4]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[5]] + ggtitle(bootvec.str[5]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  legend_b,
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D.", "E.",""),
+  axis = 'l',
+  hjust=-1,
+  nrow=2
+)
+ggsave("bayesVidtax_boot_threshold/silva_2way_byRank_boot40to80.pdf", p.2way.byRank.bootgradient.silva, width = 15, height = 12, units = "in", device="pdf")
+
+# resolution comparisons
+
 
 # then write a shell of my trait mapping and analysis functions
-
 # preliminary pairwise comparisons of tax-tables too...
 
 #### Step 2: Mapping all tax tables to a common taxonomic nomenclature
