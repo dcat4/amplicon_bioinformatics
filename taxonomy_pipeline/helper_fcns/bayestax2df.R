@@ -12,9 +12,10 @@ bayestax2df <- function(tt, boot = 0, rubric = NULL, return.conf = FALSE){
   rubdf <- data.frame(svN = names(rubric), ASV = as.character(rubric, use.names = FALSE), stringsAsFactors = FALSE)
   
   taxdf <- merge(taxdf, rubdf, by.x = "ASV", by.y = "ASV")
+  taxdf <- taxdf[,c(ncol(taxdf), 1:(ncol(taxdf)-1))]
   if (return.conf) {
-    return(list(yydf, confdf))
+    return(list(taxdf, confdf))
   } else if (!return.conf) {
-    return(yydf)
+    return(taxdf)
   }
 }

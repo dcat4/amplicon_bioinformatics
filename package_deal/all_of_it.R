@@ -11,8 +11,9 @@ source(paste0(dd,"analyze_traitmap_byTrait.R"))
 
 # helper fcns:
 source(paste0(dd,"LCA2df.R"))
-source(paste0(dd,"idtax2df.R"))
+source(paste0(dd,"idtax2df_pr2.R"))
 source(paste0(dd,"bayestax2df.R"))
+source(paste0(dd,"idtax2df_silva.R"))
 
 # ensemble tax algrithms:
 source(paste0(dd,"consensus_tax_LCAlike.R"))

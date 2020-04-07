@@ -1,5 +1,10 @@
 # UNDER CONSTRUCTION
 
+# up next:
+# 1. I think the confidence dataframes might get shuffled when you merge since the merging sorts
+# ... need to fix that... in bayes + idtax2df fcns...
+# 2. add idtax2df_silva to helper_fcns so the changes propagate in both places
+
 # this is a shell script that executes the functions I (+Kevin +Connie) written for my ensemble taxonomy pipeline
 # also using it as an outline to track where I'm at from start to finish..
 # more of just an outline right now...
@@ -36,10 +41,6 @@ idtax.silva <- readRDS("initial_tax_tabs/idtax_silva_0boot_Mar20.rds")
 lca.pr2 <- readRDS("initial_tax_tabs/LCA_pr2_rawdf_Mar20.rds")
 lca.silva <- readRDS("initial_tax_tabs/LCA_pr2_rawdf_Mar20.rds")
 
-# lca.pr2 + lca.silva were already formatted when converting from .csv, let's look:
-head(lca.pr2)
-head(lca.silva)
-
 # here's the rubric for aligning ASV numbers and sequences across datasets:
 library("DECIPHER")
 rubber <- readDNAStringSet("blaster/allASVs4blast.fasta")
@@ -47,14 +48,6 @@ rubber <- readDNAStringSet("blaster/allASVs4blast.fasta")
 # convert idtax and bayes to dataframes - keep boot = 0  and return conf for now...
 # note that for idtaxa, order of ASVs must be retrieved from dada2 seqtab - rubric represents that order
 # and adds ASV names and sequences to output dataframe:
-xx <- idtax2df(idtax.pr2, boot = 0, rubric = rubber, return.conf = TRUE)
-idtax.pr2 <- xx[[1]]
-idtax.pr2.conf <- xx[[2]]
-
-xx <- idtax2df(idtax.silva, boot = 0, rubric = rubber, return.conf = TRUE)
-idtax.silva <- xx[[1]]
-idtax.silva.conf <- xx[[2]]
-
 xx <- bayestax2df(bayes.pr2, boot = 0, rubric = rubber, return.conf = TRUE)
 bayes.pr2 <- xx[[1]]
 bayes.pr2.conf <- xx[[2]]
@@ -63,14 +56,69 @@ xx <- bayestax2df(bayes.silva, boot = 0, rubric = rubber, return.conf = TRUE)
 bayes.silva <- xx[[1]]
 bayes.silva.conf <- xx[[2]]
 
+xx <- idtax2df_pr2(idtax.pr2, boot = 0, rubric = rubber, return.conf = TRUE)
+idtax.pr2 <- xx[[1]]
+idtax.pr2.conf <- xx[[2]]
 
+xx <- idtax2df_silva(idtax.silva, boot = 0, rubric = rubber, return.conf = TRUE)
+idtax.silva <- xx[[1]]
+idtax.silva.conf <- xx[[2]]
+
+# lca.pr2 + lca.silva were already formatted when converting from .csv, so now we're good with formatting
+
+# clear out some unnecessary stuff:
+rm("rubber", "xx")
+
+# re-order your 6 tables by sorting according to ASV:
+ii <- base::sort(bayes.pr2$ASV, index.return = TRUE)
+bayes.pr2 <- bayes.pr2[ii$ix,]
+bayes.pr2.conf <- bayes.pr2.conf[ii$ix,]
+
+ii <- base::sort(idtax.pr2$ASV, index.return = TRUE)
+idtax.pr2 <- idtax.pr2[ii$ix,]
+idtax.pr2.conf <- idtax.pr2.conf[ii$ix,]
+
+ii <- base::sort(lca.pr2$ASV, index.return = TRUE)
+lca.pr2 <- lca.pr2[ii$ix,]
+# no confidence for lca tax assignments...
+
+ii <- base::sort(bayes.silva$ASV, index.return = TRUE)
+bayes.silva <- bayes.silva[ii$ix,]
+bayes.silva.conf <- bayes.silva.conf[ii$ix,]
+
+ii <- base::sort(idtax.silva$ASV, index.return = TRUE)
+idtax.silva <- idtax.silva[ii$ix,]
+idtax.silva.conf <- idtax.silva.conf[ii$ix,]
+
+ii <- base::sort(lca.silva$ASV, index.return = TRUE)
+lca.silva <- lca.silva[ii$ix,]
+# no confidence for lca tax assignments...
+
+identical(bayes.pr2$ASV, bayes.pr2$ASV)
+identical(bayes.pr2$ASV, idtax.pr2$ASV)
+identical(idtax.pr2$ASV, idtax.silva$ASV)  
+identical(idtax.silva$ASV, lca.pr2$ASV)
+identical(lca.pr2$ASV, lca.silva$ASV)
+
+# let's peak at everything to make sure it's all good:
+head(bayes.pr2)
+head(bayes.silva)
+head(idtax.pr2)
+head(idtax.silva)
+head(lca.pr2)
+head(lca.silva)
+# Noice.
+
+# ok they look good. Remove ASV and svN col's from temp arrays of each
 # little bootstrap threshold optimization:
 bootvec <- seq(from = 10, to = 90, by = 10)
-
+for (i in 1:length(bootvec)) {
+  
+}
 
 # make sure boot-strapping thresholds are honored here...
-# re-format as dataframes...
 # remove non-protists...
+
 # then write a shell of my trait mapping and analysis functions
 
 # preliminary pairwise comparisons of tax-tables too...

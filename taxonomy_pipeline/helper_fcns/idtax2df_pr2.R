@@ -5,7 +5,7 @@
 
 # code written by Connie Liang (most) and Dylan Catlett (just polishing)
 
-idtax2df <- function(tt, boot = 0, rubric = NULL, return.conf = FALSE){
+idtax2df_pr2 <- function(tt, boot = 0, rubric = NULL, return.conf = FALSE){
   taxonomy<-c()
   conf <- c()
   notu <- length(tt)
@@ -18,7 +18,7 @@ idtax2df <- function(tt, boot = 0, rubric = NULL, return.conf = FALSE){
   confdf <- data.frame(matrix(unlist(conf), nrow=notu, byrow=TRUE))
   confdf <- confdf[,-1]
   yydf[confdf < boot] <- NA
-
+  
   rubdf <- data.frame(svN = names(rubric), ASV = as.character(rubric, use.names = FALSE), stringsAsFactors = FALSE)
   yydf <- cbind(rubdf, yydf)
   
