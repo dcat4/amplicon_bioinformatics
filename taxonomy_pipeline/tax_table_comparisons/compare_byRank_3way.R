@@ -33,8 +33,8 @@ compare_byRank_3way <- function(table1, table2, table3,
     
     # prob merge these into a dataframe and make each entry in index list correspond to a rank...
     nr <- max(c(length(i.allna),length(i.t1N.t23na),length(i.t2N.t13na),length(i.t3N.t12na),
-            length(i.t12N.t3na.a),length(i.t12N.t3na.d),length(i.t13N.t2na.a),length(i.t13N.t2na.d),length(i.t23N.t1na.a),length(i.t23N.t1na.d),
-            length(i.allN.12a), length(i.allN.13a), length(i.allN.23a), length(i.allN.a), length(i.allN.d)))
+                length(i.t12N.t3na.a),length(i.t12N.t3na.d),length(i.t13N.t2na.a),length(i.t13N.t2na.d),length(i.t23N.t1na.a),length(i.t23N.t1na.d),
+                length(i.allN.12a), length(i.allN.13a), length(i.allN.23a), length(i.allN.a), length(i.allN.d)))
     indexDF <-  data.frame(matrix(NA, nrow = nr, ncol = 15))
     colnames(indexDF) <- c("all.na", "t1named.t23NA", "t2named.t13NA", "t3named.t12NA", 
                            "t12named.same.t3NA", "t12named.diff.t3NA", "t13named.same.t2NA", "t13named.diff.t2NA", "t23named.same.t1NA", "t23named.diff.t1NA",
@@ -114,7 +114,7 @@ compare_byRank_3way <- function(table1, table2, table3,
   # comparison on the x, rank on  the legend
   plotDF$rank <- factor(plotDF$rank, levels = ranknamez) # this makes the order of grouped bars follow that of ranknamez
   p2 <- ggplot(plotDF, aes(x = comp, y = count, fill = rank)) + 
-    geom_bar(stat="identity", color = "black", position=position_dodge()) + 
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) + 
     labs(x = "", y = "Proportion of ASVs") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -141,7 +141,7 @@ compare_byRank_3way <- function(table1, table2, table3,
                                 allN.t13same.t2diff = paste0(tablenames[1],", ",tablenames[3], " same name,\n", tablenames[2], " diff. name"),
                                 allN.t23same.t1diff = paste0(tablenames[2],", ",tablenames[3], " same name,\n", tablenames[1], " diff. name"),
                                 all.same.name = "All same name", all.diff.name = "All diff. name")) +
-  ggtitle(paste0(tablenames[1], ", ",  tablenames[2], ", ",  tablenames[3]))
+    ggtitle(paste0(tablenames[1], ", ",  tablenames[2], ", ",  tablenames[3]))
   
   # Here I'm creating a more general plot with broader comparison groupings:
   # below, gname is the consolidated grouping names, 
@@ -175,7 +175,7 @@ compare_byRank_3way <- function(table1, table2, table3,
   # more broad comparison groupings:
   plotDF2$rank <- factor(plotDF2$rank, levels = ranknamez) # this makes the order of grouped bars follow that of ranknamez
   p1 <- ggplot(plotDF2, aes(x = comp, y = count, fill = rank)) + 
-    geom_bar(stat="identity", color = "black", position=position_dodge()) + 
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) + 
     labs(x = "", y = "Proportion of ASVs") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -195,9 +195,9 @@ compare_byRank_3way <- function(table1, table2, table3,
                                 n3.2same = "2 names agree,\n 1 disagrees",
                                 n3.allsame = "all 3 named & agree",
                                 n3.alldiff = "all 3 named & disagree")) +
-  ggtitle(paste0(tablenames[1], ", ",  tablenames[2], ", ",  tablenames[3]))
+    ggtitle(paste0(tablenames[1], ", ",  tablenames[2], ", ",  tablenames[3]))
   
-  if (length(grep(pltfilez, "none")) == 1){
+  if (pltfilez == "none"){
     # don't save anything
   } else {
     ggsave(filename = pltfilez[1], plot = p1, device = "pdf")
@@ -205,4 +205,3 @@ compare_byRank_3way <- function(table1, table2, table3,
   }
   return(list(allofit, plotDF, plotDF2, p1, p2))
 }
-  

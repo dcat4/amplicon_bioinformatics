@@ -51,7 +51,7 @@ compare_byRank_2way <- function(table1, table2,
   library("ggplot2")
   # comp on x, rank on color
   p1 <- ggplot(plotDF, aes(x = rank, y = count, fill = comp)) +
-    geom_bar(stat="identity", color = "black", position=position_dodge()) +
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) +
     labs(x = "", y = "Proportion of ASVs") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -68,7 +68,7 @@ compare_byRank_2way <- function(table1, table2,
   
   # comp on color, rank on x
   p2 <- ggplot(plotDF, aes(x = comp, y = count, fill = rank)) + 
-    geom_bar(stat="identity", color = "black", position=position_dodge()) + 
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) + 
     labs(x = "", y = "Proportion of ASVs") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -84,7 +84,7 @@ compare_byRank_2way <- function(table1, table2,
     scale_x_discrete(labels = c(both.na = "Both NA", diff.name = "Different Name", same.name = "Same Name", t1named.t2NA = paste0(tablenames[1], " named,\n", tablenames[2], " NA"), t2named.t1NA = paste0(tablenames[2], " named,\n", tablenames[1], " NA")))
     ggtitle(paste0(tablenames[1], " vs. ",  tablenames[2]))
   
-  if (length(grep(pltfilez, "none")) == 1){
+  if (pltfilez == "none"){
     # don't save anything
   } else {
     ggsave(filename = pltfile, plot = p1, device = "pdf")

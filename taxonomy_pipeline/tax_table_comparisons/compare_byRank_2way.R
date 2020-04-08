@@ -4,7 +4,7 @@
 # clean this up by removing the 2nd for loop and doing more intersections as in 3way byRank
 
 compare_byRank_2way <- function(table1, table2,
-                                pltfilez = c("prop_2wayplt.pdf", "abs_2wayplt.pdf"),
+                                pltfilez = "none",
                                 tablenames = c("bayes", "idtax"), 
                                 ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species")) {
   notuz <- nrow(table1) # number of ASVs/OTUs/rows in each tax table
@@ -43,7 +43,6 @@ compare_byRank_2way <- function(table1, table2,
     } else {
       plotDF <- rbind(plotDF, data.frame(comp = names(pp), count = pp, rank = rep(ranknamez[i], times = length(pp))))
     }
-    # return(list(indexDF, pp, table1, table2))
     allofit[[i]] <- indexDF
   }
   # outside the loop now
@@ -55,7 +54,7 @@ compare_byRank_2way <- function(table1, table2,
   library("ggplot2")
   # comp on x, rank on color
   p1 <- ggplot(plotDF, aes(x = rank, y = count, fill = comp)) +
-    geom_bar(stat="identity", color = "black", position=position_dodge()) +
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) +
     labs(x = "", y = "Proportion of ASVs") +
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -72,7 +71,7 @@ compare_byRank_2way <- function(table1, table2,
   
   # comp on color, rank on x
   p2 <- ggplot(plotDF, aes(x = comp, y = count, fill = rank)) + 
-    geom_bar(stat="identity", color = "black", position=position_dodge()) + 
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) + 
     labs(x = "", y = "Proportion of ASVs") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -86,9 +85,9 @@ compare_byRank_2way <- function(table1, table2,
           axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) +
     scale_fill_discrete(name = "Rank") +
     scale_x_discrete(labels = c(both.na = "Both NA", diff.name = "Different Name", same.name = "Same Name", t1named.t2NA = paste0(tablenames[1], " named,\n", tablenames[2], " NA"), t2named.t1NA = paste0(tablenames[2], " named,\n", tablenames[1], " NA")))
-    ggtitle(paste0(tablenames[1], " vs. ",  tablenames[2]))
+  ggtitle(paste0(tablenames[1], " vs. ",  tablenames[2]))
   
-  if (length(grep(pltfilez, "none")) == 1){
+  if (pltfilez == "none"){
     # don't save anything
   } else {
     ggsave(filename = pltfile, plot = p1, device = "pdf")

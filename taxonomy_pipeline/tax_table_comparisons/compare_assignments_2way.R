@@ -2,7 +2,7 @@
 # code contributed by C Liang
 # will be used as an automated function to compare taxonomic assignments made by 2 taxonomy tables.
 
-compare_assignments_2way <- function(..., pltfilez = c("prop_2wayplt.pdf", "abs_2wayplt.pdf"),
+compare_assignments_2way <- function(..., pltfilez = "none",
                                      tablenames = c("bayes", "idtax"), 
                                      ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species")) {
   library("ggplot2")
@@ -55,7 +55,7 @@ compare_assignments_2way <- function(..., pltfilez = c("prop_2wayplt.pdf", "abs_
         sameN.mo2R.i <- append(sameN.mo2R.i,i)
         sameN.mo2R.r <- append(sameN.mo2R.r,length(t1))
       }
-
+      
     } else if (length(intersect(t1,t2)) > 0) {
       # this means they have >= 1 name agreement, potentially varying resolution
       if (narray[[1]][i] > narray[[2]][i]) {
@@ -157,12 +157,11 @@ compare_assignments_2way <- function(..., pltfilez = c("prop_2wayplt.pdf", "abs_
           axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) +
     ggtitle(paste0(tablenames[1], " vs. ",  tablenames[2]))
   
-  if (length(grep(pltfilez, "none")) == 1){
+  if (pltfilez == "none"){
     # don't save anything
   } else {
     ggsave(filename = pltfile, plot = p1, device = "pdf")
     ggsave(filename = pltfile, plot = p2, device = "pdf")
   }
-
   return(list(indexDF, plotDF, p1, p2))
 }

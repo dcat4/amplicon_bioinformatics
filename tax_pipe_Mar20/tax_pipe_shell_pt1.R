@@ -1,7 +1,8 @@
 # UNDER CONSTRUCTION
 
 # up next:
-# 1. figure out how to store ggplots within a list (starting point from stack on line 156 below)
+# 1. pick and apply boot-strap thresholds
+# 2. prelim trait mapping and analysis
 
 # this is a shell script that executes the functions I (+Kevin +Connie) written for my ensemble taxonomy pipeline
 # also using it as an outline to track where I'm at from start to finish..
@@ -148,22 +149,19 @@ for (i in 1:length(bootvec)) {
                                   pltfilez = "none",
                                   tablenames = c("bayes-pr2", "idtax-pr2"), 
                                   ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-  # if (i == 1) {
-  #   plot.list.pr2 <- list(r2way.pr2[[4]])
-  # }
-  # else {
-  #   feck
-  #   plot.list.pr2 <- c(plot.list.pr2, r2way.pr2[[4]])
-  # }
-  # 
-  # from stack, apparently allows you to store ggplots in lists...
-  myplots[[i]] <- local({
-    i <- i
-    p1 <- ggplot(data2, aes(x = data2[[i]])) +
-      geom_histogram(fill = "lightgreen") +
-      xlab(colnames(data2)[i])
-    print(p1)
-  })
+  a2way.pr2 <- compare_assignments_2way(x1, x2, 
+                                        pltfilez = "none",
+                                        tablenames = c("bayes-pr2", "idtax-pr2"), 
+                                        ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+  
+  if (i == 1) {
+    plot.list.pr2 <- list(r2way.pr2[[4]])
+    plot.list2.pr2 <- list(a2way.pr2[[3]])
+  }
+  else {
+    plot.list.pr2 <- c(plot.list.pr2, list(r2way.pr2[[4]]))
+    plot.list2.pr2 <- c(plot.list2.pr2, list(a2way.pr2[[3]]))
+  }
   
   x3 <- bayes.silva.list[[i]]
   x3[bayes.silva.conf < bootvec[i]] <- NA
@@ -178,11 +176,17 @@ for (i in 1:length(bootvec)) {
                                    pltfilez = "none",
                                    tablenames = c("bayes-silva","idtax-silva"), 
                                    ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+  a2way.silva <- compare_assignments_2way(x3, x4,
+                                     pltfilez = "none",
+                                     tablenames = c("bayes-silva","idtax-silva"), 
+                                     ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
   if (i == 1) {
     plot.list.silva <- list(r2way.silva[[4]])
+    plot.list2.silva <- list(a2way.silva[[3]])
   }
   else {
-    plot.list.silva <- c(plot.list.silva, r2way.silva[[4]])
+    plot.list.silva <- c(plot.list.silva, list(r2way.silva[[4]]))
+    plot.list2.silva <- c(plot.list2.silva, list(a2way.silva[[3]]))
   }
 }
 
@@ -193,33 +197,34 @@ for (i in 1:length(bootvec)) {
 
 # pr2 - bayes vs. idtax
 rezcomp.bayes.pr2 <- compare_taxrez(bayes.pr2.list[[1]], bayes.pr2.list[[2]], bayes.pr2.list[[3]], bayes.pr2.list[[4]], bayes.pr2.list[[5]], 
-                          pltfile = "none",
+                          pltfilez = "none",
                           tablenames = bootvec.str,
                           ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
 rezcomp.idtax.pr2 <- compare_taxrez(idtax.pr2.list[[1]], idtax.pr2.list[[2]], idtax.pr2.list[[3]], idtax.pr2.list[[4]], idtax.pr2.list[[5]],
-                                    pltfile = "none",
+                                    pltfilez = "none",
                                     tablenames = bootvec.str,
                                     ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
 # silva - bayes vs. idtax
 rezcomp.bayes.silva <- compare_taxrez(bayes.silva.list[[1]], bayes.silva.list[[2]], bayes.silva.list[[3]], bayes.silva.list[[4]], bayes.silva.list[[5]], 
-                                    pltfile = "none",
+                                    pltfilez = "none",
                                     tablenames = bootvec.str,
                                     ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
 rezcomp.idtax.silva <- compare_taxrez(idtax.silva.list[[1]], idtax.silva.list[[2]], idtax.silva.list[[3]], idtax.silva.list[[4]], idtax.silva.list[[5]],
-                                    pltfile = "none",
+                                    pltfilez = "none",
                                     tablenames = bootvec.str,
                                     ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
 
 # stitch your plots together (with cowplot) and save
 library("cowplot")
-# pr2 comparisons:
+yl <- c(0,1) # y-limits
+# pr2 comparisons by rank:
 legend_b <- get_legend(plot.list.pr2[[1]])
 p.2way.byRank.bootgradient.pr2 <- plot_grid(
-  plot.list.pr2[[1]] + ggtitle(bootvec.str[1]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
-  plot.list.pr2[[2]] + ggtitle(bootvec.str[2]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
-  plot.list.pr2[[3]] + ggtitle(bootvec.str[3]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
-  plot.list.pr2[[4]] + ggtitle(bootvec.str[4]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
-  plot.list.pr2[[5]] + ggtitle(bootvec.str[5]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[1]] + ggtitle(bootvec.str[1]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[2]] + ggtitle(bootvec.str[2]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[3]] + ggtitle(bootvec.str[3]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[4]] + ggtitle(bootvec.str[4]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.pr2[[5]] + ggtitle(bootvec.str[5]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
   legend_b,
   align = 'hv',
   labels = c("A.", "B.", "C.","D.", "E.",""),
@@ -227,16 +232,49 @@ p.2way.byRank.bootgradient.pr2 <- plot_grid(
   hjust=-1,
   nrow=2
 )
+# adding a title:
+title <- ggdraw() + 
+  draw_label("bayes-pr2 vs. idtax-pr2: comparisons by rank",
+    fontface = 'bold', x = 0, hjust = 0) +
+  theme(plot.margin = margin(0, 0, 0, 7))
+p.2way.byRank.bootgradient.pr2 <- plot_grid(
+  title, p.2way.byRank.bootgradient.pr2,
+  ncol = 1,
+  rel_heights = c(0.1, 1))
 ggsave("bayesVidtax_boot_threshold/pr2_2way_byRank_boot40to80.pdf", p.2way.byRank.bootgradient.pr2, width = 15, height = 12, units = "in", device="pdf")
 
-# silva comparisons
+# pr2 comparisons by assignment:
+p.2way.bootgradient.pr2 <- plot_grid(
+  plot.list2.pr2[[1]] + ggtitle(bootvec.str[1]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list2.pr2[[2]] + ggtitle(bootvec.str[2]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list2.pr2[[3]] + ggtitle(bootvec.str[3]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list2.pr2[[4]] + ggtitle(bootvec.str[4]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list2.pr2[[5]] + ggtitle(bootvec.str[5]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D.", "E."),
+  axis = 'l',
+  hjust=-1,
+  nrow=2
+)
+# adding a title:
+title <- ggdraw() + 
+  draw_label("bayes-pr2 vs. idtax-pr2: comparisons by assignment",
+             fontface = 'bold', x = 0, hjust = 0) +
+  theme(plot.margin = margin(0, 0, 0, 7))
+p.2way.bootgradient.pr2 <- plot_grid(
+  title, p.2way.bootgradient.pr2,
+  ncol = 1,
+  rel_heights = c(0.1, 1))
+ggsave("bayesVidtax_boot_threshold/pr2_2way_byAss_boot40to80.pdf", p.2way.bootgradient.pr2, width = 15, height = 12, units = "in", device="pdf")
+
+# silva comparisons by rank:
 legend_b <- get_legend(plot.list.silva[[1]])
 p.2way.byRank.bootgradient.silva <- plot_grid(
-  plot.list.silva[[1]] + ggtitle(bootvec.str[1]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
-  plot.list.silva[[2]] + ggtitle(bootvec.str[2]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
-  plot.list.silva[[3]] + ggtitle(bootvec.str[3]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
-  plot.list.silva[[4]] + ggtitle(bootvec.str[4]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
-  plot.list.silva[[5]] + ggtitle(bootvec.str[5]) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[1]] + ggtitle(bootvec.str[1]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[2]] + ggtitle(bootvec.str[2]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[3]] + ggtitle(bootvec.str[3]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[4]] + ggtitle(bootvec.str[4]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list.silva[[5]] + ggtitle(bootvec.str[5]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
   legend_b,
   align = 'hv',
   labels = c("A.", "B.", "C.","D.", "E.",""),
@@ -244,12 +282,55 @@ p.2way.byRank.bootgradient.silva <- plot_grid(
   hjust=-1,
   nrow=2
 )
+# adding a title:
+title <- ggdraw() + 
+  draw_label("bayes-silva vs. idtax-silva: comparisons by rank",
+             fontface = 'bold', x = 0, hjust = 0) +
+  theme(plot.margin = margin(0, 0, 0, 7))
+p.2way.byRank.bootgradient.silva <- plot_grid(
+  title, p.2way.byRank.bootgradient.silva,
+  ncol = 1,
+  rel_heights = c(0.1, 1))
 ggsave("bayesVidtax_boot_threshold/silva_2way_byRank_boot40to80.pdf", p.2way.byRank.bootgradient.silva, width = 15, height = 12, units = "in", device="pdf")
 
+# silva comparisons by assignment:
+p.2way.bootgradient.silva <- plot_grid(
+  plot.list2.silva[[1]] + ggtitle(bootvec.str[1]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list2.silva[[2]] + ggtitle(bootvec.str[2]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list2.silva[[3]] + ggtitle(bootvec.str[3]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list2.silva[[4]] + ggtitle(bootvec.str[4]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  plot.list2.silva[[5]] + ggtitle(bootvec.str[5]) + coord_cartesian(ylim = yl) + theme(legend.position="none",axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D.", "E."),
+  axis = 'l',
+  hjust=-1,
+  nrow=2
+)
+# adding a title:
+title <- ggdraw() + 
+  draw_label("bayes-silva vs. idtax-silva: comparisons by assignment",
+             fontface = 'bold', x = 0, hjust = 0) +
+  theme(plot.margin = margin(0, 0, 0, 7))
+p.2way.bootgradient.silva <- plot_grid(
+  title, p.2way.bootgradient.silva,
+  ncol = 1,
+  rel_heights = c(0.1, 1))
+ggsave("bayesVidtax_boot_threshold/silva_2way_byAss_boot40to80.pdf", p.2way.bootgradient.silva, width = 15, height = 12, units = "in", device="pdf")
+
 # resolution comparisons
+p.rezcomps <- plot_grid(
+  rezcomp.bayes.pr2[[2]] + ggtitle("bayes-pr2") + coord_cartesian(ylim = yl) + theme(axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  rezcomp.idtax.pr2[[2]] + ggtitle("idtax-pr2") + coord_cartesian(ylim = yl) + theme(axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  rezcomp.bayes.silva[[2]] + ggtitle("bayes-silva") + coord_cartesian(ylim = yl) + theme(axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  rezcomp.idtax.silva[[2]] + ggtitle("idtax-silva") + coord_cartesian(ylim = yl) + theme(axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D."),
+  axis = 'l',
+  hjust=-1,
+  nrow=2
+)
+ggsave("bayesVidtax_boot_threshold/all4_rezcomps_boot40to80.pdf", p.rezcomps, width = 10, height = 8, units = "in", device="pdf")
 
-
-# then write a shell of my trait mapping and analysis functions
 # preliminary pairwise comparisons of tax-tables too...
 
 #### Step 2: Mapping all tax tables to a common taxonomic nomenclature

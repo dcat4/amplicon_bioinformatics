@@ -6,7 +6,7 @@
 
 # function that returns a dataframe with proportion of ASVs of unassigned at each rank in each taxonomy table
 # also makes and saves a grouped bar plot of proportion of ASVs unassigned at each rank in each taxonomy table
-compare_taxrez <- function(..., pltfile = "rezplt.pdf", 
+compare_taxrez <- function(..., pltfilez = "none", 
                            tablenames = c("bayes", "idtax"), 
                            ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species")){
   # package download/loading/updating:
@@ -31,7 +31,7 @@ compare_taxrez <- function(..., pltfile = "rezplt.pdf",
   
   yaboi <- melt(yaboi, id.vars = "rankz")
   p2 <- ggplot(yaboi, aes(fill = variable, x = rankz, y = value)) + 
-    geom_bar(stat="identity", color = "black", position=position_dodge()) + 
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) + 
     labs(x = "Taxonomic Rank", y = "Proportion Unassigned") + 
     scale_x_discrete(limits = ranknamez) + 
     scale_y_discrete(limits = seq(0.1,1.05,0.1), expand = c(0,0)) +
@@ -47,7 +47,7 @@ compare_taxrez <- function(..., pltfile = "rezplt.pdf",
                                       colour = "white"),
       axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) + 
       scale_fill_discrete(name = "Taxonomy")
-  if (length(grep(pltfile, "none")) == 1){
+  if (pltfilez == "none"){
     # don't save anything
   } else {
     ggsave(filename = pltfile, plot = p2, device = "pdf")
