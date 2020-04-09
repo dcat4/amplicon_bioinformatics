@@ -1,8 +1,10 @@
 # UNDER CONSTRUCTION
 
 # up next:
-# 1. pick and apply boot-strap thresholds
-# 2. prelim trait mapping and analysis
+# 1. add pre-processing to rm prok's, small ASVs, metazoans --> this doesn't really work until you decide bootstrap values...
+# 1a. propagate find_asvs_by_name to taxonomy_pipeline
+# 2. pick and apply boot-strap thresholds
+# 3. prelim trait mapping and analysis
 
 # this is a shell script that executes the functions I (+Kevin +Connie) written for my ensemble taxonomy pipeline
 # also using it as an outline to track where I'm at from start to finish..
@@ -38,7 +40,7 @@ idtax.pr2 <- readRDS("initial_tax_tabs/idtax_pr2_0boot_Mar20.rds")
 bayes.silva <- readRDS("initial_tax_tabs/bayes_silva_0boot_Mar20.rds")
 idtax.silva <- readRDS("initial_tax_tabs/idtax_silva_0boot_Mar20.rds")
 lca.pr2 <- readRDS("initial_tax_tabs/LCA_pr2_rawdf_Mar20.rds")
-lca.silva <- readRDS("initial_tax_tabs/LCA_pr2_rawdf_Mar20.rds")
+lca.silva <- readRDS("initial_tax_tabs/LCA_silva_rawdf_Mar20.rds")
 
 # here's the rubric for aligning ASV numbers and sequences across datasets:
 library("DECIPHER")
@@ -109,21 +111,60 @@ head(lca.pr2)
 head(lca.silva)
 # Noice.
 
+#### ADD PREPROCESSING HERE!!!
+# library("stringr")
+# # remove ASVs based on seq length (target = 120-130, trim < 90 & > 180):
+# sl <- str_length(bayes.pr2$ASV)
+# rmme <- which(sl < 90 | sl > 180)
+# rmASV.seqlength <- bayes.pr2$ASV[rmme] # store it to summarize pre-processing later
+# bayes.pr2 <- bayes.pr2[-rmme,]
+# bayes.pr2.conf <- bayes.pr2.conf[-rmme,]
+# bayes.silva <- bayes.silva[-rmme,]
+# bayes.silva.conf <- bayes.silva.conf[-rmme,]
+# idtax.pr2 <- idtax.pr2[-rmme,]
+# idtax.pr2.conf <- idtax.pr2.conf[-rmme,]
+# idtax.silva <- idtax.silva[-rmme,]
+# idtax.silva.conf <- idtax.silva.conf[-rmme,]
+# lca.pr2 <- lca.pr2[-rmme,]
+# lca.silva <- lca.silva[-rmme,]
+# 
+# n2f.prok <- c("Bacteria", "Archaea")
+# i.prok.all <- find_asvs_by_name(bayes.silva, idtax.silva, lca.silva, 
+#                             names2find = n2f.prok, return.byTable = FALSE)
+# rmme <- unlist(i.prok.all, use.names=FALSE)
+# rmme <- rmme[!is.na(rmme)]
+# rnASV.prok <- bayes.pr2$ASV[rmme]
+# bayes.pr2 <- bayes.pr2[-rmme,]
+# bayes.pr2.conf <- bayes.pr2.conf[-rmme,]
+# bayes.silva <- bayes.silva[-rmme,]
+# bayes.silva.conf <- bayes.silva.conf[-rmme,]
+# idtax.pr2 <- idtax.pr2[-rmme,]
+# idtax.pr2.conf <- idtax.pr2.conf[-rmme,]
+# idtax.silva <- idtax.silva[-rmme,]
+# idtax.silva.conf <- idtax.silva.conf[-rmme,]
+# lca.pr2 <- lca.pr2[-rmme,]
+# lca.silva <- lca.silva[-rmme,]
+# 
+# i.prok.lca <- find_asvs_by_name(bayes.silva, names2find = n2f.prok, return.byTable = FALSE)
+# i.prok.bayes <- find_asvs_by_name(bayes.silva, names2find = n2f.prok, return.byTable = FALSE)
+# i.prok.idtax <- find_asvs_by_name(idtax.silva, names2find = n2f.prok, return.byTable = FALSE)
+# 
+# feck
+
 #### Step 1: boot threshold sensitivity analysis and preliminary mapping/comparisons
 
 ### 1a. bootstrap threshold comparison
 ## Here loop thru a gradient of bootstrapping thresholds and compare:
 # resolution of assignments across the data set
 # pairwise comparisons of =thresholds for idtaxa vs. bayes of each ref db
-
-tmp <- bayes.pr2[,c("svN", "ASV")]
 bayes.silva <- bayes.silva[, -which(colnames(bayes.silva) %in% c("svN", "ASV"))]
 bayes.pr2 <- bayes.pr2[, -which(colnames(bayes.pr2) %in% c("svN", "ASV"))]
 idtax.silva <- idtax.silva[, -which(colnames(idtax.silva) %in% c("svN", "ASV"))]
 idtax.pr2 <- idtax.pr2[, -which(colnames(idtax.pr2) %in% c("svN", "ASV"))]
-# little bootstrap threshold optimization:
+# vector of boot thresholds u want to fux wit
 bootvec <- seq(from = 40, to = 80, by = 10)
 bootvec.str <- vector(mode = "character")
+# initialize lists for various boot thresholds applied to the 4 tables...
 bayes.pr2.list <- rep(list(bayes.pr2), length(bootvec))
 idtax.pr2.list <- rep(list(idtax.pr2), length(bootvec))
 bayes.silva.list <- rep(list(bayes.silva), length(bootvec))
@@ -153,7 +194,6 @@ for (i in 1:length(bootvec)) {
                                         pltfilez = "none",
                                         tablenames = c("bayes-pr2", "idtax-pr2"), 
                                         ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-  
   if (i == 1) {
     plot.list.pr2 <- list(r2way.pr2[[4]])
     plot.list2.pr2 <- list(a2way.pr2[[3]])
@@ -331,7 +371,36 @@ p.rezcomps <- plot_grid(
 )
 ggsave("bayesVidtax_boot_threshold/all4_rezcomps_boot40to80.pdf", p.rezcomps, width = 10, height = 8, units = "in", device="pdf")
 
-# preliminary pairwise comparisons of tax-tables too...
+# preliminary pairwise comparisons of lca tax-tables:
+rnam <- as.character(seq(from = 1, to = ncol(lca.pr2)-2, by = 1))
+rnam <- sapply(rnam, FUN = function(x) {paste0("r",x)})
+tblnam <- c("lca-pr2", "lca-silva")
+# lca.comp.rank <- compare_byRank_2way(lca.pr2[,3:ncol(lca.pr2)], lca.silva[,3:ncol(lca.silva)],
+#                                      pltfilez = "none",
+#                                      tablenames = tblnam, 
+#                                      ranknamez = rnam)
+lca.comp.ass <- compare_assignments_2way(lca.pr2[,3:ncol(lca.pr2)], lca.silva[,3:ncol(lca.silva)],
+                                         pltfilez = "none",
+                                         tablenames = tblnam, 
+                                         ranknamez = rnam)
+p.lcacompz <- lca.comp.ass[[3]] + coord_cartesian(ylim = yl) + theme(axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm"))
+# p.lcacompz <- plot_grid(
+#   lca.comp.ass[[3]] + coord_cartesian(ylim = yl) + theme(axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+#   lca.comp.rank[[4]] + coord_cartesian(ylim = yl) + theme(axis.text.x = element_text(angle=45, hjust=1, size=12), plot.margin = unit(c(0.75,0.75,0.75,0.75), "cm")),
+#   align = 'hv',
+#   labels = c("A.", "B.", "C.","D."),
+#   axis = 'l',
+#   hjust=-1,
+#   nrow=1
+# )
+ggsave("bayesVidtax_boot_threshold/lca_unmapped_pr2vsSilva.pdf", p.lcacompz, width = 6, height = 4, units = "in", device="pdf")
+
+# clear out the shit
+rm(list=setdiff(ls(), c("bayes.pr2","bayes.pr2.conf","bayes.silva","bayes.silva.conf",
+                        "idtax.pr2","idtax.pr2.conf","idtax.silva","idtax.silva.conf",
+                        "lca.pr2", "lca.silva", "bootvec", "bootvec.str")))
+# re-source your fcns:
+source("~/Documents/R/amplicon_bioinformatics/package_deal/all_of_it.R")
 
 #### Step 2: Mapping all tax tables to a common taxonomic nomenclature
 # Kevin's stuff goes here
