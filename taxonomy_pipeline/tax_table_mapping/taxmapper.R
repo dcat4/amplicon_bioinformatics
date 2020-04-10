@@ -11,70 +11,64 @@
 # the character vector should include all names within taxin that were unable to be mapped
 # the optional second data frame should have the ASV seqs supplied in taxin with the mapped taxonomic assignments (structure should be identical to taxin except for taxonomic nomenclature)
 
+# helper function takes in given taxonomy and finds a potential matching row from tax2map2
+# returns the matching row from tax2map2 or NA if it can't find any
+
+findMapping <- function(taxonomy, tax2map2) {
+  cols <- rev(names(tax2map2))
+  for (i in 1:length(cols)) {
+    matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
+    if (nrow(matchings) != 0) {
+      matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
+      colnames(matched.row) <- rev(cols)
+      matched.row[1:(length(cols)-i+1)] <- matchings[1, ][1:(length(cols)-i+1)]
+      return (matched.row)
+    }
+  }
+  return (NA)
+}
+
 taxmapper <- function(taxin, tax2map2, 
                       synonym.file = "tax_synonyms_FINAL.csv", 
                       outfilez = "none") {
-  ref_cols <- rev(colnames(taxin))
-  map_cols <- rev(colnames(tax2map2))
   
-  ref_mapped <- NA
-  mapped <- FALSE
-  ref_not_mapped <- vector()
+  # remove duplicates and remove sVN and ASV columns
+  taxin.u <- unique(taxin[,-c(1,2)])
+  tax2map2.u <- unique(tax2map2[,-c(1,2)])
   
-  for (row in 1:nrow(taxin)) {
-    for (col in 1:ncol(taxin)) {
-      if (!is.null(taxin[row, col])) {
-        result <- findRow(row[, ref_cols[col]], tax2map2, map_cols)
-        if (!is.empty(result) & length(result) == 1) {
-          ref_mapped[row] <- result
-          mapped <- TRUE
+  taxin.cols <- rev(names(taxin.u))
+  
+  # non eukaryotes
+  nonexist <- c('Bacteria', 'Archaea')
+  
+  # not mapped
+  not.mapped <- vector()
+  
+  mapped <- data.frame(matrix(ncol=(ncol(taxin.u) + ncol(tax2map2.u)),nrow=0, dimnames=list(NULL, c(names(taxin.u), names(tax2map2.u)))))
+  
+  for (row in 1:nrow(taxin.u)) {
+    for (col in 1:ncol(taxin.u)) {
+      taxonomy <- taxin.u[row, taxin.cols[col]]
+      if (!is.na(taxonomy)) {
+        match <- findMapping(taxonomy, tax2map2.u)
+        if (is.data.frame(match)) {
+          combined <- cbind(taxin.u[row, ], match)
+          mapped <- rbind(mapped, combined)
           break
         }
         else {
-          if (row[colNames(taxin)[1]] != 'Bacteria' & row[colNames(taxin)[1]] != 'Archaea' & !mapped) {
-            ref_not_mapped <- c(ref_not_mapped, taxin[row, ref_cols[col]])
+          if (is.element(taxonomy, nonexist)) {
+            null.row <- data.frame(matrix(rep(NA, ncol(tax2map2)), ncol = ncol(tax2map2), nrow = 1, dimnames=list(NULL, names(tax2map2.u))))
+            null.row[1] <- 'Bacteria'
+            combined <- cbind(taxin.u[row, ], null.row)
+            mapped <- rbind(mapped, combined)
+          }
+          else {
+            not.mapped <- c(not.mapped, taxonomy)
           }
         }
       }
-      if (row[colNames(taxin)[1]] != 'Bacteria' & row[colNames(taxin)[1]] != 'Archaea' & !mapped) {
-        ref_mapped[row] <- data.frame(c('Bacteria', rep(NA, times = length(tax2map2))), colNames = colNames(tax2map2))
-        mapped <- TRUE
-      }
-      if (!mapped) {
-        ref_not_mapped <- c(ref_not_mapped, row)
-      }
-      else {
-        mapped <- FALSE
-      }
     }
   }
-  
-  ref_mapped_index <- vector(ref_mapped.keys)
-  
-  ref_mapped_df <- data.frame(colnames = colNames(taxin))
-  map_mapped_df <- data.frame(colnames = colNames(tax2map2))
-  
-  for (index in ref_mapped_index) {
-    ref_mapped_df <- rbind(ref_mapped_df, ref_df[index,])
-    map_mapped_df <- rbind(map_mapped_df, ref_mapped[index])
-  }
-  
-  combined <- rbind(ref_mapped_df, map_mapped_df)
-  
-  return (combined)
 }
 
-
-
-
-findRow <- function(colName, dataFrame, listOfCols) {
-  for (col in 1:length(listOfCols)) {
-    result <- dataFrame[, dataFrame$listOfCols[col] == colName]
-    if (length(result) > 0) {
-      mapped_row <- rep(NA, times = length(listOfCols))
-      mapped_row[1:length(listOfCols)-col] = result[0,1:length(listOfCols)-col]
-      return (data.frame(mapped_row, colName = rev(listOfCols)))
-    }
-    return (data.frame())
-  }
-}
