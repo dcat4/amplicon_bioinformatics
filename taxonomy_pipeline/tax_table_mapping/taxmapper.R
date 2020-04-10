@@ -32,18 +32,12 @@ taxmapper <- function(taxin, tax2map2,
                       synonym.file = "tax_synonyms_FINAL.csv", 
                       outfilez = "none") {
   
-  # remove duplicates and remove sVN and ASV columns
   taxin.u <- unique(taxin[,-c(1,2)])
   tax2map2.u <- unique(tax2map2[,-c(1,2)])
   
   taxin.cols <- rev(names(taxin.u))
-  
-  # non eukaryotes
   nonexist <- c('Bacteria', 'Archaea')
-  
-  # not mapped
   not.mapped <- vector()
-  
   mapped <- data.frame(matrix(ncol=(ncol(taxin.u) + ncol(tax2map2.u)),nrow=0, dimnames=list(NULL, c(names(taxin.u), names(tax2map2.u)))))
   
   for (row in 1:nrow(taxin.u)) {
@@ -58,7 +52,7 @@ taxmapper <- function(taxin, tax2map2,
         }
         else {
           if (is.element(taxonomy, nonexist)) {
-            null.row <- data.frame(matrix(rep(NA, ncol(tax2map2)), ncol = ncol(tax2map2), nrow = 1, dimnames=list(NULL, names(tax2map2.u))))
+            null.row <- data.frame(matrix(rep(NA, ncol(tax2map2.u)), ncol = ncol(tax2map2.u), nrow = 1, dimnames=list(NULL, names(tax2map2.u))))
             null.row[1] <- 'Bacteria'
             combined <- cbind(taxin.u[row, ], null.row)
             mapped <- rbind(mapped, combined)
@@ -70,5 +64,11 @@ taxmapper <- function(taxin, tax2map2,
       }
     }
   }
+  
+  ASV <- taxin[as.integer(rownames(mapped)), 2]
+  asv.mapped <- cbind(ASV, mapped[-(1:ncol(taxin.u))])
+  asv.mapped$ASV <- as.character(asv.mapped$ASV)
+  
+  return (list(mapped, not.mapped, asv.mapped))
 }
 
