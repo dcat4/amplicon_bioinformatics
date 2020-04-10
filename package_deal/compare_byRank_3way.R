@@ -114,7 +114,7 @@ compare_byRank_3way <- function(table1, table2, table3,
   # comparison on the x, rank on  the legend
   plotDF$rank <- factor(plotDF$rank, levels = ranknamez) # this makes the order of grouped bars follow that of ranknamez
   p2 <- ggplot(plotDF, aes(x = comp, y = count, fill = rank)) + 
-    geom_bar(stat="identity", color = "black", position=position_dodge()) + 
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) + 
     labs(x = "", y = "Proportion of ASVs") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -175,7 +175,7 @@ compare_byRank_3way <- function(table1, table2, table3,
   # more broad comparison groupings:
   plotDF2$rank <- factor(plotDF2$rank, levels = ranknamez) # this makes the order of grouped bars follow that of ranknamez
   p1 <- ggplot(plotDF2, aes(x = comp, y = count, fill = rank)) + 
-    geom_bar(stat="identity", color = "black", position=position_dodge()) + 
+    geom_bar(stat="identity", color = "black", position=position_dodge(width=0.8)) + 
     labs(x = "", y = "Proportion of ASVs") + 
     theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -197,7 +197,7 @@ compare_byRank_3way <- function(table1, table2, table3,
                                 n3.alldiff = "all 3 named & disagree")) +
   ggtitle(paste0(tablenames[1], ", ",  tablenames[2], ", ",  tablenames[3]))
   
-  if (length(grep(pltfilez, "none")) == 1){
+  if (pltfilez == "none"){
     # don't save anything
   } else {
     ggsave(filename = pltfilez[1], plot = p1, device = "pdf")
