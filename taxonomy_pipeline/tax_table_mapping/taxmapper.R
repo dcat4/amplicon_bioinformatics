@@ -35,6 +35,12 @@ taxmapper <- function(taxin, tax2map2,
   taxin.u <- unique(taxin[,-c(1,2)])
   tax2map2.u <- unique(tax2map2[,-c(1,2)])
   
+  synonyms <- read.csv(synonym.file)
+  syn <- synonyms[, 2:7]
+  rownames(syn) <- synonyms[,1]
+  synonyms <- t(syn)
+  rownames(synonyms) <- c()
+  
   taxin.cols <- rev(names(taxin.u))
   nonexist <- c('Bacteria', 'Archaea')
   not.mapped <- vector()
@@ -42,23 +48,32 @@ taxmapper <- function(taxin, tax2map2,
   
   for (row in 1:nrow(taxin.u)) {
     for (col in 1:ncol(taxin.u)) {
-      taxonomy <- taxin.u[row, taxin.cols[col]]
-      if (!is.na(taxonomy)) {
-        match <- findMapping(taxonomy, tax2map2.u)
-        if (is.data.frame(match)) {
-          combined <- cbind(taxin.u[row, ], match)
-          mapped <- rbind(mapped, combined)
-          break
+      tax <- taxin.u[row, taxin.cols[col]]
+      pos.taxs <- getSynonyms(tax, synonyms)
+      for (taxonomy in pos.taxs) {
+        last <- FALSE
+        if (match(taxonomy, pos.taxs) == length(pos.taxs)) {
+          last <- TRUE
         }
-        else {
-          if (is.element(taxonomy, nonexist)) {
-            null.row <- data.frame(matrix(rep(NA, ncol(tax2map2.u)), ncol = ncol(tax2map2.u), nrow = 1, dimnames=list(NULL, names(tax2map2.u))))
-            null.row[1] <- 'Bacteria'
-            combined <- cbind(taxin.u[row, ], null.row)
+        if (!is.na(taxonomy)) {
+          match <- findMapping(taxonomy, tax2map2.u)
+          if (is.data.frame(match)) {
+            combined <- cbind(taxin.u[row, ], match)
             mapped <- rbind(mapped, combined)
+            break
           }
           else {
-            not.mapped <- c(not.mapped, taxonomy)
+            if (is.element(taxonomy, nonexist)) {
+              null.row <- data.frame(matrix(rep(NA, ncol(tax2map2.u)), ncol = ncol(tax2map2.u), nrow = 1, dimnames=list(NULL, names(tax2map2.u))))
+              null.row[1] <- 'Bacteria'
+              combined <- cbind(taxin.u[row, ], null.row)
+              mapped <- rbind(mapped, combined)
+            }
+            else {
+              if (last) {
+                not.mapped <- c(not.mapped, tax)
+              }
+            }
           }
         }
       }
@@ -69,6 +84,6 @@ taxmapper <- function(taxin, tax2map2,
   asv.mapped <- cbind(ASV, mapped[-(1:ncol(taxin.u))])
   asv.mapped$ASV <- as.character(asv.mapped$ASV)
   
-  return (list(mapped, not.mapped, asv.mapped))
+  return (list(mapped, unique(not.mapped), asv.mapped))
 }
 
