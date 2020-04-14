@@ -20,12 +20,6 @@ find_asvs_by_name <- function(..., names2find, return.byTable = FALSE) {
   
   xx <- list(...)
   
-  for (i in 1:length(names2find)) {
-    nn <- names2find[i]
-    eh <- lapply(xx, FUN = function(x) apply(x, MARGIN = c(1,2), function(y) nn == y))
-    matchr.list <- lapply(eh, FUN = function(x) which(rowSums(x, na.rm = TRUE) > 0))
-  }
-  
   # initialize list for storing index vectors by name for each tax table input:
   allout.list <- rep(list(base::as.data.frame(matrix(NA, nrow = nrow(xx[[1]]), ncol = length(names2find), dimnames = list(NULL,names2find)), stringsAsFactors = FALSE)), times = length(xx))
   # initialize dataframe for overlapping indices of each name across the input tax tables

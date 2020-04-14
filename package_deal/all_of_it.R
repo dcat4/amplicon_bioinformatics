@@ -26,6 +26,8 @@ source(paste0(dd,"compare_byRank_2way.R"))
 source(paste0(dd,"compare_byRank_3way.R"))
 source(paste0(dd,"compare_assignments_2way.R"))
 source(paste0(dd,"compare_assignments_3way.R"))
+source(paste0(dd,"compare_by_tax_name.R"))
+
 
 
 
