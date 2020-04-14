@@ -28,7 +28,18 @@ findMapping <- function(taxonomy, tax2map2) {
   return (NA)
 }
 
-taxmapper <- function(taxin, tax2map2, 
+getSynonyms <- function(taxonomy, syn.df) {
+  pos.tax <- names(syn.df)
+  if (is.element(taxonomy, pos.tax)) {
+    v <- syn.df[,taxonomy]
+    return (c(taxonomy, v[!is.na(v)]))
+  }
+  else {
+    return (c(taxonomy))
+  }
+}
+
+taxmapper <- function(taxin, tax2map2, exceptions,
                       synonym.file = "tax_synonyms_FINAL.csv", 
                       outfilez = "none") {
   
@@ -42,7 +53,6 @@ taxmapper <- function(taxin, tax2map2,
   rownames(synonyms) <- c()
   
   taxin.cols <- rev(names(taxin.u))
-  nonexist <- c('Bacteria', 'Archaea')
   not.mapped <- vector()
   mapped <- data.frame(matrix(ncol=(ncol(taxin.u) + ncol(tax2map2.u)),nrow=0, dimnames=list(NULL, c(names(taxin.u), names(tax2map2.u)))))
   
@@ -63,7 +73,7 @@ taxmapper <- function(taxin, tax2map2,
             break
           }
           else {
-            if (is.element(taxonomy, nonexist)) {
+            if (is.element(taxonomy, exceptions)) {
               null.row <- data.frame(matrix(rep(NA, ncol(tax2map2.u)), ncol = ncol(tax2map2.u), nrow = 1, dimnames=list(NULL, names(tax2map2.u))))
               null.row[1] <- 'Bacteria'
               combined <- cbind(taxin.u[row, ], null.row)
@@ -84,6 +94,14 @@ taxmapper <- function(taxin, tax2map2,
   asv.mapped <- cbind(ASV, mapped[-(1:ncol(taxin.u))])
   asv.mapped$ASV <- as.character(asv.mapped$ASV)
   
-  return (list(mapped, unique(not.mapped), asv.mapped))
+  not.mapped <- unique(not.mapped)
+  
+  if (outfilez != "none") {
+    write.csv(mapped, outfilez[1])
+    write.csv(as.data.frame(not.mapped))
+    write.csv(asv.mapped, outfilez[3])
+  }
+  
+  return (list(mapped, not.mapped, asv.mapped))
 }
 
