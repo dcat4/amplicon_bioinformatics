@@ -1,4 +1,4 @@
-analyze_traitmap_byTrait <- function(map.result, trait.name, otu.table = "none", plotfilez = "none") {
+analyze_traitmap_byTrait <- function(map.result, trait.name, otu.table = "none", pltfilez = "none") {
   library("stringr")
   library("ggplot2")
   library("reshape2")
@@ -100,7 +100,6 @@ analyze_traitmap_byTrait <- function(map.result, trait.name, otu.table = "none",
           panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
                                           colour = "white"),
           axis.line = element_line(size = 0.5, linetype = "solid", colour = "black"))
-    
   } else {
     # all variables returned when otu.table is provided are returned as NULL
     raDF <- NULL
@@ -108,6 +107,16 @@ analyze_traitmap_byTrait <- function(map.result, trait.name, otu.table = "none",
     p2 <- NULL
     p3 <- NULL
   }
-  return(list(p1, p2, p3, indexDF, plotDF.asv, raDF))
+  if (pltfilez == "none"){
+    # don't save anything
+    return(list(p1, p2, p3, indexDF, plotDF.asv, raDF))
+  } else {
+    ggsave(filename = pltfilez[1], plot = p1, device = "pdf")
+    if (otu.table != "none") {
+      ggsave(filename = pltfilez[2], plot = p2, device = "pdf")
+      ggsave(filename = pltfilez[3], plot = p3, device = "pdf")
+    }
+    return(list(p1, p2, p3, indexDF, plotDF.asv, raDF))
+  }
 }
 
