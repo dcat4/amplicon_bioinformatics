@@ -296,13 +296,6 @@ idtax.silva.list <- rep(list(idtax.silva), length(bootvec))
 # ggsave("bayesVidtax_boot_threshold/bothdb_default-10or20_boots.pdf", p.2way.default.bothdb2, width = 13, height = 12, units = "in", device="pdf")
 # 
 
-# clear out the shit
-rm(list=setdiff(ls(), c("bayes.pr2","bayes.pr2.conf","bayes.silva","bayes.silva.conf",
-                        "idtax.pr2","idtax.pr2.conf","idtax.silva","idtax.silva.conf",
-                        "lca.pr2", "lca.silva", "bootvec", "bootvec.str")))
-# re-source your fcns:
-source("~/Documents/R/amplicon_bioinformatics/package_deal/all_of_it.R")
-
 # boot threshold implementation
 bboot <- 60
 iboot <- 50
@@ -311,15 +304,38 @@ bayes.silva[bayes.silva.conf < bboot] <- NA
 idtax.pr2[idtax.pr2.conf < iboot] <- NA
 idtax.silva[idtax.silva.conf < iboot] <- NA
 
-## trying to write a new function to "compare_by_tax_name"
-dummy <- compare_by_tax_name(bayes.silva, idtax.silva, lca.silva,
-                             taxnames = c("Bacteria","Archaea"),
-                             tablenames = c("bayes-silva","idtax-silva","lca-silva"),
-                             return.conflix = FALSE)
-dummy2 <- compare_by_tax_name(bayes.silva, idtax.silva, lca.silva,
-                              taxnames = c("Bacteria","Archaea"),
-                              tablenames = c("bayes-silva","idtax-silva","lca-silva"),
-                              return.conflix = TRUE)
+# clear out the shit
+rm(list=setdiff(ls(), c("bayes.pr2","bayes.silva","idtax.pr2","idtax.silva","lca.pr2", "lca.silva")))
+# re-source your fcns:
+source("~/Documents/R/amplicon_bioinformatics/package_deal/all_of_it.R")
+
+## not actually removing non-protists, but not really worth doing given disagreements in euks ----
+# get prok rows
+# dummy2 <- compare_by_tax_name(bayes.silva, idtax.silva, lca.silva,
+#                               taxnames = c("Bacteria","Archaea"),
+#                               tablenames = c("bayes-silva","idtax-silva","lca-silva"),
+#                               return.conflix = TRUE)
+# rm.proks <- c(dummy2$Bacteria[[2]][,"i.no.conflict"], dummy2$Archaea[[2]][,"i.no.conflict"])
+# # get macroeuk rows:
+# dummy2 <- compare_by_tax_name(bayes.silva, idtax.silva, lca.silva, bayes.pr2, idtax.pr2, lca.pr2,
+#                               taxnames = c("Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae"),
+#                               tablenames = c("bayes-silva","idtax-silva","lca-silva", "bayes-pr2","idtax-pr2","lca-pr2"),
+#                               return.conflix = FALSE)
+# 
+# dummy <- compare_by_tax_name(bayes.silva, idtax.silva, lca.silva,
+#                               taxnames = c("Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae"),
+#                               tablenames = c("bayes-silva","idtax-silva","lca-silva"),
+#                               return.conflix = TRUE)
+# rm.macroeuks <- c(dummy$Metazoa[[2]][,"i.no.conflict"], dummy$Fungi[[2]][,"i.no.conflict"], dummy$Streptophyta[[2]][,"i.no.conflict"],
+#                   dummy$Rhodophyta[[2]][,"i.no.conflict"], dummy$Ulvophyceae[[2]][,"i.no.conflict"], dummy$Phaeophyceae[[2]][,"i.no.conflict"])
+
+
+
+### ---- this stuff was checking that the function behaved appropriately ----
+# dummy <- compare_by_tax_name(bayes.silva, idtax.silva, lca.silva,
+#                              taxnames = c("Bacteria","Archaea"),
+#                              tablenames = c("bayes-silva","idtax-silva","lca-silva"),
+#                              return.conflix = FALSE)
 ## this Bacteria thang all checks out...can just use dummy2 [maybe do one more check for metazoans]
 # bac <- dummy$Bacteria
 # bac.summ <- bac[[1]]; bac.i <- bac[[2]]
@@ -338,16 +354,46 @@ dummy2 <- compare_by_tax_name(bayes.silva, idtax.silva, lca.silva,
 # rm.arc <- unlist(arc.i[,-conflix.i]); rm.arc <- rm.arc[!is.na(rm.arc)] # indices to remove as bacteria...
 # checkme <- unlist(arc.i[,conflix.i]); checkme <- checkme[!is.na(checkme)]
 # length(checkme) == sum(arc.summ$Freq[conflix.i])
+# n <- "Archaea"
+# bloop <- unique(c(which(bayes.silva[,1] == n), which(idtax.silva[,1] == n), which(lca.silva[,3] == n)))
+# ----
 
-# attempting to remove proks:
+# loop to map the OG tax tables onto the trait database
+xx <- list(bayes.pr2, bayes.silva, idtax.pr2, idtax.silva, lca.pr2, lca.silva)
+nn <- c("bayes-pr2", "bayes-silva", "idtax-pr2", "idtax-silva", "lca-pr2", "lca-silva")
+
+# mm <- readRDS(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/Ramond_traitdb_clean.RDS")
+# dm <- c("Eukaryota", "Archaea", "Bacteria", "Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae",
+#                    "Alveolata","Opisthokonta","Archaeplastida","Excavata","Rhizaria","Stramenopiles",
+#                    "Hacrobia","Amoebozoa","Apusozoa","Eukaryota_X","Protalveolata","Terrabacteria")
+# for (i in 1:length(xx)) {
+#   tt <- xx[[i]]
+#   fout <- c(paste0("unmappedtax_traitmap_results/",nn[i],"_mapout.csv"), paste0("unmappedtax_traitmap_results/",nn[i],"_namesNotMapped.csv"))
+#   traitmapper_Ramond(tt, mm, dont.map = dm, filezout = fout)
+# }
+# write.csv(mm, file = "Ramond_db_clean.csv") # saving to check manually that it worked alright.
+
+# note that it doesn't really make sense to do this until after removing non-protists...
+# analyze the trait mapping results:
+trts <- c("Chloroplast", "Plast_Origin", "Ingestion", "Cover", "Shape")
+seqtab <- readRDS("seqtab_nochime_Mar20.rds")
+for (i in 1:length(xx)){
+  tt <- xx[[i]]
+  mr <- read.csv(paste0("unmappedtax_traitmap_results/",nn[i],"_mapout.csv"), stringsAsFactors = FALSE)
+  for (j in 1:length(trts)){
+    fout <- c(paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_ASV_plot.pdf"), 
+            paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_abundance_plot1.pdf"),
+            paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_abundance_plot2.pdf"))
+    analyze_traitmap_byTrait(map.result = mr, trait.name = trts[j], otu.table = seqtab, pltfilez = fout)
+  }
+}
+
+
 
 #### Step 2: Mapping all tax tables to a common taxonomic nomenclature
 # Kevin's stuff goes here
 
 #### Step 3: Re-mapping individual tax-mapped tax tables onto trait database
-# make sure boot-strapping thresholds are honored here...
-# re-format as dataframes...
-# remove non-protists...
 # then write a shell of my trait mapping and analysis functions
 
 #### Step 4: Comparisons of mapped taxonomy tables

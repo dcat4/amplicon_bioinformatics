@@ -179,234 +179,23 @@ You can run this for a sanity check:
 ``` r
 # check that they're all in the same order
 identical(bayes.pr2$ASV, bayes.silva$ASV)
-```
-
-    ## [1] TRUE
-
-``` r
 identical(bayes.pr2$ASV, idtax.pr2$ASV)
-```
-
-    ## [1] TRUE
-
-``` r
 identical(idtax.pr2$ASV, idtax.silva$ASV)  
-```
-
-    ## [1] TRUE
-
-``` r
 identical(idtax.silva$ASV, lca.pr2$ASV)
-```
-
-    ## [1] TRUE
-
-``` r
 identical(lca.pr2$ASV, lca.silva$ASV)
 ```
-
-    ## [1] TRUE
 
 …and this to see what the data sets look like. These data sets are
 available in the test-data directory.
 
 ``` r
 head(bayes.pr2)
-```
-
-    ##       svN
-    ## 1 sv22105
-    ## 2 sv23520
-    ## 3 sv22004
-    ## 4 sv15978
-    ## 5 sv20125
-    ## 6 sv24136
-    ##                                                                                             ASV
-    ## 1 AAACCAACCAAGTAAGATCTAGAAAAGGCATTATTTTTTTGGTAATGTCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 2 AAACCAACCAAGTAAGATCTAGAAAAGGTATTATTCTTTTGGTAATATCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 3 AAACCAACCAAGTAGGGTTGAGGCGAGGCCTTTTTCTTTTGGAAAGGTCAAGCCTGAGCTCTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 4   AAACCAACCGAGCAGGCTTTAGATGAGCTTCATTGAGTAAATGGATCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 5   AAACCAACCGAGCAGGCTTTAGATGAGTTTTATTGAGTAAATAAGTCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 6  AAACCAACCGAGCAGGGTCCGGGTAAACCACGCTTTCTTGAGCATGGTGAATCTAGTCTCAGTGAGGTGGGTTAAGTCGTCACAAGGTAACC
-    ##     Kingdom   Supergroup     Division                 Class
-    ## 1 Eukaryota    Amoebozoa       Conosa Mycetozoa-Myxogastrea
-    ## 2 Eukaryota     Rhizaria Foraminifera         Monothalamids
-    ## 3 Eukaryota    Amoebozoa       Conosa Mycetozoa-Myxogastrea
-    ## 4 Eukaryota Opisthokonta      Metazoa              Mollusca
-    ## 5 Eukaryota Opisthokonta      Metazoa       Platyhelminthes
-    ## 6 Eukaryota Opisthokonta        Fungi       Kickxellomycota
-    ##                   Order                  Family      Genus
-    ## 1          Pelobiontida             Pelomyxidae   Pelomyxa
-    ## 2 Monothalamids_Clade-C Monothalamids_Clade-C_X  Shinkaiya
-    ## 3          Pelobiontida             Pelomyxidae   Pelomyxa
-    ## 4            Gastropoda          Heterobranchia    Aplysia
-    ## 5           Turbellaria         Prolecithophora Vorticeros
-    ## 6     Kickxellomycotina            Kickxellales  Coemansia
-    ##                  Species
-    ## 1     Pelomyxa_stagnalis
-    ## 2     Shinkaiya_lindsayi
-    ## 3     Pelomyxa_stagnalis
-    ## 4 Aplysia_extraordinaria
-    ## 5      Vorticeros_ijimai
-    ## 6     Coemansia_asiatica
-
-``` r
 head(bayes.silva)
-```
-
-    ##       svN
-    ## 1 sv22105
-    ## 2 sv23520
-    ## 3 sv22004
-    ## 4 sv15978
-    ## 5 sv20125
-    ## 6 sv24136
-    ##                                                                                             ASV
-    ## 1 AAACCAACCAAGTAAGATCTAGAAAAGGCATTATTTTTTTGGTAATGTCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 2 AAACCAACCAAGTAAGATCTAGAAAAGGTATTATTCTTTTGGTAATATCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 3 AAACCAACCAAGTAGGGTTGAGGCGAGGCCTTTTTCTTTTGGAAAGGTCAAGCCTGAGCTCTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 4   AAACCAACCGAGCAGGCTTTAGATGAGCTTCATTGAGTAAATGGATCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 5   AAACCAACCGAGCAGGCTTTAGATGAGTTTTATTGAGTAAATAAGTCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 6  AAACCAACCGAGCAGGGTCCGGGTAAACCACGCTTTCTTGAGCATGGTGAATCTAGTCTCAGTGAGGTGGGTTAAGTCGTCACAAGGTAACC
-    ##   Kingdom        Phylum        Class           Order          Family Genus
-    ## 1 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales SCGC_AAA286-E23  <NA>
-    ## 2 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales SCGC_AAA286-E23  <NA>
-    ## 3 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales SCGC_AAA286-E23  <NA>
-    ## 4 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales          GW2011  AR20
-    ## 5 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales            <NA>  <NA>
-    ## 6 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales          GW2011  AR15
-
-``` r
 head(idtax.pr2)
-```
-
-    ##           svN
-    ## 22105 sv22105
-    ## 23520 sv23520
-    ## 22004 sv22004
-    ## 15978 sv15978
-    ## 20125 sv20125
-    ## 24136 sv24136
-    ##                                                                                                 ASV
-    ## 22105 AAACCAACCAAGTAAGATCTAGAAAAGGCATTATTTTTTTGGTAATGTCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 23520 AAACCAACCAAGTAAGATCTAGAAAAGGTATTATTCTTTTGGTAATATCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 22004 AAACCAACCAAGTAGGGTTGAGGCGAGGCCTTTTTCTTTTGGAAAGGTCAAGCCTGAGCTCTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 15978   AAACCAACCGAGCAGGCTTTAGATGAGCTTCATTGAGTAAATGGATCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 20125   AAACCAACCGAGCAGGCTTTAGATGAGTTTTATTGAGTAAATAAGTCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 24136  AAACCAACCGAGCAGGGTCCGGGTAAACCACGCTTTCTTGAGCATGGTGAATCTAGTCTCAGTGAGGTGGGTTAAGTCGTCACAAGGTAACC
-    ##              X2           X3           X4                    X5
-    ## 22105 Eukaryota     Rhizaria Foraminifera         Globothalamea
-    ## 23520 Eukaryota     Excavata   Metamonada           Preaxostyla
-    ## 22004 Eukaryota    Amoebozoa       Conosa Mycetozoa-Myxogastrea
-    ## 15978 Eukaryota Opisthokonta      Metazoa               Myxozoa
-    ## 20125 Eukaryota    Amoebozoa       Conosa Mycetozoa-Myxogastrea
-    ## 24136 Eukaryota    Amoebozoa       Conosa Mycetozoa-Myxogastrea
-    ##                            X6                        X7           X8
-    ## 22105            Textulariida            Trochamminidae  Trochammina
-    ## 23520             Oxymonadida          Saccinobaculidae Opisthomitus
-    ## 22004 Stemonitales-Physarales Stemonitales-Physarales_X  Lamproderma
-    ## 15978               Myxozoa_X                Myxosporea    Myxobolus
-    ## 20125                Liceales              Tubiferaceae     Tubifera
-    ## 24136 Stemonitales-Physarales               Didymiaceae  Lepidoderma
-    ##                                  X9
-    ## 22105               Trochammina_sp.
-    ## 23520 Opisthomitus_longiflagellatus
-    ## 22004               Lamproderma_sp.
-    ## 15978           Myxobolus_squamalis
-    ## 20125          Tubifera_ferruginosa
-    ## 24136          Lepidoderma_tigrinum
-
-``` r
 head(idtax.silva)
-```
-
-    ##           svN
-    ## 22105 sv22105
-    ## 23520 sv23520
-    ## 22004 sv22004
-    ## 15978 sv15978
-    ## 20125 sv20125
-    ## 24136 sv24136
-    ##                                                                                                 ASV
-    ## 22105 AAACCAACCAAGTAAGATCTAGAAAAGGCATTATTTTTTTGGTAATGTCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 23520 AAACCAACCAAGTAAGATCTAGAAAAGGTATTATTCTTTTGGTAATATCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 22004 AAACCAACCAAGTAGGGTTGAGGCGAGGCCTTTTTCTTTTGGAAAGGTCAAGCCTGAGCTCTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 15978   AAACCAACCGAGCAGGCTTTAGATGAGCTTCATTGAGTAAATGGATCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 20125   AAACCAACCGAGCAGGCTTTAGATGAGTTTTATTGAGTAAATAAGTCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 24136  AAACCAACCGAGCAGGGTCCGGGTAAACCACGCTTTCTTGAGCATGGTGAATCTAGTCTCAGTGAGGTGGGTTAAGTCGTCACAAGGTAACC
-    ##        domain        phylum        class           order          family genus
-    ## 22105 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales SCGC AAA286-E23  <NA>
-    ## 23520 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales SCGC AAA286-E23  <NA>
-    ## 22004 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales SCGC AAA286-E23  <NA>
-    ## 15978 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales          GW2011  AR15
-    ## 20125 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales          GW2011  AR20
-    ## 24136 Archaea Nanoarchaeota Nanoarchaeia Woesearchaeales          GW2011  AR15
-
-``` r
 head(lca.pr2)
-```
-
-    ##           svN
-    ## 13454 sv22105
-    ## 15026 sv23520
-    ## 13342 sv22004
-    ## 6644  sv15978
-    ## 11254 sv20125
-    ## 15710 sv24136
-    ##                                                                                                 ASV
-    ## 13454 AAACCAACCAAGTAAGATCTAGAAAAGGCATTATTTTTTTGGTAATGTCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 15026 AAACCAACCAAGTAAGATCTAGAAAAGGTATTATTCTTTTGGTAATATCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 13342 AAACCAACCAAGTAGGGTTGAGGCGAGGCCTTTTTCTTTTGGAAAGGTCAAGCCTGAGCTCTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 6644    AAACCAACCGAGCAGGCTTTAGATGAGCTTCATTGAGTAAATGGATCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 11254   AAACCAACCGAGCAGGCTTTAGATGAGTTTTATTGAGTAAATAAGTCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 15710  AAACCAACCGAGCAGGGTCCGGGTAAACCACGCTTTCTTGAGCATGGTGAATCTAGTCTCAGTGAGGTGGGTTAAGTCGTCACAAGGTAACC
-    ##         X1   X2   X3   X4   X5   X6   X7   X8   X9  X10  X11  X12  X13  X14
-    ## 13454 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 15026 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 13342 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 6644  <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 11254 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 15710 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ##        X15  X16  X17  X18  X19  X20  X21  X22  X23  X24  X25  X26  X27  X28
-    ## 13454 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 15026 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 13342 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 6644  <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 11254 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 15710 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-
-``` r
 head(lca.silva)
 ```
-
-    ##           svN
-    ## 13454 sv22105
-    ## 15026 sv23520
-    ## 13342 sv22004
-    ## 6644  sv15978
-    ## 11254 sv20125
-    ## 15710 sv24136
-    ##                                                                                                 ASV
-    ## 13454 AAACCAACCAAGTAAGATCTAGAAAAGGCATTATTTTTTTGGTAATGTCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 15026 AAACCAACCAAGTAAGATCTAGAAAAGGTATTATTCTTTTGGTAATATCAATTCTTAATTTTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 13342 AAACCAACCAAGTAGGGTTGAGGCGAGGCCTTTTTCTTTTGGAAAGGTCAAGCCTGAGCTCTGTGAGGGGGGTTAAGTCGTCACAAGGTATCC
-    ## 6644    AAACCAACCGAGCAGGCTTTAGATGAGCTTCATTGAGTAAATGGATCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 11254   AAACCAACCGAGCAGGCTTTAGATGAGTTTTATTGAGTAAATAAGTCGAATCTAAGGTCAGTGAGGTGGGTTAAGTCGTCACAAGGTATCC
-    ## 15710  AAACCAACCGAGCAGGGTCCGGGTAAACCACGCTTTCTTGAGCATGGTGAATCTAGTCTCAGTGAGGTGGGTTAAGTCGTCACAAGGTAACC
-    ##         X1   X2   X3   X4   X5   X6   X7   X8   X9  X10  X11  X12  X13  X14
-    ## 13454 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 15026 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 13342 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 6644  <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 11254 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ## 15710 <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA> <NA>
-    ##        X15  X16  X17  X18
-    ## 13454 <NA> <NA> <NA> <NA>
-    ## 15026 <NA> <NA> <NA> <NA>
-    ## 13342 <NA> <NA> <NA> <NA>
-    ## 6644  <NA> <NA> <NA> <NA>
-    ## 11254 <NA> <NA> <NA> <NA>
-    ## 15710 <NA> <NA> <NA> <NA>
 
 ## Run taxmapper
 
@@ -431,7 +220,9 @@ synonym.filepath <- "~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxo
 # Bacteria and Archaea doesn't exist in pr2
 nonexistent <- c('Bacteria', 'Archaea')
 
-bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=bayes.pr2, 
+pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv")
+
+bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=pr2, 
                                exceptions=nonexistent,
                                synonym.file=synonym.filepath)
 ```
@@ -457,28 +248,28 @@ head(bayes.silva.2.pr2[[1]], 10)
     ## 14   Archaea   Nanoarchaeota        Nanoarchaeia    Woesearchaeales
     ## 15   Archaea   Nanoarchaeota        Nanoarchaeia    Woesearchaeales
     ## 75 Eukaryota Chytridiomycota    Chytridiomycetes  Rhizophlyctidales
-    ##                 Family         Genus   Kingdom   Supergroup Division
-    ## 1      SCGC_AAA286-E23          <NA>  Bacteria         <NA>     <NA>
-    ## 4               GW2011          AR20  Bacteria         <NA>     <NA>
-    ## 5                 <NA>          <NA>  Bacteria         <NA>     <NA>
-    ## 6               GW2011          AR15  Bacteria         <NA>     <NA>
-    ## 7         CG1-02-57-44          <NA>  Bacteria         <NA>     <NA>
+    ##                 Family         Genus   kingdom   supergroup division
+    ## 1      SCGC_AAA286-E23          <NA>   Archaea         <NA>     <NA>
+    ## 4               GW2011          AR20   Archaea         <NA>     <NA>
+    ## 5                 <NA>          <NA>   Archaea         <NA>     <NA>
+    ## 6               GW2011          AR15   Archaea         <NA>     <NA>
+    ## 7         CG1-02-57-44          <NA>   Archaea         <NA>     <NA>
     ## 12     Pasteurellaceae Volucribacter  Bacteria         <NA>     <NA>
-    ## 13 Methanobacteriaceae          <NA>  Bacteria         <NA>     <NA>
-    ## 14      SCGC_AAA011-D5          <NA>  Bacteria         <NA>     <NA>
-    ## 15   GW2011_GWC1_47_15          <NA>  Bacteria         <NA>     <NA>
+    ## 13 Methanobacteriaceae          <NA>   Archaea         <NA>     <NA>
+    ## 14      SCGC_AAA011-D5          <NA>   Archaea         <NA>     <NA>
+    ## 15   GW2011_GWC1_47_15          <NA>   Archaea         <NA>     <NA>
     ## 75  Rhizophlyctidaceae Rhizophlyctis Eukaryota Opisthokonta    Fungi
-    ##              Class             Order           Family Genus Species
-    ## 1             <NA>              <NA>             <NA>  <NA>      NA
-    ## 4             <NA>              <NA>             <NA>  <NA>      NA
-    ## 5             <NA>              <NA>             <NA>  <NA>      NA
-    ## 6             <NA>              <NA>             <NA>  <NA>      NA
-    ## 7             <NA>              <NA>             <NA>  <NA>      NA
-    ## 12            <NA>              <NA>             <NA>  <NA>      NA
-    ## 13            <NA>              <NA>             <NA>  <NA>      NA
-    ## 14            <NA>              <NA>             <NA>  <NA>      NA
-    ## 15            <NA>              <NA>             <NA>  <NA>      NA
-    ## 75 Chytridiomycota Chytridiomycotina Chytridiomycetes  <NA>      NA
+    ##              class             order           family         genus species
+    ## 1             <NA>              <NA>             <NA>          <NA>      NA
+    ## 4             <NA>              <NA>             <NA>          <NA>      NA
+    ## 5             <NA>              <NA>             <NA>          <NA>      NA
+    ## 6             <NA>              <NA>             <NA>          <NA>      NA
+    ## 7             <NA>              <NA>             <NA>          <NA>      NA
+    ## 12            <NA>              <NA>             <NA>          <NA>      NA
+    ## 13            <NA>              <NA>             <NA>          <NA>      NA
+    ## 14            <NA>              <NA>             <NA>          <NA>      NA
+    ## 15            <NA>              <NA>             <NA>          <NA>      NA
+    ## 75 Chytridiomycota Chytridiomycotina Chytridiomycetes Rhizophlyctis      NA
 
 Here we see any instances of Archaea or Bacteria from bayes-silva gets
 mapped to Bacteria on the bayes-pr2 side.
@@ -491,9 +282,10 @@ wasn’t able to be
 head(bayes.silva.2.pr2[[2]], 10)
 ```
 
-    ##  [1] "SCGC_AAA286-E23" "Woesearchaeales" "Nanoarchaeia"    "Nanoarchaeota"  
-    ##  [5] "AR20"            "GW2011"          "AR15"            "CG1-02-57-44"   
-    ##  [9] "Volucribacter"   "Pasteurellaceae"
+    ##  [1] "Rhizophlyctidaceae"    "Rhizophlyctidales"     "Hypotrichomonadea_fa" 
+    ##  [4] "Hypotrichomonadea_or"  "Hypotrichomonadea"     "Pinguiochrysidales_fa"
+    ##  [7] "Ochrophyta_ph"         "Hildenbrandiophycidae" "Florideophycidae"     
+    ## [10] "Tetramitia"
 
 Let’s look at the data frame of ASV’s from bayes-silva mapped to their
 corresponding taxonomies from
@@ -514,25 +306,25 @@ head(bayes.silva.2.pr2[[3]], 10)
     ## 14         AAACCAACCGAGTTATGAAGGGATGAAGCCCTTATTGGGAAAAATCTTTTCATGACAAGGTAGGTTAAGTCGTCACAAGGTATCT
     ## 15         AAACCAACCGAGTTATGAAGGGATGAAGCTCTCATTGAGAAGAATCTTTTCACGACAAGGTAGGTTAAGTCGTCACAAGGTATCT
     ## 75          AAACCAACCGAGTTGTGTTCTGGCGAGGTTTTTCGAAAACGAACCTTAGCACGACAAGGCAGGTTAAGTCGACACAAGGTATCT
-    ##      Kingdom   Supergroup Division           Class             Order
-    ## 1   Bacteria         <NA>     <NA>            <NA>              <NA>
-    ## 4   Bacteria         <NA>     <NA>            <NA>              <NA>
-    ## 5   Bacteria         <NA>     <NA>            <NA>              <NA>
-    ## 6   Bacteria         <NA>     <NA>            <NA>              <NA>
-    ## 7   Bacteria         <NA>     <NA>            <NA>              <NA>
+    ##      kingdom   supergroup division           class             order
+    ## 1    Archaea         <NA>     <NA>            <NA>              <NA>
+    ## 4    Archaea         <NA>     <NA>            <NA>              <NA>
+    ## 5    Archaea         <NA>     <NA>            <NA>              <NA>
+    ## 6    Archaea         <NA>     <NA>            <NA>              <NA>
+    ## 7    Archaea         <NA>     <NA>            <NA>              <NA>
     ## 12  Bacteria         <NA>     <NA>            <NA>              <NA>
-    ## 13  Bacteria         <NA>     <NA>            <NA>              <NA>
-    ## 14  Bacteria         <NA>     <NA>            <NA>              <NA>
-    ## 15  Bacteria         <NA>     <NA>            <NA>              <NA>
+    ## 13   Archaea         <NA>     <NA>            <NA>              <NA>
+    ## 14   Archaea         <NA>     <NA>            <NA>              <NA>
+    ## 15   Archaea         <NA>     <NA>            <NA>              <NA>
     ## 75 Eukaryota Opisthokonta    Fungi Chytridiomycota Chytridiomycotina
-    ##              Family Genus Species
-    ## 1              <NA>  <NA>      NA
-    ## 4              <NA>  <NA>      NA
-    ## 5              <NA>  <NA>      NA
-    ## 6              <NA>  <NA>      NA
-    ## 7              <NA>  <NA>      NA
-    ## 12             <NA>  <NA>      NA
-    ## 13             <NA>  <NA>      NA
-    ## 14             <NA>  <NA>      NA
-    ## 15             <NA>  <NA>      NA
-    ## 75 Chytridiomycetes  <NA>      NA
+    ##              family         genus species
+    ## 1              <NA>          <NA>      NA
+    ## 4              <NA>          <NA>      NA
+    ## 5              <NA>          <NA>      NA
+    ## 6              <NA>          <NA>      NA
+    ## 7              <NA>          <NA>      NA
+    ## 12             <NA>          <NA>      NA
+    ## 13             <NA>          <NA>      NA
+    ## 14             <NA>          <NA>      NA
+    ## 15             <NA>          <NA>      NA
+    ## 75 Chytridiomycetes Rhizophlyctis      NA

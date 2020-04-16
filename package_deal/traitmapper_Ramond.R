@@ -83,10 +83,16 @@ traitmapper_Ramond <- function(taxin, map2,
     # just outside the j for-loop
     counter <- counter - 1
   }
+  # outside the i for-loop
   colnames(mapout) <- c(colnames(taxin),"name.mapped","n.hitz",colnames(map2))
   mapout <- as.data.frame(apply(mapout, MARGIN = 2, FUN = as.character), stringsAsFactors = FALSE)
-  # mapout <- vapply(mapout, FUN = as.character, USE.NAMES = TRUE)
-  # outside the i for-loop
-  return(list(mapout, nomap))
+  if (filezout == "none"){
+    # don't save anything
+    return(list(mapout, nomap))
+  } else {
+    write.csv(mapout, file = filezout[1])
+    write.csv(nomap, file = filezout[2])
+    return(list(mapout, nomap))
+  }
 }
 

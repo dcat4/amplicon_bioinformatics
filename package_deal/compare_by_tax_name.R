@@ -57,18 +57,26 @@ compare_by_tax_name <- function(..., taxnames, tablenames, return.conflix = FALS
     
     if (return.conflix) {
       # rows (cols) of summary (index array) where there are conflicts (disagreeing names rather than target name+NA's)
-      bloop <- which((rowSums(ohyea == "Bacteria", na.rm = TRUE) + rowSums(is.na(ohyea))) < (ncol(ohyea)-1))
-      no.conflix.i <- unlist(ohyea.i[,-bloop]); no.conflix.i <- no.conflix.i[!is.na(no.conflix.i)] # indices to remove as bacteria...
-      conflix.i <- unlist(ohyea.i[,bloop]); conflix.i <- conflix.i[!is.na(conflix.i)]
-      if (length(conflix.i) > length(no.conflix.i)) {
-        no.conflix.i <- c(no.conflix.i, rep(NA, times = length(conflix.i) - length(no.conflix.i)))
-      } else if (length(conflix.i) < length(no.conflix.i)) {
-        conflix.i <- c(conflix.i, rep(NA, times = length(no.conflix.i) - length(conflix.i)))
+      bloop <- which((rowSums(ohyea == taxnames[i], na.rm = TRUE) + rowSums(is.na(ohyea))) < (ncol(ohyea)-1))
+      if (length(bloop > 0)) {
+        no.conflix.i <- unlist(ohyea.i[,-bloop]); no.conflix.i <- no.conflix.i[!is.na(no.conflix.i)] # indices to remove as bacteria...
+        conflix.i <- unlist(ohyea.i[,bloop]); conflix.i <- conflix.i[!is.na(conflix.i)]
+        if (length(conflix.i) > length(no.conflix.i)) {
+          no.conflix.i <- c(no.conflix.i, rep(NA, times = length(conflix.i) - length(no.conflix.i)))
+        } else if (length(conflix.i) < length(no.conflix.i)) {
+          conflix.i <- c(conflix.i, rep(NA, times = length(no.conflix.i) - length(conflix.i)))
+        }
+        oh <- data.frame(n.conflict = c(length(conflix.i) - sum(is.na(conflix.i))), n.no.conflict = c(length(no.conflix.i) - sum(is.na(no.conflix.i))))
+        yea <- data.frame(i.conflict = conflix.i, i.no.conflict = no.conflix.i)
+        allout.list[[i]] <- list(oh, yea)
+      } else if (length(bloop) == 0){
+        # there are not conflicts!!! ya!!
+        no.conflix.i <- unlist(ohyea.i); no.conflix.i <- no.conflix.i[-which(is.na(no.conflix.i))]
+        oh <- data.frame(n.conflict = 0, n.no.conflict = c(length(no.conflix.i) - sum(is.na(no.conflix.i))))
+        yea <- data.frame(i.conflict = rep(c(NA), times = length(no.conflix.i)), i.no.conflict = no.conflix.i)
+        allout.list[[i]] <- list(oh, yea)
       }
       
-      oh <- data.frame(n.conflict = c(length(conflix.i) - sum(is.na(conflix.i))), n.no.conflict = c(length(no.conflix.i) - sum(is.na(no.conflix.i))))
-      yea <- data.frame(i.conflict = conflix.i, i.no.conflict = no.conflix.i)
-      allout.list[[i]] <- list(oh, yea)
     } else {
       # store these arrays in a list within your big list
       allout.list[[i]] <- list(ohyea, ohyea.i)

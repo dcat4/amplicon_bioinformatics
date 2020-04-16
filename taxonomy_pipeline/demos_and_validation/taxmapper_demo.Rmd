@@ -104,7 +104,7 @@ lca.silva <- lca.silva[ii$ix,]
 
 You can run this for a sanity check:
 
-```{r}
+```{r, eval=FALSE}
 # check that they're all in the same order
 identical(bayes.pr2$ASV, bayes.silva$ASV)
 identical(bayes.pr2$ASV, idtax.pr2$ASV)
@@ -115,7 +115,7 @@ identical(lca.pr2$ASV, lca.silva$ASV)
 
 ...and this to see what the data sets look like. These data sets are available in the test-data directory.
 
-```{r}
+```{r, eval=FALSE}
 head(bayes.pr2)
 head(bayes.silva)
 head(idtax.pr2)
@@ -138,7 +138,9 @@ synonym.filepath <- "~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxo
 # Bacteria and Archaea doesn't exist in pr2
 nonexistent <- c('Bacteria', 'Archaea')
 
-bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=bayes.pr2, 
+pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv")
+
+bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=pr2, 
                                exceptions=nonexistent,
                                synonym.file=synonym.filepath)
 ```
