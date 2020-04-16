@@ -96,7 +96,7 @@ taxmapper <- function(taxin, tax2map2, exceptions,
   
   if (outfilez != "none") {
     write.csv(mapped, outfilez[1])
-    write.csv(as.data.frame(not.mapped))
+    write.csv(as.data.frame(not.mapped), outfilez[2])
     write.csv(asv.mapped, outfilez[3])
   }
   
