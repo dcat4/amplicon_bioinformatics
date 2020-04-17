@@ -140,7 +140,7 @@ nonexistent <- c('Bacteria', 'Archaea')
 
 pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv")
 
-bayes.silva.2.pr2 <- taxmapper(taxin=bayes.pr2, tax2map2=pr2, 
+bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=pr2, 
                                exceptions=nonexistent,
                                synonym.file=synonym.filepath)
 ```
@@ -162,5 +162,5 @@ head(bayes.silva.2.pr2[[2]], 10)
 Let's look at the data frame of ASV's from bayes-silva mapped to their corresponding taxonomies from bayes-pr2.
 
 ```{r}
-head(bayes.silva.2.pr2[[3]], 10)
+head(bayes.silva.2.pr2[[3]], 20)
 ```
