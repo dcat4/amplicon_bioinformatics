@@ -93,9 +93,12 @@ taxmapper <- function(taxin, tax2map2, exceptions,
     }
   }
   
-  ASV <- taxin[as.integer(rownames(mapped)), 2]
-  asv.mapped <- cbind(ASV, mapped[-(1:ncol(taxin.u))])
-  asv.mapped$ASV <- as.character(asv.mapped$ASV)
+  names(taxin) <- c(colnames(taxin)[1:2], toupper(colnames(taxin.u)))
+  mapped.t <- mapped
+  names(mapped.t) <- c(toupper(colnames(mapped)[1:ncol(taxin.u)]), colnames(mapped)[(ncol(taxin.u)+1):ncol(mapped)])
+  
+  asv.mapped <- merge(x=taxin, y=mapped.t, by=toupper(colnames(taxin.u)), all.x=TRUE)
+  asv.mapped <- asv.mapped[ , !(colnames(asv.mapped) %in% toupper(colnames(taxin.u)))]
   
   not.mapped <- unique(not.mapped)
   
