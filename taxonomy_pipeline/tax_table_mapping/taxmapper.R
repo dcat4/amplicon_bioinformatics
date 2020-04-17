@@ -65,6 +65,7 @@ taxmapper <- function(taxin, tax2map2, exceptions,
       for (col in 1:ncol(taxin.u)) {
         tax <- taxin.u[row, taxin.cols[col]]
         pos.taxs <- getSynonyms(tax, synonyms)
+        matched <- FALSE
         for (taxonomy in pos.taxs) {
           last <- FALSE
           if (match(taxonomy, pos.taxs) == length(pos.taxs)) {
@@ -75,6 +76,7 @@ taxmapper <- function(taxin, tax2map2, exceptions,
             if (is.data.frame(match)) {
               combined <- cbind(taxin.u[row, ], match)
               mapped <- rbind(mapped, combined)
+              matched <- TRUE
               break
             }
             else {
@@ -83,6 +85,9 @@ taxmapper <- function(taxin, tax2map2, exceptions,
               }
             }
           }
+        }
+        if (matched) {
+          break
         }
       }
     }

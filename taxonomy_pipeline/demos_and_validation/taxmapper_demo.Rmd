@@ -140,7 +140,7 @@ nonexistent <- c('Bacteria', 'Archaea')
 
 pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv")
 
-bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=pr2, 
+bayes.silva.2.pr2 <- taxmapper(taxin=bayes.pr2, tax2map2=pr2, 
                                exceptions=nonexistent,
                                synonym.file=synonym.filepath)
 ```
@@ -148,7 +148,7 @@ bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=pr2,
 `bayes.silva.2.pr2` contains a list of the three outputs discussed earlier. Let's look through each element, starting with the unique taxonomic assignments from bayes-silva to bayes-pr2's corresponding mapped assignments.
 
 ```{r}
-head(bayes.silva.2.pr2[[1]], 10)
+head(bayes.silva.2.pr2[[1]], 20)
 ```
 
 Here we see any instances of Archaea or Bacteria from bayes-silva gets mapped to Bacteria on the bayes-pr2 side.
