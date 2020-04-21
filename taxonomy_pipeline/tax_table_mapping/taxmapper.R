@@ -40,6 +40,8 @@ taxmapper <- function(taxin, tax2map2, exceptions,
     }  
   }
   
+  colnames(tax2map2) <- paste("tax2map2", colnames(tax2map2), sep="_")
+  
   taxin.u <- unique(taxin[, !(names(taxin) %in% c("svN","ASV"))])
   tax2map2.u <- unique(tax2map2)
   
@@ -90,12 +92,12 @@ taxmapper <- function(taxin, tax2map2, exceptions,
     }
   }
   
-  names(taxin) <- c(colnames(taxin)[1:2], toupper(colnames(taxin.u)))
-  mapped.t <- mapped
-  names(mapped.t) <- c(toupper(colnames(mapped)[1:ncol(taxin.u)]), colnames(mapped)[(ncol(taxin.u)+1):ncol(mapped)])
+  #names(taxin) <- c(colnames(taxin)[1:2], toupper(colnames(taxin.u)))
+  #mapped.t <- mapped
+  #names(mapped.t) <- c(toupper(colnames(mapped)[1:ncol(taxin.u)]), colnames(mapped)[(ncol(taxin.u)+1):ncol(mapped)])
   
-  asv.mapped <- merge(x=taxin, y=mapped.t, by=toupper(colnames(taxin.u)), all.x=TRUE)
-  asv.mapped <- asv.mapped[ , !(colnames(asv.mapped) %in% toupper(colnames(taxin.u)))]
+  asv.mapped <- merge(x=taxin, y=mapped, by=colnames(taxin.u), all.x=TRUE)
+  asv.mapped <- asv.mapped[ , !(colnames(asv.mapped) %in% colnames(taxin.u))]
   
   not.mapped <- unique(not.mapped)
   
