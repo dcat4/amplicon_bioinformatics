@@ -12,6 +12,7 @@
 # 2. if return.conflix, the comparisons are condensed to 2 categories and return values are the same w/ only the 2 categories reported
 
 compare_by_tax_name <- function(..., taxnames, tablenames, return.conflix = FALSE) {
+  
   xx <- list(...)
   notuz <- nrow(xx[[1]])
   

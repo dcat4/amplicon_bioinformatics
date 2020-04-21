@@ -1,14 +1,11 @@
-# UNDER CONSTRUCTION
+# DONE but will have to revisit
 
-# up next:
-# 1. add pre-processing to rm prok's, small ASVs, metazoans --> this doesn't really work until you decide bootstrap values...
-# 1a. propagate find_asvs_by_name to taxonomy_pipeline
-# 2. pick and apply boot-strap thresholds -- trying defaults for now...
-# 3. prelim trait mapping and analysis
+# I did some exploration of boot-thresholds in bayes/idtax tables
+# did some prelim mapping of OG tax tables onto trait database
+# mapped all tax tables onto pr2 + then did trait-mapping on outputs
+# saved all the outputs and moving on to pt 2 to remove non-protists, analyze trait-mapping results
 
-# this is a shell script that executes the functions I (+Kevin +Connie) written for my ensemble taxonomy pipeline
-# also using it as an outline to track where I'm at from start to finish..
-# more of just an outline right now...
+# didnt quite get thru a full run, files will tell u what you can comment out
 
 #### Starting point:
 # Starts with initial taxonomic assignments output by DADA2/idtaxa/BLAST-MEGAN-LCA, boot-strapping thresholds not set yet, with arrays/files as follows:
@@ -129,172 +126,172 @@ bayes.pr2.list <- rep(list(bayes.pr2), length(bootvec))
 idtax.pr2.list <- rep(list(idtax.pr2), length(bootvec))
 bayes.silva.list <- rep(list(bayes.silva), length(bootvec))
 idtax.silva.list <- rep(list(idtax.silva), length(bootvec))
-# 
-# # for storing ggplots
-# plot.list.pr2 <- list()
-# plot.list.silva <- list()
-# # this loop NAs-out assignments based on thresholds in boot. plots 2-way comparisons of pr2 and silva tax tabs at each boot thresholds
-# for (i in 1:length(bootvec)) {
-#   
-#   bootvec.str <- append(bootvec.str, paste0("boot = ",toString(bootvec[i]),"%")) # for plot titles below...
-#   
-#   x1 <- bayes.pr2.list[[i]]
-#   x1[bayes.pr2.conf < bootvec[i]] <- NA
-#   bayes.pr2.list[[i]] <- x1
-#   
-#   x2 <- idtax.pr2.list[[i]]
-#   x2[idtax.pr2.conf < bootvec[i]] <- NA
-#   idtax.pr2.list[[i]] <- x2
-#   
-#   x3 <- bayes.silva.list[[i]]
-#   x3[bayes.silva.conf < bootvec[i]] <- NA
-#   bayes.silva.list[[i]] <- x3
-#   
-#   x4 <- idtax.silva.list[[i]]
-#   x4[idtax.silva.conf < bootvec[i]] <- NA
-#   idtax.silva.list[[i]] <- x4
-# }
-# 
-# # will stitch your plots together (with cowplot) and save
-# library("cowplot")
-# yl <- c(0,1) # y-limits
-# 
-# # first look at defaults/recommended boots for each algorithm (idtax = 60, bayes = 80)
-# # pr2:
-# b80.pr2 <- bayes.pr2.list[[which(bootvec == 80)]]
-# i60.pr2 <- idtax.pr2.list[[which(bootvec == 60)]]
-# p1 <- compare_assignments_2way(b80.pr2, i60.pr2,
-#                                pltfilez = "none",
-#                                tablenames = c("bayes-pr2","idtax-pr2"),
-#                                ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-# p2 <- compare_byRank_2way(b80.pr2, i60.pr2,
-#                           pltfilez = "none",
-#                           tablenames = c("bayes-pr2","idtax-pr2"),
-#                           ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-# # silva:
-# b80.silva <- bayes.silva.list[[which(bootvec == 80)]]
-# i60.silva <- idtax.silva.list[[which(bootvec == 60)]]
-# p3 <- compare_assignments_2way(b80.silva, i60.silva,
-#                               pltfilez = "none",
-#                               tablenames = c("bayes-silva","idtax-silva"),
-#                               ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
-# p4 <- compare_byRank_2way(b80.silva, i60.silva,
-#                           pltfilez = "none",
-#                           tablenames = c("bayes-silva","idtax-silva"),
-#                           ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
-# p.2way.default.bothdb <- plot_grid(
-#   p1[[3]] + ggtitle("bayes-pr2, boot=80% vs. idtax-pr2, boot=60%") + coord_cartesian(ylim = yl),
-#   p2[[4]] + coord_cartesian(ylim = yl),
-#   p3[[3]] + ggtitle("bayes-silva, boot=80% vs. idtax-silva, boot=60%") + coord_cartesian(ylim = yl),
-#   p4[[4]] + coord_cartesian(ylim = yl),
-#   align = 'hv',
-#   labels = c("A.", "B.", "C.","D."),
-#   axis = 'l',
-#   hjust=-1,
-#   nrow = 2
-# )
-# ggsave("bayesVidtax_boot_threshold/bothdb_default_boots.pdf", p.2way.default.bothdb, width = 13, height = 12, units = "in", device="pdf")
-# 
-# # according to idtaxa creators, 50% is also "high confidence" so try that too...
-# i50.pr2 <- idtax.pr2.list[[which(bootvec == 50)]]
-# p5 <- compare_assignments_2way(b80.pr2, i50.pr2,
-#                                pltfilez = "none",
-#                                tablenames = c("bayes-pr2","idtax-pr2"),
-#                                ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-# p6 <- compare_byRank_2way(b80.pr2, i50.pr2,
-#                           pltfilez = "none",
-#                           tablenames = c("bayes-pr2","idtax-pr2"),
-#                           ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-# # silva:
-# i50.silva <- idtax.silva.list[[which(bootvec == 50)]]
-# p7 <- compare_assignments_2way(b80.silva, i50.silva,
-#                                pltfilez = "none",
-#                                tablenames = c("bayes-silva","idtax-silva"),
-#                                ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
-# p8 <- compare_byRank_2way(b80.silva, i50.silva,
-#                           pltfilez = "none",
-#                           tablenames = c("bayes-silva","idtax-silva"),
-#                           ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
-# p.2way.default.bothdb2 <- plot_grid(
-#   p5[[3]] + ggtitle("bayes-pr2, boot=80% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
-#   p6[[4]] + coord_cartesian(ylim = yl),
-#   p7[[3]] + ggtitle("bayes-pr2, boot=80% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
-#   p8[[4]] + coord_cartesian(ylim = yl),
-#   align = 'hv',
-#   labels = c("A.", "B.", "C.","D."),
-#   axis = 'l',
-#   hjust=-1,
-#   nrow = 2
-# )
-# ggsave("bayesVidtax_boot_threshold/bothdb_default_boots2.pdf", p.2way.default.bothdb2, width = 13, height = 12, units = "in", device="pdf")
-# 
-# ### now adjust bayes-pr2 down iteratively, holding idtax at 50%
-# # pr2:
-# b70.pr2 <- bayes.pr2.list[[which(bootvec == 70)]]
-# p1 <- compare_assignments_2way(b70.pr2, i50.pr2,
-#                                pltfilez = "none",
-#                                tablenames = c("bayes-pr2","idtax-pr2"),
-#                                ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-# p2 <- compare_byRank_2way(b70.pr2, i50.pr2,
-#                           pltfilez = "none",
-#                           tablenames = c("bayes-pr2","idtax-pr2"),
-#                           ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-# # silva:
-# b70.silva <- bayes.silva.list[[which(bootvec == 70)]]
-# p3 <- compare_assignments_2way(b70.silva, i50.silva,
-#                                pltfilez = "none",
-#                                tablenames = c("bayes-silva","idtax-silva"),
-#                                ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
-# p4 <- compare_byRank_2way(b70.silva, i50.silva,
-#                           pltfilez = "none",
-#                           tablenames = c("bayes-silva","idtax-silva"),
-#                           ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
-# p.2way.default.bothdb <- plot_grid(
-#   p1[[3]] + ggtitle("bayes-pr2, boot=70% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
-#   p2[[4]] + coord_cartesian(ylim = yl),
-#   p3[[3]] + ggtitle("bayes-silva, boot=70% vs. idtax-silva, boot=50%") + coord_cartesian(ylim = yl),
-#   p4[[4]] + coord_cartesian(ylim = yl),
-#   align = 'hv',
-#   labels = c("A.", "B.", "C.","D."),
-#   axis = 'l',
-#   hjust=-1,
-#   nrow = 2
-# )
-# ggsave("bayesVidtax_boot_threshold/bothdb_default-10_boots.pdf", p.2way.default.bothdb, width = 13, height = 12, units = "in", device="pdf")
-# 
-# # according to idtaxa creators, 50% is also "high confidence" so try that too...
-# b60.pr2 <- bayes.pr2.list[[which(bootvec == 60)]]
-# p5 <- compare_assignments_2way(b60.pr2, i50.pr2,
-#                                pltfilez = "none",
-#                                tablenames = c("bayes-pr2","idtax-pr2"),
-#                                ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-# p6 <- compare_byRank_2way(b60.pr2, i50.pr2,
-#                           pltfilez = "none",
-#                           tablenames = c("bayes-pr2","idtax-pr2"),
-#                           ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
-# # silva:
-# b60.silva <- bayes.silva.list[[which(bootvec == 60)]]
-# p7 <- compare_assignments_2way(b60.silva, i50.silva,
-#                                pltfilez = "none",
-#                                tablenames = c("bayes-silva","idtax-silva"),
-#                                ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
-# p8 <- compare_byRank_2way(b60.silva, i50.silva,
-#                           pltfilez = "none",
-#                           tablenames = c("bayes-silva","idtax-silva"),
-#                           ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
-# p.2way.default.bothdb2 <- plot_grid(
-#   p5[[3]] + ggtitle("bayes-pr2, boot=60% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
-#   p6[[4]] + coord_cartesian(ylim = yl),
-#   p7[[3]] + ggtitle("bayes-pr2, boot=60% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
-#   p8[[4]] + coord_cartesian(ylim = yl),
-#   align = 'hv',
-#   labels = c("A.", "B.", "C.","D."),
-#   axis = 'l',
-#   hjust=-1,
-#   nrow = 2
-# )
-# ggsave("bayesVidtax_boot_threshold/bothdb_default-10or20_boots.pdf", p.2way.default.bothdb2, width = 13, height = 12, units = "in", device="pdf")
-# 
+
+# for storing ggplots
+plot.list.pr2 <- list()
+plot.list.silva <- list()
+# this loop NAs-out assignments based on thresholds in boot. plots 2-way comparisons of pr2 and silva tax tabs at each boot thresholds
+for (i in 1:length(bootvec)) {
+
+  bootvec.str <- append(bootvec.str, paste0("boot = ",toString(bootvec[i]),"%")) # for plot titles below...
+
+  x1 <- bayes.pr2.list[[i]]
+  x1[bayes.pr2.conf < bootvec[i]] <- NA
+  bayes.pr2.list[[i]] <- x1
+
+  x2 <- idtax.pr2.list[[i]]
+  x2[idtax.pr2.conf < bootvec[i]] <- NA
+  idtax.pr2.list[[i]] <- x2
+
+  x3 <- bayes.silva.list[[i]]
+  x3[bayes.silva.conf < bootvec[i]] <- NA
+  bayes.silva.list[[i]] <- x3
+
+  x4 <- idtax.silva.list[[i]]
+  x4[idtax.silva.conf < bootvec[i]] <- NA
+  idtax.silva.list[[i]] <- x4
+}
+
+# will stitch your plots together (with cowplot) and save
+library("cowplot")
+yl <- c(0,1) # y-limits
+
+# first look at defaults/recommended boots for each algorithm (idtax = 60, bayes = 80)
+# pr2:
+b80.pr2 <- bayes.pr2.list[[which(bootvec == 80)]]
+i60.pr2 <- idtax.pr2.list[[which(bootvec == 60)]]
+p1 <- compare_assignments_2way(b80.pr2, i60.pr2,
+                               pltfilez = "none",
+                               tablenames = c("bayes-pr2","idtax-pr2"),
+                               ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+p2 <- compare_byRank_2way(b80.pr2, i60.pr2,
+                          pltfilez = "none",
+                          tablenames = c("bayes-pr2","idtax-pr2"),
+                          ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+# silva:
+b80.silva <- bayes.silva.list[[which(bootvec == 80)]]
+i60.silva <- idtax.silva.list[[which(bootvec == 60)]]
+p3 <- compare_assignments_2way(b80.silva, i60.silva,
+                              pltfilez = "none",
+                              tablenames = c("bayes-silva","idtax-silva"),
+                              ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+p4 <- compare_byRank_2way(b80.silva, i60.silva,
+                          pltfilez = "none",
+                          tablenames = c("bayes-silva","idtax-silva"),
+                          ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+p.2way.default.bothdb <- plot_grid(
+  p1[[3]] + ggtitle("bayes-pr2, boot=80% vs. idtax-pr2, boot=60%") + coord_cartesian(ylim = yl),
+  p2[[4]] + coord_cartesian(ylim = yl),
+  p3[[3]] + ggtitle("bayes-silva, boot=80% vs. idtax-silva, boot=60%") + coord_cartesian(ylim = yl),
+  p4[[4]] + coord_cartesian(ylim = yl),
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D."),
+  axis = 'l',
+  hjust=-1,
+  nrow = 2
+)
+ggsave("bayesVidtax_boot_threshold/bothdb_default_boots.pdf", p.2way.default.bothdb, width = 13, height = 12, units = "in", device="pdf")
+
+# according to idtaxa creators, 50% is also "high confidence" so try that too...
+i50.pr2 <- idtax.pr2.list[[which(bootvec == 50)]]
+p5 <- compare_assignments_2way(b80.pr2, i50.pr2,
+                               pltfilez = "none",
+                               tablenames = c("bayes-pr2","idtax-pr2"),
+                               ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+p6 <- compare_byRank_2way(b80.pr2, i50.pr2,
+                          pltfilez = "none",
+                          tablenames = c("bayes-pr2","idtax-pr2"),
+                          ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+# silva:
+i50.silva <- idtax.silva.list[[which(bootvec == 50)]]
+p7 <- compare_assignments_2way(b80.silva, i50.silva,
+                               pltfilez = "none",
+                               tablenames = c("bayes-silva","idtax-silva"),
+                               ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+p8 <- compare_byRank_2way(b80.silva, i50.silva,
+                          pltfilez = "none",
+                          tablenames = c("bayes-silva","idtax-silva"),
+                          ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+p.2way.default.bothdb2 <- plot_grid(
+  p5[[3]] + ggtitle("bayes-pr2, boot=80% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
+  p6[[4]] + coord_cartesian(ylim = yl),
+  p7[[3]] + ggtitle("bayes-pr2, boot=80% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
+  p8[[4]] + coord_cartesian(ylim = yl),
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D."),
+  axis = 'l',
+  hjust=-1,
+  nrow = 2
+)
+ggsave("bayesVidtax_boot_threshold/bothdb_default_boots2.pdf", p.2way.default.bothdb2, width = 13, height = 12, units = "in", device="pdf")
+
+### now adjust bayes-pr2 down iteratively, holding idtax at 50%
+# pr2:
+b70.pr2 <- bayes.pr2.list[[which(bootvec == 70)]]
+p1 <- compare_assignments_2way(b70.pr2, i50.pr2,
+                               pltfilez = "none",
+                               tablenames = c("bayes-pr2","idtax-pr2"),
+                               ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+p2 <- compare_byRank_2way(b70.pr2, i50.pr2,
+                          pltfilez = "none",
+                          tablenames = c("bayes-pr2","idtax-pr2"),
+                          ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+# silva:
+b70.silva <- bayes.silva.list[[which(bootvec == 70)]]
+p3 <- compare_assignments_2way(b70.silva, i50.silva,
+                               pltfilez = "none",
+                               tablenames = c("bayes-silva","idtax-silva"),
+                               ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+p4 <- compare_byRank_2way(b70.silva, i50.silva,
+                          pltfilez = "none",
+                          tablenames = c("bayes-silva","idtax-silva"),
+                          ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+p.2way.default.bothdb <- plot_grid(
+  p1[[3]] + ggtitle("bayes-pr2, boot=70% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
+  p2[[4]] + coord_cartesian(ylim = yl),
+  p3[[3]] + ggtitle("bayes-silva, boot=70% vs. idtax-silva, boot=50%") + coord_cartesian(ylim = yl),
+  p4[[4]] + coord_cartesian(ylim = yl),
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D."),
+  axis = 'l',
+  hjust=-1,
+  nrow = 2
+)
+ggsave("bayesVidtax_boot_threshold/bothdb_default-10_boots.pdf", p.2way.default.bothdb, width = 13, height = 12, units = "in", device="pdf")
+
+# according to idtaxa creators, 50% is also "high confidence" so try that too...
+b60.pr2 <- bayes.pr2.list[[which(bootvec == 60)]]
+p5 <- compare_assignments_2way(b60.pr2, i50.pr2,
+                               pltfilez = "none",
+                               tablenames = c("bayes-pr2","idtax-pr2"),
+                               ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+p6 <- compare_byRank_2way(b60.pr2, i50.pr2,
+                          pltfilez = "none",
+                          tablenames = c("bayes-pr2","idtax-pr2"),
+                          ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"))
+# silva:
+b60.silva <- bayes.silva.list[[which(bootvec == 60)]]
+p7 <- compare_assignments_2way(b60.silva, i50.silva,
+                               pltfilez = "none",
+                               tablenames = c("bayes-silva","idtax-silva"),
+                               ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+p8 <- compare_byRank_2way(b60.silva, i50.silva,
+                          pltfilez = "none",
+                          tablenames = c("bayes-silva","idtax-silva"),
+                          ranknamez = c("Domain", "Phylum", "Class", "Order", "Family", "Genus"))
+p.2way.default.bothdb2 <- plot_grid(
+  p5[[3]] + ggtitle("bayes-pr2, boot=60% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
+  p6[[4]] + coord_cartesian(ylim = yl),
+  p7[[3]] + ggtitle("bayes-pr2, boot=60% vs. idtax-pr2, boot=50%") + coord_cartesian(ylim = yl),
+  p8[[4]] + coord_cartesian(ylim = yl),
+  align = 'hv',
+  labels = c("A.", "B.", "C.","D."),
+  axis = 'l',
+  hjust=-1,
+  nrow = 2
+)
+ggsave("bayesVidtax_boot_threshold/bothdb_default-10or20_boots.pdf", p.2way.default.bothdb2, width = 13, height = 12, units = "in", device="pdf")
+
 
 # boot threshold implementation
 bboot <- 60
@@ -362,36 +359,66 @@ source("~/Documents/R/amplicon_bioinformatics/package_deal/all_of_it.R")
 xx <- list(bayes.pr2, bayes.silva, idtax.pr2, idtax.silva, lca.pr2, lca.silva)
 nn <- c("bayes-pr2", "bayes-silva", "idtax-pr2", "idtax-silva", "lca-pr2", "lca-silva")
 
-# mm <- readRDS(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/Ramond_traitdb_clean.RDS")
-# dm <- c("Eukaryota", "Archaea", "Bacteria", "Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae",
-#                    "Alveolata","Opisthokonta","Archaeplastida","Excavata","Rhizaria","Stramenopiles",
-#                    "Hacrobia","Amoebozoa","Apusozoa","Eukaryota_X","Protalveolata","Terrabacteria")
-# for (i in 1:length(xx)) {
-#   tt <- xx[[i]]
-#   fout <- c(paste0("unmappedtax_traitmap_results/",nn[i],"_mapout.csv"), paste0("unmappedtax_traitmap_results/",nn[i],"_namesNotMapped.csv"))
-#   traitmapper_Ramond(tt, mm, dont.map = dm, filezout = fout)
-# }
-# write.csv(mm, file = "Ramond_db_clean.csv") # saving to check manually that it worked alright.
-
-# note that it doesn't really make sense to do this until after removing non-protists...
-# analyze the trait mapping results:
-trts <- c("Chloroplast", "Plast_Origin", "Ingestion", "Cover", "Shape")
-seqtab <- readRDS("seqtab_nochime_Mar20.rds")
-for (i in 1:length(xx)){
+mm <- readRDS(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/Ramond_traitdb_clean.RDS")
+dm <- c("Eukaryota", "Archaea", "Bacteria", "Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae",
+                   "Alveolata","Opisthokonta","Archaeplastida","Excavata","Rhizaria","Stramenopiles",
+                   "Hacrobia","Amoebozoa","Apusozoa","Eukaryota_X","Protalveolata","Terrabacteria")
+for (i in 1:length(xx)) {
   tt <- xx[[i]]
-  mr <- read.csv(paste0("unmappedtax_traitmap_results/",nn[i],"_mapout.csv"), stringsAsFactors = FALSE)
-  for (j in 1:length(trts)){
-    fout <- c(paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_ASV_plot.pdf"), 
-            paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_abundance_plot1.pdf"),
-            paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_abundance_plot2.pdf"))
-    analyze_traitmap_byTrait(map.result = mr, trait.name = trts[j], otu.table = seqtab, pltfilez = fout)
-  }
+  fout <- c(paste0("unmappedtax_traitmap_results/",nn[i],"_mapout.csv"), paste0("unmappedtax_traitmap_results/",nn[i],"_namesNotMapped.csv"))
+  traitmapper_Ramond(tt, mm, dont.map = dm, filezout = fout)
 }
-
+write.csv(mm, file = "Ramond_db_clean.csv") # saving to check manually that it worked alright.
 
 
 #### Step 2: Mapping all tax tables to a common taxonomic nomenclature
 # Kevin's stuff goes here
+
+bayes.pr2 <- cbind(lca.pr2[,c("svN","ASV")],bayes.pr2)
+maptax <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv",
+                   stringsAsFactors = FALSE)
+# QC:
+# bayes.pr2.m <- taxmapper(bayes.pr2, maptax, exceptions = c("Archaea","Bacteria"),
+#                   synonym.file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv",
+#                   outfilez = "none")
+# bayes.pr2.m <- bayes.pr2.m[[3]]
+# ii <- sort(bayes.pr2$svN, index.return = TRUE)
+# bayes.pr2 <- bayes.pr2[ii$ix,]
+# ii <- sort(bayes.pr2.m$svN, index.return = TRUE)
+# bayes.pr2.m <- bayes.pr2.m[ii$ix,]
+# looks good...
+
+maptax <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv",
+                   stringsAsFactors = FALSE)
+mappedtt <- vector(mode = "list", length = length(xx)) # for storing the mapped tax tables
+names(mappedtt) <- nn
+# run it furreal and save the outputs:
+for (i in 1:length(xx)){
+  tt <- xx[[i]]
+  if (all(colnames(tt) != "ASV")){
+    tt <- cbind(lca.pr2[,c("svN","ASV")], tt)
+  }
+  fout <- c(paste0("taxtab_map_results/map_key_",nn[i],"2pr2.csv"),
+            paste0("taxtab_map_results/names_not_mapped_",nn[i],"2pr2.csv"),
+            paste0("taxtab_map_results/mapped_taxtab",nn[i],"2pr2.csv"))
+  mm <- taxmapper(tt, maptax, exceptions = c("Archaea","Bacteria"),
+                  synonym.file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv",
+                  outfilez = fout)
+  mappedtt[[i]] <- mm[[3]] # assign the mapped tables
+}
+saveRDS(mappedtt, file = "all_mapped_taxtabs.rds")
+
+mm <- readRDS(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/Ramond_traitdb_clean.RDS")
+dm <- c("Eukaryota", "Archaea", "Bacteria", "Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae",
+                   "Alveolata","Opisthokonta","Archaeplastida","Excavata","Rhizaria","Stramenopiles",
+                   "Hacrobia","Amoebozoa","Apusozoa","Eukaryota_X","Protalveolata","Terrabacteria")
+for (i in 1:length(mappedtt)) {
+  tt <- mappedtt[[i]]
+  fout <- c(paste0("mappedtax_traitmap_results/",nn[i],"_mapout.csv"), 
+            paste0("mappedtax_traitmap_results/",nn[i],"_namesNotMapped.csv"))
+  traitmapper_Ramond(tt, mm, dont.map = dm, filezout = fout)
+}
+
 
 #### Step 3: Re-mapping individual tax-mapped tax tables onto trait database
 # then write a shell of my trait mapping and analysis functions
