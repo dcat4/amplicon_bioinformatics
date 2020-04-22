@@ -30,24 +30,23 @@ taxmapper <- function(taxin, tax2map2, exceptions,
   }
   
   getSynonyms <- function(taxonomy, syn.df) {
-    pos.tax <- names(syn.df)
-    if (is.element(taxonomy, pos.tax)) {
-      v <- syn.df[,taxonomy]
-      return (c(taxonomy, v[!is.na(v)]))
+    found.rows <- syn.df[which(syn.df == taxonomy, arr.ind=TRUE)[,'row'],]
+    if (length(found.rows) > 0) {
+      v <- as.character(as.matrix(found.rows))
+      return (unique(c(taxonomy, v[!is.na(v)])))
     }
     else {
       return (c(taxonomy))
-    }
+    }  
   }
   
-  taxin.u <- unique(taxin[,-c(1,2)])
-  tax2map2.u <- unique(tax2map2[,-c(1)])
+  colnames(tax2map2) <- paste("tax2map2", colnames(tax2map2), sep="_")
+  
+  taxin.u <- unique(taxin[, !(names(taxin) %in% c("svN","ASV"))])
+  tax2map2.u <- unique(tax2map2)
   
   synonyms <- read.csv(synonym.file)
-  syn <- synonyms[, 2:7]
-  rownames(syn) <- synonyms[,1]
-  synonyms <- t(syn)
-  rownames(synonyms) <- c()
+  synonyms <- synonyms[, colnames(synonyms)[startsWith(colnames(synonyms), "Name")]]
   
   taxin.cols <- rev(names(taxin.u))
   not.mapped <- vector()
@@ -93,12 +92,12 @@ taxmapper <- function(taxin, tax2map2, exceptions,
     }
   }
   
-  names(taxin) <- c(colnames(taxin)[1:2], toupper(colnames(taxin.u)))
-  mapped.t <- mapped
-  names(mapped.t) <- c(toupper(colnames(mapped)[1:ncol(taxin.u)]), colnames(mapped)[(ncol(taxin.u)+1):ncol(mapped)])
+  #names(taxin) <- c(colnames(taxin)[1:2], toupper(colnames(taxin.u)))
+  #mapped.t <- mapped
+  #names(mapped.t) <- c(toupper(colnames(mapped)[1:ncol(taxin.u)]), colnames(mapped)[(ncol(taxin.u)+1):ncol(mapped)])
   
-  asv.mapped <- merge(x=taxin, y=mapped.t, by=toupper(colnames(taxin.u)), all.x=TRUE)
-  asv.mapped <- asv.mapped[ , !(colnames(asv.mapped) %in% toupper(colnames(taxin.u)))]
+  asv.mapped <- merge(x=taxin, y=mapped, by=colnames(taxin.u), all.x=TRUE)
+  asv.mapped <- asv.mapped[ , !(colnames(asv.mapped) %in% colnames(taxin.u))]
   
   not.mapped <- unique(not.mapped)
   
