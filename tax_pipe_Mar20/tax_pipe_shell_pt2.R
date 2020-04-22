@@ -33,28 +33,29 @@ arc.summary <- silva.compz[["Archaea"]][[1]]
 # there are no conflicts for Archaea classifications:
 # > arc.summary
 # bayes.silva idtax.silva lca.silva Freq
-# 1     Archaea     Archaea   Archaea  104
-# 2        <NA>     Archaea   Archaea    6
-# 3     Archaea        <NA>   Archaea    2
-# 4        <NA>        <NA>   Archaea    3
+# 1     Archaea     Archaea   Archaea  105
+# 2        <NA>     Archaea   Archaea    5
+# 3     Archaea        <NA>   Archaea    1
+# 4        <NA>        <NA>   Archaea    4
 # 6        <NA>     Archaea      <NA>    4
-# 7     Archaea        <NA>      <NA>    6
+# 7     Archaea        <NA>      <NA>    7
 bac.summary <- silva.compz[["Bacteria"]][[1]]
 # there are 20 total conflicts (ASVs assigned to something else - Eukaryota) for Bacteria
 # > bac.summary
 # bayes.silva idtax.silva lca.silva Freq
-# 1     Bacteria    Bacteria  Bacteria 1730
-# 3         <NA>    Bacteria  Bacteria    5
-# 7     Bacteria        <NA>  Bacteria   47
-# 8    Eukaryota        <NA>  Bacteria    2
-# 9         <NA>        <NA>  Bacteria   28
+# 1     Bacteria    Bacteria  Bacteria 1729
+# 3         <NA>    Bacteria  Bacteria    6
+# 7     Bacteria        <NA>  Bacteria   44
+# 8    Eukaryota        <NA>  Bacteria    1
+# 9         <NA>        <NA>  Bacteria   32
 # 13    Bacteria   Eukaryota Eukaryota    1
-# 16    Bacteria        <NA> Eukaryota    3
-# 19    Bacteria    Bacteria      <NA>   44
-# 20   Eukaryota    Bacteria      <NA>    7
-# 21        <NA>    Bacteria      <NA>    7
-# 22    Bacteria   Eukaryota      <NA>    7
-# 25    Bacteria        <NA>      <NA>  230
+# 16    Bacteria        <NA> Eukaryota    2
+# 19    Bacteria    Bacteria      <NA>   45
+# 20   Eukaryota    Bacteria      <NA>    8
+# 21        <NA>    Bacteria      <NA>    5
+# 22    Bacteria   Eukaryota      <NA>    6
+# 25    Bacteria        <NA>      <NA>  243
+
 bloop <- which((rowSums(bac.summary == "Bacteria", na.rm = TRUE) + rowSums(is.na(bac.summary))) < (ncol(bac.summary)-1))
 bac.i <- silva.compz[["Bacteria"]][[2]]
 bac.no.conflix.i <- unlist(bac.i[,-bloop]); bac.no.conflix.i <- bac.no.conflix.i[!is.na(bac.no.conflix.i)] # indices to remove as bacteria...
@@ -155,7 +156,7 @@ for (i in 1:length(macro.compz)) {
   
   if (length(intersect(rm.macro.maj,rm.macro.all)) > 0 |
       length(intersect(rm.macro.maj,macro.minority)) > 0) {
-        feck
+        foock
       }
 }
 # something's wrong above..:
