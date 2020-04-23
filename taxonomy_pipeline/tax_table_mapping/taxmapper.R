@@ -92,19 +92,19 @@ taxmapper <- function(taxin, tax2map2, exceptions,
     }
   }
   
-  #names(taxin) <- c(colnames(taxin)[1:2], toupper(colnames(taxin.u)))
-  #mapped.t <- mapped
-  #names(mapped.t) <- c(toupper(colnames(mapped)[1:ncol(taxin.u)]), colnames(mapped)[(ncol(taxin.u)+1):ncol(mapped)])
-  
   asv.mapped <- merge(x=taxin, y=mapped, by=colnames(taxin.u), all.x=TRUE)
   asv.mapped <- asv.mapped[ , !(colnames(asv.mapped) %in% colnames(taxin.u))]
+  colnames(asv.mapped) <- gsub("tax2map2_", "", colnames(asv.mapped))
   
   not.mapped <- unique(not.mapped)
   
+  colnames(mapped) <- gsub("tax2map2_", "", colnames(mapped))
+  
   if (outfilez != "none") {
-    write.csv(mapped, outfilez[1])
-    write.csv(as.data.frame(not.mapped), outfilez[2])
-    write.csv(asv.mapped, outfilez[3])
+    write.csv(mapped, outfilez[1], row.names=FALSE)
+    not.mapped.df <- as.data.frame(not.mapped)
+    write.table(not.mapped.df, outfilez[2], row.names=FALSE, col.names=FALSE)
+    write.csv(asv.mapped, outfilez[3], row.names=FALSE)
   }
   
   return (list(mapped, not.mapped, asv.mapped))
