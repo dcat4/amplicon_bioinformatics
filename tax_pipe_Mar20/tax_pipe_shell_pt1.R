@@ -388,25 +388,25 @@ nn <- c("bayes-pr2", "bayes-silva", "idtax-pr2", "idtax-silva", "lca-pr2", "lca-
 # # bayes.pr2.m <- bayes.pr2.m[ii$ix,]
 # # looks good...
 # 
-# maptax <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv",
-#                    stringsAsFactors = FALSE)
-# mappedtt <- vector(mode = "list", length = length(xx)) # for storing the mapped tax tables
-# names(mappedtt) <- nn
-# # run it furreal and save the outputs:
-# for (i in 1:length(xx)){
-#   tt <- xx[[i]]
-#   if (all(colnames(tt) != "ASV")){
-#     tt <- cbind(lca.pr2[,c("svN","ASV")], tt)
-#   }
-#   fout <- c(paste0("taxtab_map_results/map_key_",nn[i],"2pr2.csv"),
-#             paste0("taxtab_map_results/names_not_mapped_",nn[i],"2pr2.csv"),
-#             paste0("taxtab_map_results/mapped_taxtab",nn[i],"2pr2.csv"))
-#   mm <- taxmapper(tt, maptax, exceptions = c("Archaea","Bacteria"),
-#                   synonym.file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv",
-#                   outfilez = fout)
-#   mappedtt[[i]] <- mm[[3]] # assign the mapped tables
-# }
-# saveRDS(mappedtt, file = "all_mapped_taxtabs.rds")
+maptax <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv",
+                   stringsAsFactors = FALSE)
+mappedtt <- vector(mode = "list", length = length(xx)) # for storing the mapped tax tables
+names(mappedtt) <- nn
+# run it furreal and save the outputs:
+for (i in 1:length(xx)){
+  tt <- xx[[i]]
+  if (all(colnames(tt) != "ASV")){
+    tt <- cbind(lca.pr2[,c("svN","ASV")], tt)
+  }
+  fout <- c(paste0("taxtab_map_results/map_key_",nn[i],"2pr2.csv"),
+            paste0("taxtab_map_results/names_not_mapped_",nn[i],"2pr2.csv"),
+            paste0("taxtab_map_results/mapped_taxtab",nn[i],"2pr2.csv"))
+  mm <- taxmapper(tt, maptax, exceptions = c("Archaea","Bacteria"),
+                  synonym.file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv",
+                  outfilez = fout)
+  mappedtt[[i]] <- mm[[3]] # assign the mapped tables
+}
+saveRDS(mappedtt, file = "all_mapped_taxtabs.rds")
 
 mappedtt <- readRDS("all_mapped_taxtabs.rds")
 mm <- readRDS(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/Ramond_traitdb_clean.RDS")
@@ -419,17 +419,3 @@ for (i in 1:length(mappedtt)) {
             paste0("mappedtax_traitmap_results/",nn[i],"_namesNotMapped.csv"))
   traitmapper_Ramond(tt, mm, dont.map = dm, filezout = fout)
 }
-
-
-#### Step 3: Re-mapping individual tax-mapped tax tables onto trait database
-# then write a shell of my trait mapping and analysis functions
-
-#### Step 4: Comparisons of mapped taxonomy tables
-# should be straightforward...
-
-#### Step 5: ensemble taxonomy generation
-# should be straightforward
-
-#### Step 6: trait mapping of ensemble taxonomies
-# should be straightforward
-
