@@ -8,6 +8,9 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
   n.dfs <- length(x)
   ties <- vector()
   
+  # get the rows that are all NA's and pop them into the consensus.tax since they're all NA's
+  # think of ways to validate the mapping of consensus
+  
   for (row in 1:n.rows) {
     placed <- FALSE
     for (col in rev(3:n.cols)) {
@@ -16,7 +19,17 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
         taxs <- c(taxs, df[row, col])
       }
       freq.df <- as.data.frame(table(taxs), stringsAsFactors=FALSE)
+      # add NA freq here by counting NA in taxs 
       if (nrow(freq.df) > 0) {
+        # multiply the weight to the frequency and divide it by the normalized 
+        
+        # example of weighing (default vector of 1's)
+        # table1 -> Bacteria      table2 -> Bacteria      table3 -> Eukaryota 
+        # weighing scheme 1 1 2
+        
+        # freq -> 2 Euk and 2 Bacteria 
+        
+        
         freq.df$prop <- freq.df$Freq / length(taxs[!is.na(taxs)])
         max.prop <- max(freq.df$prop)
         if (max.prop >= threshold) {
@@ -27,6 +40,7 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
             break
           }
           else {
+            # add NA downstream of the column found 
             df <- x[[match(c.tax, taxs)]]
             result <- rbind(result, df[row, ])
             placed <- TRUE
@@ -39,6 +53,10 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
       ties <- c(ties, row)
     }
   }
+  
+  # add the tie breaking stuff -> user specified rules
+  # weighing option for each data frame for proportion calculation (numeric vector in order of df)
+  # option to treat NA's as a name
   
   return(list(result, ties))
   
