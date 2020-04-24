@@ -1,5 +1,5 @@
 consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"),
-                                  tiebreakz = "LCAlike") {
+                                  tiebreakz = "LCAlike", count.na=FALSE, weights=rep(1, length(list(...)))) {
   x <- list(...)
   consensus.tax <- data.frame(matrix(ncol=(ncol(x[[1]])), nrow=0, dimnames=list(NULL, names(x[[1]]))))
   n.rows <- nrow(x[[1]])
@@ -15,11 +15,19 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
     placed <- FALSE
     for (col in rev(3:n.cols)) {
       taxs <- vector()
-      for (df in x) {
-        taxs <- c(taxs, df[row, col])
+      for (i in 1:n.df) {
+        df <- x[[i]]
+        taxs <- c(taxs, rep(df[row, col], weights[i]))
       }
       freq.df <- as.data.frame(table(taxs), stringsAsFactors=FALSE)
-      # add NA freq here by counting NA in taxs 
+      # add NA freq here by counting NA in taxs
+      if (count.na) {
+        freq.df <- as.data.frame(table(taxs, exclude=NULL), stringsAsFactors=FALSE)
+        # if the table only contains NA move to the next column
+        if (nrow(freq.df) == 1 & (is.na(freq.df[,1]))) {
+          next
+        }
+      }
       if (nrow(freq.df) > 0) {
         # multiply the weight to the frequency and divide it by the normalized 
         
@@ -30,7 +38,7 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
         # freq -> 2 Euk and 2 Bacteria 
         
         
-        freq.df$prop <- freq.df$Freq / length(taxs[!is.na(taxs)])
+        freq.df$prop <- freq.df$Freq / sum(freq.df$Freq)
         max.prop <- max(freq.df$prop)
         if (max.prop >= threshold) {
           c.tax <- freq.df[which(freq.df$prop == max.prop), "taxs"]
@@ -42,7 +50,12 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
           else {
             # add NA downstream of the column found 
             df <- x[[match(c.tax, taxs)]]
-            result <- rbind(result, df[row, ])
+            
+            matched.row <- data.frame(matrix(rep(NA, n.cols), ncol = n.cols, nrow = 1))
+            colnames(matched.row) <- colnames(df)
+            matched.row[1:col] <- df[row, ][1:col]
+            
+            consensus.tax <- rbind(consensus.tax, matched.row)
             placed <- TRUE
             break
           }
@@ -58,7 +71,7 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
   # weighing option for each data frame for proportion calculation (numeric vector in order of df)
   # option to treat NA's as a name
   
-  return(list(result, ties))
+  return(list(consensus.tax, ties))
   
   # NOTES
   # majority rule system
