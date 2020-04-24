@@ -67,6 +67,23 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
     }
   }
   
+  # for (i in 1:length(ties)) {
+  #   matchz <- lapply(x, function(x), x[ties[i], ])
+  #   eh <- unique(matrix(unlist(matchz), nrow=length(matchz), byrow=TRUE))
+  #   if (nrow(eh) == 1) {
+  #     consensus.tax <- rbind(consensus.tax, eh)
+  #     ties[i] <- NA
+  #   }
+  # }
+  # ties <- ties[!is.na(ties)]
+  # if (length(grep("none", tiebreakz)) > 0) {
+  #   
+  # } else if (identical("LCAlike", tiebreakz)) {
+  #   for (i in 1:length(ties)) {
+  #     tsi <- unlist(bestrez)
+  #   }
+  # }
+  
   # add the tie breaking stuff -> user specified rules
   # weighing option for each data frame for proportion calculation (numeric vector in order of df)
   # option to treat NA's as a name
