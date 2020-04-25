@@ -67,6 +67,10 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
     }
   }
   
+  # tie breaking
+  # tie for the highest proportion
+  # take the tables -> subset it and apply the tie breaking rules to the subset
+  
   # for (i in 1:length(ties)) {
   #   matchz <- lapply(x, function(x), x[ties[i], ])
   #   eh <- unique(matrix(unlist(matchz), nrow=length(matchz), byrow=TRUE))
