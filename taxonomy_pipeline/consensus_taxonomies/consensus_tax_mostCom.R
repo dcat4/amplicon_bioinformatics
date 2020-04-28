@@ -15,7 +15,7 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
     placed <- FALSE
     for (col in rev(3:n.cols)) {
       taxs <- vector()
-      for (i in 1:n.df) {
+      for (i in 1:n.dfs) {
         df <- x[[i]]
         taxs <- c(taxs, rep(df[row, col], weights[i]))
       }
@@ -71,22 +71,67 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
   # tie for the highest proportion
   # take the tables -> subset it and apply the tie breaking rules to the subset
   
-  # for (i in 1:length(ties)) {
-  #   matchz <- lapply(x, function(x), x[ties[i], ])
-  #   eh <- unique(matrix(unlist(matchz), nrow=length(matchz), byrow=TRUE))
-  #   if (nrow(eh) == 1) {
-  #     consensus.tax <- rbind(consensus.tax, eh)
-  #     ties[i] <- NA
-  #   }
-  # }
-  # ties <- ties[!is.na(ties)]
-  # if (length(grep("none", tiebreakz)) > 0) {
-  #   
-  # } else if (identical("LCAlike", tiebreakz)) {
-  #   for (i in 1:length(ties)) {
-  #     tsi <- unlist(bestrez)
-  #   }
-  # }
+  for (i in 1:length(ties)) {
+    matchz <- lapply(x, function(x) x[ties[i], ])
+    eh <- unique(matrix(unlist(matchz), nrow=length(matchz), byrow=TRUE))
+    if (nrow(eh) == 1) {
+      consensus.tax <- rbind(consensus.tax, eh)
+      ties[i] <- NA
+    }
+  }
+  ties <- ties[!is.na(ties)]
+  if (length(grep("none", tiebreakz)) > 0) {
+
+  } else if (identical("LCAlike", tiebreakz)) {
+    for (i in 1:length(ties)) {
+      eh <- lapply(x, function(z) z[ties[i],])
+      eh <- lapply(eh, function(z) z[, !is.na(z)])
+      durp <- x[[1]][ties[i],]
+      eh2 <- unlist(lapply(lapply(eh, intersect, durp), length))
+      lcai <- which(eh2 == min(eh2))
+      if (length(lcai) > 1) {
+        lcai <- min(lcai)
+      }
+      if (lcapathi > 0) {
+        matched.row <- data.frame(matrix(rep(NA, n.cols), ncol = n.cols, nrow = 1))
+        colnames(matched.row) <- colnames(df)
+        matched.row[,1:lcapathi] <- x[[lcai]][ties[i], 1:lcapathi]
+        consensus.tax <- rbind(consensus.tax, matched.row)
+        ties[i] <- NA
+      } else {
+        ties[i] <- NA
+      }
+    }
+  } else {
+    for (j in 1:length(tiebreakz)) {
+      pikl <- tiebreakz[[j]][1]
+      if (length(grep("LCAlike", pikl)) > 0) {
+        for (i in 1:length(ties)) {
+          eh <- lapply(x, function(z) z[ties[i],])
+          eh <- lapply(eh, function(z) z[,!is.na(z)])
+          durp <- x[[1]][ties[i],]
+          eh2 <- unlist(lapply(lapply(eh, intersect, durp), length))
+          lcai <- which(eh2 == min(eh2))
+          if (length(lcai) > 1) {
+            lcai <- min(lcai)
+          }
+          lcapathi <- min(eh2)
+          if (lcapathi > 0) {
+            matched.row <- data.frame(matrix(rep(NA, n.cols), ncol = n.cols, nrow = 1))
+            colnames(matched.row) <- colnames(df)
+            matched.row[,1:lcapathi] <- x[[lcai]][ties[i], 1:lcapathi]
+            consensus.tax <- rbind(consensus.tax, matched.row)
+            ties[i] <- NA
+          } else {
+            ties[i] <- NA
+          }
+        }
+      } else {
+        # table names ?
+      }
+      ties <- ties[!is.na(ties)]
+    }
+  }
   
   # add the tie breaking stuff -> user specified rules
   # weighing option for each data frame for proportion calculation (numeric vector in order of df)
