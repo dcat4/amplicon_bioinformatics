@@ -11,13 +11,16 @@
 # the character vector should include all names within taxin that were unable to be mapped
 # the optional second data frame should have the ASV seqs supplied in taxin with the mapped taxonomic assignments (structure should be identical to taxin except for taxonomic nomenclature)
 
-taxmapper <- function(taxin, tax2map2, exceptions,
+taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
                       synonym.file = "tax_synonyms_FINAL.csv", 
                       outfilez = "none") {
   
-  findMapping <- function(taxonomy, tax2map2) {
+  findMapping <- function(taxonomy, tax2map2, ignore.format) {
     cols <- rev(names(tax2map2))
     for (i in 1:length(cols)) {
+      if (ignore.format) {
+       taxonomy <- gsub("(_.*)", "", taxonomy)
+      }
       matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
       if (nrow(matchings) != 0) {
         matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
@@ -71,7 +74,7 @@ taxmapper <- function(taxin, tax2map2, exceptions,
             last <- TRUE
           }
           if (!is.na(taxonomy)) {
-            match <- findMapping(taxonomy, tax2map2.u)
+            match <- findMapping(taxonomy, tax2map2.u, ignore.format)
             if (is.data.frame(match)) {
               combined <- cbind(taxin.u[row, ], match)
               mapped <- rbind(mapped, combined)
