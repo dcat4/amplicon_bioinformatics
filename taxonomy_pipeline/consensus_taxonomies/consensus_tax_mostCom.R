@@ -127,7 +127,23 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
           }
         }
       } else {
-        # table names ?
+        for (i in 1:length(ties)) {
+          eh <- which(tablenames %in% pikl)
+          pn <- tiebreakz[[j]][2]
+          if (length(eh) == 0) {
+            
+          } else if (length(eh) > 0 & is.na(pn)) {
+            consensus.tax <- rbind(consensus.tax, x[[eh]][ties[i],])
+            ties[i] <- NA
+          } else if (length(eh) > 0 & !is.na(pn)) {
+            if (pn %in% x[[eh]][ties[i],]) {
+              consensus.tax <- rbind(consensus.tax, x[[eh]][ties[i],])
+              ties[i] <- NA
+            } else {
+              
+            }
+          }
+        }
       }
       ties <- ties[!is.na(ties)]
     }
