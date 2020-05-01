@@ -1,0 +1,159 @@
+---
+title: "consensus_tax_mostCom Demo"
+author: "K Son"
+date: "April 30, 2020"
+output: github_document
+---
+
+## Overview
+
+Here, we step through implementations of the consensus_tax_mostCom.R algorithm to demonstrate proper uses and anticipated results. This algorithm is built to utilize information from multiple taxonomy tables (defined here as a table of ASVs and correspnding taxonomic assignments) in order to improve the resolution and/or accuracy of taxonomic annotations of amplicon sequences. It incorporates information from multiple taxonomy tables and determines a "consensus taxonomy" for each ASV in your data set. The algorithm requires that all taxonomy tables follow the same taxonomic naming and ranking conventions, that the order of columns in each taxonomy table follows the taxonomic ranking heirarchy, and that the order of rows (ASVs) in each of the input taxonomy tables is the same. If these rules are not followed, spurious results are likely.
+
+### consensus_tax_mostCom Algorithm Description
+
+consensus_tax_mostCom generates a consensus taxonomy by using the most frequent taxonomy starting at the most specific ranking across all user-specified input taxonomy tables. In other words, it's designed to get the the taxonomic annotation where it is the majority among other taxonomic assignments. Unresolved taxonomic assignments in each taxonomy table should be indicated by NA as there is a parameter for the algorithm to consider NA as a taxonomic assignment or not. There will be occasions when multiple input taxonomy tables are 'tied' for the most frequeny taxonomy for a given ASV; thus, after assigning a consensus taxonomy to the ASVs where a single taxonomy provides the most common taxonomy, the algorithm uses a series of user-speicifed rules to break the remaining ties. Rules you may specify are demonstarted below. 
+
+### Start 'er up:
+
+We'll clear out our environment, load in the reshape2 package ofr later, set our wd, and read in taxonomy tables: The taxonomy tables used here come from implementations of the RDP Bayesian classifer, the new idtaxa algorithm, and MEGAN'S LCA algorithm against both the Silva and pr2 reference databases. Our amplicon data set is an 18S-V9 tag sequencing project from the coastal ocean. 
+
+You can do this with any taxonomy tables assuming you format them properly. To follow along with this demo, grab the taxonomy tables in the "test_data" directory of this repository and follow the code below.
+
+```{r}
+rm(list = ls())
+
+# load up reshape2:
+# load up reshape2:
+.cran_packages <- c("reshape2")
+.inst <- .cran_packages %in% installed.packages()
+if(any(!.inst)) {
+  install.packages(.cran_packages[!.inst])
+}
+sapply(c(.cran_packages), require, character.only = TRUE)
+
+# setwd and read in your datasets:
+setwd("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/demos_and_validation")
+
+idtax.pr2 <- readRDS("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/idtax_0boot_pr2_all18SAug19.rds")
+bayes.pr2 <- readRDS("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_0boot_pr2_all18SAug19.rds")
+bayes.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_silva_60boot_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+idtax.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/idtax_silva_0boot_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+lca.pr2 <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/LCA_pr2_mapped2pr2_all18SAug19.csv",
+                        stringsAsFactors = FALSE)
+lca.silva <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/test_data/LCA_silva_mapped2pr2_all18SAug19_Fixed.csv",
+                    stringsAsFactors = FALSE)
+```
+
+### Arranging and formating our taxonomy tables for running the algorithm:
+
+The data we're using was pulled slightly haphazardly, so here we'll use some bootstrapping estimates to NA-out low-confidence assignments, reformat our taxonomy tables as dataframes, and sort them alphabetically by ASV sequences so that the order of rows/ASVs is the same across all taxonomy tables.
+
+```{r}
+# convert tax tables to dataframes as needed and sort by seq's to get the same order..:
+conf <- as.data.frame(bayes.pr2$boot, stringsAsFactors = FALSE)
+bayes.pr2 <- as.data.frame(bayes.pr2$tax, stringsAsFactors = FALSE)
+bayes.pr2[conf < 60] <- NA
+
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/helper_fcns/idtax2df.R")
+idtax.pr2 <- idtax2df(idtax.pr2, boot = 60)
+
+# sorting each dataframe by DNA sequences:
+ii <- sort(rownames(bayes.pr2), index.return = TRUE)
+bayes.pr2 <- bayes.pr2[ii$ix,]
+idtax.pr2 <- idtax.pr2[ii$ix,]
+jj <- sort(bayes.silva$DNASeq, index.return = TRUE)
+bayes.silva <- bayes.silva[jj$ix,2:9]
+kk <- sort(idtax.silva$Sequence, index.return = TRUE)
+idtax.silva <- idtax.silva[kk$ix,3:10]
+ll <- sort(lca.silva$Sequence, index.return = TRUE)
+lca.silva <- lca.silva[ll$ix,3:10]
+mm <- sort(lca.pr2$Sequence, index.return = TRUE)
+lca.pr2 <- lca.pr2[mm$ix,3:10]
+```
+
+You can run this for a sanity check:
+
+```{r}
+# compare the sorted sequence arrays to ensure they're all =:
+identical(ii$x, jj$x)
+identical(jj$x, kk$x)
+identical(kk$x, ll$x)
+identical(ll$x,mm$x)
+```
+
+...and this to see what the data sets look like. These data sets are available in the test-data directory.
+
+```{r}
+# one more check:
+head(bayes.pr2, n = 10)
+head(bayes.silva, n = 10)
+head(idtax.pr2, n = 10)
+head(idtax.silva, n = 10)
+head(lca.pr2, n = 10)
+head(lca.silva, n = 10)
+```
+
+### First run
+
+Our data should be good to go, so let's run the algorithm. We have to specify names for our taxonmy tables in a character vector. We won't specify rank names b/c the defaults work for us.
+
+First we'll tell R where to find the algorithm and load it into our session. In our first run, we'll specify no tie-breakers, so that the algorithm will only assign consensus taxonomies to ASVs where a single taxonomy table has the most common taxonomy of our 3 datasets.
+
+```{r}
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom.R")
+
+tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
+test1 <- consensus_tax_mostCom(bayes.pr2, idtax.pr2, lca.pr2,
+                        tablenames = tblnam, 
+                        tiebreakz = "none")
+```
+
+The output is a list with 3 elements. The 1st element is the consensus taxonomy table, the 2nd element is a list of all the input taxonomies, and the third element is a numeric vector containing the row indices of all ASVs that still require tie-breaking. The below code chunk will manipulate the outputs to create a more manageable subset of outputs we can use for qualitative QC to ensure the algorithm works properly.
+
+```{r}
+itb <- test1[[3]] # indices of rows needing tiebreakerz (none used above)
+allt <- test1[[2]] # all input taxonomy tables
+# assign same rank names to all input tables:
+ranknamez <- c("Kingdom","Supergroup","Division","Class","Order","Family","Genus","Species") 
+ah <- function(x) {
+  colnames(x) <- ranknamez
+  return(x)
+}
+subber <- 1:2000 
+allt <- lapply(allt, ah) 
+alltsub <- lapply(allt, function(x) x[subber,]) # subset a smaller number of rows for QC
+eh <- melt(alltsub) # pops it all into a dataframe...
+# adds table names to indicate which taxtable each row came from
+for (i in 1:length(tblnam)) {
+  eh$L1[eh$L1 == i] <- tblnam[i]
+}
+
+# add in merged tax to your QC df and write out a csv that you can QC manually...
+mt <- test1[[1]]
+mt$L1 <- "merged"
+QCer <- rbind(eh,mt[subber,],stringsAsFactors = FALSE)
+# below rearranges the combined df by ASV rather than by taxtable...
+tot <- max(subber)
+strt <- min(subber)
+yy <- c()
+for (i in strt:tot) {
+  xx <- seq(from = i, to = tot * (length(tblnam)+1), by = tot)
+  yy <- append(yy,xx)
+}
+QCer <- QCer[yy,]
+```
+
+Above we've created a dataframe, QCer, that has chunked out each ASV's taxonomic assignments from each of our 6 input taxonomy tables, as well as our consensus taxonomy table, and put them in consecutive rows. This way, we can look at chunks of assignments for the same ASV to QC the algorithm and ensure it's doing what we think. I did this by saving QCer to a csv file and flipping through the outputs, as below:
+
+```{r}
+write.csv(QCer, file = "~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/QCme_6tables_none.csv")
+```
+
+Here I'll pop out a few good examples I found from my .csv file to demo the expected output of the tiebreakerz = "none"
+
+```{r}
+ii <- which(rownames(QCer) %in% "1")
+QCer[seq(ii,ii+6,1),]
+```
