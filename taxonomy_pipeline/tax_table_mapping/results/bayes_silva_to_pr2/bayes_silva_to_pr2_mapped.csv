@@ -223,7 +223,7 @@
 "Bacteria","Proteobacteria","Alphaproteobacteria","Rhizobiales","Rhizobiaceae","Pseudorhizobium","Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Bacteria","Proteobacteria","Alphaproteobacteria","Rhodospirillales","AEGEAN-169_marine_group",NA,"Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Bacteria","Firmicutes","Bacilli","Lactobacillales","Catellicoccaceae","Catellicoccus","Bacteria",NA,NA,NA,NA,NA,NA,NA
-"Eukaryota","Diatomea","Coscinodiscophytina_cl","Fragilariales","Fragilariales_fa","Podocystis","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X",NA,NA,NA
+"Eukaryota","Diatomea","Coscinodiscophytina_cl","Fragilariales","Fragilariales_fa","Podocystis","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta",NA,NA,NA,NA
 "Bacteria","Proteobacteria","Gammaproteobacteria","Oceanospirillales","Halomonadaceae","Modicisalibacter","Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Bacteria","Proteobacteria","Alphaproteobacteria","SAR11_clade","Clade_III",NA,"Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Eukaryota","Retaria","Polycystinea","Collodaria","Collodaria_fa","Collophidium","Eukaryota","Rhizaria","Radiolaria","Polycystinea","Collodaria","Collophidiidae","Collophidium",NA
@@ -580,7 +580,7 @@
 "Bacteria","Proteobacteria","Gammaproteobacteria","Cardiobacteriales","Cardiobacteriaceae","Dichelobacter","Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Bacteria","Proteobacteria","Gammaproteobacteria","Chromatiales","Chromatiaceae","Thiohalobacter","Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Bacteria","Proteobacteria","Alphaproteobacteria","Acetobacterales","Acetobacteraceae","Acidocella","Bacteria",NA,NA,NA,NA,NA,NA,NA
-"Eukaryota","Holozoa_ph","Choanoflagellida","Craspedida_or","Salpingoecidae","Salpingoeca","Eukaryota","Opisthokonta","Choanoflagellida",NA,NA,NA,NA,NA
+"Eukaryota","Holozoa_ph","Choanoflagellida","Craspedida_or","Salpingoecidae","Salpingoeca","Eukaryota","Opisthokonta","Choanoflagellida","Choanoflagellatea","Craspedida",NA,NA,NA
 "Eukaryota","Ascomycota","Leotiomycetes","Helotiales","Leotiaceae","Alatospora","Eukaryota","Opisthokonta","Fungi","Ascomycota","Pezizomycotina","Pezizomycotina_X","Alatospora",NA
 "Bacteria","Proteobacteria","Gammaproteobacteria","Enterobacterales","Enterobacteriaceae","Aquamonas","Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Bacteria","Cyanobacteria","Cyanobacteriia","Cyanobacteriales","Cyanobacteriaceae","Chroococcus_HUW_799","Bacteria",NA,NA,NA,NA,NA,NA,NA
@@ -632,7 +632,7 @@
 "Eukaryota","Nemertea","Enopla",NA,NA,NA,"Eukaryota","Opisthokonta","Metazoa","Nemertea",NA,NA,NA,NA
 "Eukaryota","Diatomea","Bacillariophyceae","Bacillariophyceae_or","Bacillariophyceae_fa","Phaeodactylum","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Raphid-pennate","Phaeodactylum",NA
 "Eukaryota","Diatomea","Bacillariophyceae","Bacillariophyceae_or","Bacillariophyceae_fa","Neidium","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Raphid-pennate","Neidium",NA
-"Eukaryota","Holozoa_ph","Choanoflagellida","Acanthoecida_or","Stephanoecidae",NA,"Eukaryota","Opisthokonta","Choanoflagellida",NA,NA,NA,NA,NA
+"Eukaryota","Holozoa_ph","Choanoflagellida","Acanthoecida_or","Stephanoecidae",NA,"Eukaryota","Opisthokonta","Choanoflagellida","Choanoflagellatea","Acanthoecida",NA,NA,NA
 "Bacteria","Verrucomicrobiota","Verrucomicrobiae","Opitutales","Puniceicoccaceae","MB11C04_marine_group","Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Bacteria","Acidobacteriota","Subgroup_26",NA,NA,NA,"Bacteria",NA,NA,NA,NA,NA,NA,NA
 "Bacteria","Acidobacteriota","Vicinamibacteria","Vicinamibacterales",NA,NA,"Bacteria",NA,NA,NA,NA,NA,NA,NA
@@ -761,7 +761,7 @@
 "Eukaryota","Dinoflagellata","Dinophyceae","Gymnodiniphycidae","Gymnodinium_clade","Nematodinium","Eukaryota","Alveolata","Dinoflagellata","Dinophyceae","Gymnodiniales","Warnowiaceae","Nematodinium",NA
 "Eukaryota","Ascomycota","Eurotiomycetes","Chaetothyriales","Herpotrichiellaceae","Berlesiella","Eukaryota","Opisthokonta","Fungi","Ascomycota","Pezizomycotina","Eurotiomycetes","Berlesiella",NA
 "Eukaryota","Ascomycota","Lecanoromycetes","Lecanorales","Parmeliaceae","Menegazzia","Eukaryota","Opisthokonta","Fungi","Ascomycota","Pezizomycotina","Lecanoromycetes","Menegazzia",NA
-"Eukaryota","Holozoa_ph","Choanoflagellida","Acanthoecida_or","Stephanoecidae","Marine_Choanoflagellates_1","Eukaryota","Opisthokonta","Choanoflagellida",NA,NA,NA,NA,NA
+"Eukaryota","Holozoa_ph","Choanoflagellida","Acanthoecida_or","Stephanoecidae","Marine_Choanoflagellates_1","Eukaryota","Opisthokonta","Choanoflagellida","Choanoflagellatea","Acanthoecida",NA,NA,NA
 "Eukaryota","Chytridiomycota","Chytridiomycetes","Incertae_Sedis","Synchytriaceae","Synchytrium","Eukaryota","Opisthokonta","Fungi","Chytridiomycota","Chytridiomycotina","Chytridiomycetes","Synchytrium",NA
 "Eukaryota","Ascomycota","Pezizomycetes","Pezizales","Pyronemataceae","Pseudombrophila","Eukaryota","Opisthokonta","Fungi","Ascomycota","Pezizomycotina","Pezizomycetes","Pseudombrophila",NA
 "Eukaryota","Basidiomycota","Agaricomycetes","Agaricales","Agaricales_fa","Clavaria","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Agaricomycotina","Agaricomycetes","Clavaria",NA
@@ -899,7 +899,7 @@
 "Eukaryota","Ochrophyta_ph","Raphidophyceae","Chattonellales","Chattonellales_fa","Merotricha","Eukaryota","Stramenopiles","Ochrophyta","Raphidophyceae",NA,NA,NA,NA
 "Eukaryota","Ochrophyta_ph","Chrysophyceae","Chromulinales","Chromulinales_fa","Phaeoplaca","Eukaryota","Stramenopiles","Ochrophyta","Chrysophyceae","Chrysophyceae_X","Chrysophyceae_Clade-D","Phaeoplaca",NA
 "Eukaryota","Ctenophora","Tentaculata",NA,NA,NA,"Eukaryota","Opisthokonta","Metazoa","Ctenophora",NA,NA,NA,NA
-"Eukaryota","Ochrophyta_ph","ANT37-16",NA,NA,NA,"Eukaryota",NA,NA,NA,NA,NA,NA,NA
+"Eukaryota","Ochrophyta_ph","ANT37-16",NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta",NA,NA,NA,NA,NA
 "Eukaryota","Peronosporomycetes","Peronosporomycetes_cl","Peronosporomycetes_or","Peronosporomycetes_fa",NA,"Eukaryota","Stramenopiles","Pseudofungi","Oomycota",NA,NA,NA,NA
 "Eukaryota","Prymnesiophyceae","Prymnesiophyceae_cl","Prymnesiales","Prymnesiales_fa","Imantonia","Eukaryota","Hacrobia","Haptophyta","Prymnesiophyceae","Prymnesiales",NA,NA,NA
 "Eukaryota","Basidiomycota","Agaricostilbomycetes","Agaricostilbales","Chionosphaeraceae","Ballistosporomyces","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Pucciniomycotina","Agaricostilbomycetes",NA,NA
@@ -933,7 +933,7 @@
 "Eukaryota","MAST-4","MAST-4D",NA,NA,NA,"Eukaryota","Stramenopiles","Sagenista","MAST-4","MAST-4D",NA,NA,NA
 "Eukaryota","MAST-3","MAST-3D",NA,NA,NA,"Eukaryota","Stramenopiles","Opalozoa","MAST-3","MAST-3D",NA,NA,NA
 "Eukaryota","Diatomea","Mediophyceae","Mediophyceae_or","Mediophyceae_fa","Thalassiosira","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Polar-centric-Mediophyceae","Thalassiosira",NA
-"Eukaryota","Diatomea","Coscinodiscophytina_cl","Fragilariales",NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X",NA,NA,NA
+"Eukaryota","Diatomea","Coscinodiscophytina_cl","Fragilariales",NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta",NA,NA,NA,NA
 "Eukaryota","Diatomea","Coscinodiscophytina_cl","Fragilariales","Fragilariales_fa","Licmosphenia","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Araphid-pennate","Licmosphenia",NA
 "Eukaryota","Stramenopiles_ph",NA,NA,NA,NA,"Eukaryota","Stramenopiles",NA,NA,NA,NA,NA,NA
 "Eukaryota","Diatomea","Bacillariophyceae","Bacillariophyceae_or","Bacillariophyceae_fa","Pseudo-nitzschia","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Raphid-pennate","Pseudo-nitzschia",NA
@@ -968,7 +968,7 @@
 "Eukaryota","Ochrophyta_ph","Phaeophyceae","Ectocarpales","Ectocarpales_fa","Heribaudiella","Eukaryota","Stramenopiles","Ochrophyta","Phaeophyceae","Phaeophyceae_X","Phaeophyceae_XX","Heribaudiella",NA
 "Eukaryota","Ochrophyta_ph","Chrysophyceae",NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Chrysophyceae",NA,NA,NA,NA
 "Eukaryota","Labyrinthulomycetes","Labyrinthulomycetes_cl","Labyrinthulomycetes_or","Thraustochytriaceae","Thraustochytrium","Eukaryota","Stramenopiles","Sagenista","Labyrinthulomycetes","Thraustochytriales","Thraustochytriaceae","Thraustochytrium",NA
-"Eukaryota","Diatomea","Coscinodiscophytina_cl","Fragilariales","Fragilariales_fa","Gedaniella","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X",NA,NA,NA
+"Eukaryota","Diatomea","Coscinodiscophytina_cl","Fragilariales","Fragilariales_fa","Gedaniella","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta",NA,NA,NA,NA
 "Eukaryota","Diatomea","Coscinodiscophytina_cl","Coscinodiscophytina_or","Rhizosolenids","Proboscia","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Radial-centric-basal-Coscinodiscophyceae","Proboscia",NA
 "Eukaryota","Ochrophyta_ph","Phaeophyceae","Ectocarpales","Ectocarpales_fa","Ectocarpus","Eukaryota","Stramenopiles","Ochrophyta","Phaeophyceae","Phaeophyceae_X","Phaeophyceae_XX","Ectocarpus",NA
 "Eukaryota","Ochrophyta_ph","Phaeophyceae","Ectocarpales",NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Phaeophyceae",NA,NA,NA,NA
@@ -1011,7 +1011,7 @@
 "Eukaryota","Ochrophyta_ph","Eustigmatophyceae","Eustigmatales","Eustigmatales_fa","Nannochloropsis","Eukaryota","Stramenopiles","Ochrophyta","Eustigmatophyceae","Eustigmatophyceae_X","Eustigmatophyceae_XX","Nannochloropsis",NA
 "Eukaryota","Ochrophyta_ph","Chrysophyceae","Incertae_Sedis","Incertae_Sedis_fa","Chlamydomyxa","Eukaryota","Stramenopiles","Ochrophyta","Synchromophyceae","Synchromadales","Synchromaceae","Chlamydomyxa",NA
 "Eukaryota","Diatomea","Bacillariophyceae","Bacillariophyceae_or","Bacillariophyceae_fa","Haslea","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Raphid-pennate","Haslea",NA
-"Eukaryota","Scalidophora","Priapulida_cl","Priapulida_or","Tubiluchidae",NA,"Eukaryota",NA,NA,NA,NA,NA,NA,NA
+"Eukaryota","Scalidophora","Priapulida_cl","Priapulida_or","Tubiluchidae",NA,"Eukaryota","Opisthokonta","Metazoa","Priapulida",NA,NA,NA,NA
 "Eukaryota","Ochrophyta_ph","Chrysophyceae","Ochromonadales","Ochromonadales_fa","Epipyxis","Eukaryota","Stramenopiles","Ochrophyta","Chrysophyceae","Chrysophyceae_X","Chrysophyceae_Clade-C","Epipyxis",NA
 "Eukaryota","Diatomea","Diatomea_cl","ME-Euk-FW10",NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta",NA,NA,NA,NA
 "Eukaryota","Diatomea","Mediophyceae","Mediophyceae_or","Mediophyceae_fa","Roundia","Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Polar-centric-Mediophyceae","Roundia",NA
@@ -1157,7 +1157,7 @@
 "Eukaryota","Ascomycota","Lecanoromycetes","Ostropales","Graphidaceae","Graphis","Eukaryota","Opisthokonta","Fungi","Ascomycota","Pezizomycotina","Lecanoromycetes","Graphis",NA
 "Eukaryota","Mollusca","Bivalvia","Solemyoida",NA,NA,"Eukaryota","Opisthokonta","Metazoa","Mollusca","Bivalvia",NA,NA,NA
 "Eukaryota","Ciliophora","Intramacronucleata","Conthreep","Phyllopharyngea","Coeloperix","Eukaryota","Alveolata","Ciliophora","Phyllopharyngea",NA,NA,NA,NA
-"Eukaryota","Scalidophora","Kinorhyncha_cl","Kinorhyncha_Incertae_Sedis",NA,NA,"Eukaryota",NA,NA,NA,NA,NA,NA,NA
+"Eukaryota","Scalidophora","Kinorhyncha_cl","Kinorhyncha_Incertae_Sedis",NA,NA,"Eukaryota","Opisthokonta","Metazoa","Kinorhyncha",NA,NA,NA,NA
 "Eukaryota","Basidiomycota","Exobasidiomycetes","Exobasidiales","Brachybasidiaceae",NA,"Eukaryota","Opisthokonta","Fungi","Basidiomycota","Ustilaginomycotina","Exobasidiomycetes",NA,NA
 "Eukaryota","Mollusca","Bivalvia","Unionoida",NA,NA,"Eukaryota","Opisthokonta","Metazoa","Mollusca","Bivalvia",NA,NA,NA
 "Eukaryota","Heterolobosea","Tetramitia","Tetramitia_or","Tetramitia_fa","Psalteriomonas","Eukaryota","Excavata","Discoba","Heterolobosea","Heterolobosea_X","Lyromonadidae","Psalteriomonas",NA
@@ -1211,7 +1211,7 @@
 "Eukaryota","Hemichordata","Enteropneusta","Enteropneusta_or","Harrimaniidae",NA,"Eukaryota","Opisthokonta","Metazoa","Hemichordata","Hemichordata_X","Hemichordata_XX","Enteropneusta",NA
 "Eukaryota","Mollusca","Gastropoda","Caenogastropoda",NA,NA,"Eukaryota","Opisthokonta","Metazoa","Mollusca","Gastropoda","Caenogastropoda",NA,NA
 "Eukaryota","Basidiomycota","Agaricomycetes","Gomphales","Gomphaceae","Clavariadelphus","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Agaricomycotina","Agaricomycetes","Clavariadelphus",NA
-"Eukaryota","Holozoa_ph","Choanoflagellida","Acanthoecida_or","Acanthoecidae","FV23-1A4","Eukaryota","Opisthokonta","Choanoflagellida",NA,NA,NA,NA,NA
+"Eukaryota","Holozoa_ph","Choanoflagellida","Acanthoecida_or","Acanthoecidae","FV23-1A4","Eukaryota","Opisthokonta","Choanoflagellida","Choanoflagellatea","Acanthoecida",NA,NA,NA
 "Eukaryota","Mucoromycota","Glomeromycetes","Archaeosporales","Geosiphonaceae","Geosiphon","Eukaryota","Opisthokonta","Fungi","Glomeromycota","Glomeromycotina","Glomeromycotina_X","Geosiphon",NA
 "Eukaryota","Arthropoda","Arachnida","Scorpiones",NA,NA,"Eukaryota","Opisthokonta","Metazoa","Arthropoda","Chelicerata","Arachnida",NA,NA
 "Eukaryota","Basidiomycota","Microbotryomycetes","Incertae_Sedis","Incertae_Sedis","Colacogloea","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Pucciniomycotina","Microbotryomycetes","Colacogloea",NA
@@ -1300,7 +1300,7 @@
 "Eukaryota","Porifera","Demospongiae","Poecilosclerida",NA,NA,"Eukaryota","Opisthokonta","Metazoa","Porifera","Porifera_X","Demospongiae","Poecilosclerida",NA
 "Eukaryota","Basidiomycota","Microbotryomycetes","Sporidiobolales","Sporidiobolaceae","Rhodotorula","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Pucciniomycotina","Cystobasidiomycetes","Rhodotorula",NA
 "Eukaryota","Basidiomycota","Cystobasidiomycetes","Erythrobasidiales","Erythrobasidiaceae","Erythrobasidium","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Pucciniomycotina","Cystobasidiomycetes","Erythrobasidium",NA
-"Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Debaryomycetaceae","Candida_kruisii_clade","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales",NA,NA
+"Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Debaryomycetaceae","Candida_kruisii_clade","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales","Candida",NA
 "Eukaryota","Basidiomycota","Microbotryomycetes","Sporidiobolales","Sporidiobolaceae","Sporobolomyces","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Pucciniomycotina","Cystobasidiomycetes","Sporobolomyces",NA
 "Eukaryota","Basidiomycota","Microbotryomycetes","Sporidiobolales","Sporidiobolaceae",NA,"Eukaryota","Opisthokonta","Fungi","Basidiomycota","Pucciniomycotina","Microbotryomycetes",NA,NA
 "Eukaryota","Basidiomycota","Microbotryomycetes","Leucosporidiales","Leucosporidiaceae","Leucosporidium","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Pucciniomycotina","Microbotryomycetes","Leucosporidium",NA
@@ -1317,7 +1317,7 @@
 "Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Pichiaceae","Pichia","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales","Pichia",NA
 "Eukaryota","Ascomycota","Pezizomycetes","Pezizales","Pyronemataceae","Lasiobolidium","Eukaryota","Opisthokonta","Fungi","Ascomycota","Pezizomycotina","Pezizomycetes","Lasiobolidium",NA
 "Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Incertae_Sedis","Kuraishia","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales","Kuraishia",NA
-"Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Debaryomycetaceae","Candida_glaebosa_clade","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales",NA,NA
+"Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Debaryomycetaceae","Candida_glaebosa_clade","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales","Candida",NA
 "Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Saccharomycetales_fa","Candida","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales","Candida",NA
 "Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Debaryomycetaceae","Candida-Lodderomyces_clade","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales","Lodderomyces",NA
 "Eukaryota","Basidiomycota","Agaricostilbomycetes","Agaricostilbales","Kondoaceae","Kondoa","Eukaryota","Opisthokonta","Fungi","Basidiomycota","Pucciniomycotina","Agaricostilbomycetes","Kondoa",NA
@@ -1343,7 +1343,7 @@
 "Eukaryota","Amoebozoa_ph","Discosea","Centramoebida","Centramoebida_fa","Acanthamoeba","Eukaryota","Amoebozoa","Lobosa","Lobosa_X","Centramoebida","Acanthamoebidae","Acanthamoeba",NA
 "Eukaryota","Cryptophyceae_ph","Cryptophyceae_cl","Cryptomonadales","Cryptomonadales_fa","Teleaulax","Eukaryota","Hacrobia","Cryptophyta","Cryptophyceae","Cryptomonadales","Cryptomonadales_X","Teleaulax",NA
 "Eukaryota","Phragmoplastophyta","Embryophyta","Sphaerocarpales","Sphaerocarpales_fa","Sphaerocarpos","Eukaryota","Archaeplastida","Streptophyta","Embryophyceae","Embryophyceae_X","Embryophyceae_XX","Sphaerocarpos",NA
-"Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Debaryomycetaceae","Candida_tanzawaensis_clade","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales",NA,NA
+"Eukaryota","Ascomycota","Saccharomycetes","Saccharomycetales","Debaryomycetaceae","Candida_tanzawaensis_clade","Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales","Candida",NA
 "Eukaryota","Mucoromycota","Incertae_Sedis","Mucorales","Lichtheimiaceae",NA,"Eukaryota","Opisthokonta","Fungi","Mucoromycota","Mucoromycotina","Mucorales",NA,NA
 "Eukaryota","Ascomycota","Sordariomycetes","Diaporthales","Diaporthales_fa","Valsa","Eukaryota","Opisthokonta","Fungi","Ascomycota","Pezizomycotina","Sordariomycetes","Valsa",NA
 "Eukaryota","Entoprocta",NA,NA,NA,NA,"Eukaryota","Opisthokonta","Metazoa","Entoprocta",NA,NA,NA,NA
