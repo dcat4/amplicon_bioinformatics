@@ -17,10 +17,10 @@ taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
   
   findMapping <- function(taxonomy, tax2map2, ignore.format) {
     cols <- rev(names(tax2map2))
+    if (ignore.format) {
+      taxonomy <- gsub("(_.*)", "", taxonomy)
+    }
     for (i in 1:length(cols)) {
-      if (ignore.format) {
-       taxonomy <- gsub("(_.*)", "", taxonomy)
-      }
       matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
       if (nrow(matchings) != 0) {
         matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
