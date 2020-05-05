@@ -18,15 +18,31 @@ taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
   findMapping <- function(taxonomy, tax2map2, ignore.format) {
     cols <- rev(names(tax2map2))
     if (ignore.format) {
-      taxonomy <- gsub("(_.*)", "", taxonomy)
+      no.hyphen <- strsplit(taxonomy, "_")
+      no.underscore <- strsplit(taxonomy, "-")
+      taxs <- c(no.hyphen[[1]], no.underscore[[1]], gsub("(_.*)", "", taxonomy), taxonomy)
+      taxs <- unique(taxs)
+      for (taxonomy in taxs) {
+        for (i in 1:length(cols)) {
+          matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
+          if (nrow(matchings) != 0) {
+            matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
+            colnames(matched.row) <- rev(cols)
+            matched.row[1:(length(cols)-i+1)] <- matchings[1, ][1:(length(cols)-i+1)]
+            return (matched.row)
+          }
+        }
+      }
     }
-    for (i in 1:length(cols)) {
-      matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
-      if (nrow(matchings) != 0) {
-        matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
-        colnames(matched.row) <- rev(cols)
-        matched.row[1:(length(cols)-i+1)] <- matchings[1, ][1:(length(cols)-i+1)]
-        return (matched.row)
+    else {
+      for (i in 1:length(cols)) {
+        matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
+        if (nrow(matchings) != 0) {
+          matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
+          colnames(matched.row) <- rev(cols)
+          matched.row[1:(length(cols)-i+1)] <- matchings[1, ][1:(length(cols)-i+1)]
+          return (matched.row)
+        }
       }
     }
     return (NA)
