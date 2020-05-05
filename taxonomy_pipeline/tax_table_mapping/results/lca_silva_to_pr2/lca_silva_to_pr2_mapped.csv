@@ -101,7 +101,7 @@
 "Eukaryota","Stramenopiles","Labyrinthulomycetes",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Sagenista","Labyrinthulomycetes",NA,NA,NA,NA
 "Eukaryota","Stramenopiles","Bacillariophyta","Bacillariophyceae","Bacillariophycidae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Raphid-pennate",NA,NA
 "Eukaryota","Haptista","Haptophyta","Prymnesiophyceae","Phaeocystales","Phaeocystaceae","Phaeocystis",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Hacrobia","Haptophyta","Prymnesiophyceae","Phaeocystales","Phaeocystaceae","Phaeocystis",NA
-"Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae","Rhizosoleniophycidae","Rhizosoleniales","Rhizosoleniaceae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X",NA,NA,NA
+"Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae","Rhizosoleniophycidae","Rhizosoleniales","Rhizosoleniaceae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta",NA,NA,NA,NA
 "Eukaryota","Stramenopiles","Chrysophyceae","Chromulinales",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Chrysophyceae",NA,NA,NA,NA
 "Eukaryota","Stramenopiles","Raphidophyceae","Chattonellales",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Raphidophyceae",NA,NA,NA,NA
 "Eukaryota","Stramenopiles","Chrysophyceae","Chromulinales","Paraphysomonadaceae","Paraphysomonas",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Chrysophyceae","Chrysophyceae_X","Chrysophyceae_Clade-F","Paraphysomonas",NA
@@ -112,7 +112,7 @@
 "Eukaryota","Opisthokonta","Fungi",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Opisthokonta","Fungi",NA,NA,NA,NA,NA
 "Eukaryota","Opisthokonta","Fungi","Dikarya",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Opisthokonta","Fungi",NA,NA,NA,NA,NA
 "Eukaryota","Opisthokonta","Fungi","Dikarya","Ascomycota","saccharomyceta","Saccharomycotina","Saccharomycetes","Saccharomycetales",NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Opisthokonta","Fungi","Ascomycota","Saccharomycotina","Saccharomycetales",NA,NA
-"Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae","Coscinodiscophycidae","Coscinodiscales",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X",NA,NA,NA
+"Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae","Coscinodiscophycidae","Coscinodiscales",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta",NA,NA,NA,NA
 "Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae","Coscinodiscophycidae","Coscinodiscales","Hemidiscaceae","Actinocyclus",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Radial-centric-basal-Coscinodiscophyceae","Actinocyclus",NA
 "Eukaryota","Stramenopiles","Bicosoecida","Bicosoecidae","Bicosoeca",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Opalozoa","Bicoecea","Bicoecales","Bicoecaceae","Bicosoeca",NA
 "Eukaryota","Stramenopiles","Bicosoecida",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Opalozoa","Bicoecea","Borokales","Borokaceae","Bicosoecida",NA
@@ -121,7 +121,7 @@
 "Eukaryota","Stramenopiles","Bacillariophyta","Mediophyceae","Biddulphiophycidae","Biddulphiales","Biddulphiaceae","Biddulphia",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Polar-centric-Mediophyceae","Biddulphia",NA
 "Eukaryota","Stramenopiles","Bacillariophyta","Bacillariophyceae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Raphid-pennate",NA,NA
 "Eukaryota","Viridiplantae","Chlorophyta","Mamiellophyceae","Mamiellales",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Archaeplastida","Chlorophyta","Mamiellophyceae","Mamiellales",NA,NA,NA
-"Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae","Coscinodiscophycidae","Melosirales",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X",NA,NA,NA
+"Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae","Coscinodiscophycidae","Melosirales",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta",NA,NA,NA,NA
 "Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae","Coscinodiscophycidae","Melosirales","Stephanopyxidaceae","Stephanopyxis",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X","Radial-centric-basal-Coscinodiscophyceae","Stephanopyxis",NA
 "Eukaryota","Stramenopiles","Dictyochophyceae","Florenciellales","Pseudochattonella",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Dictyochophyceae","Dictyochophyceae_X","Florenciellales","Pseudochattonella",NA
 "Eukaryota","Stramenopiles","Dictyochophyceae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Dictyochophyceae",NA,NA,NA,NA
@@ -130,7 +130,7 @@
 "Eukaryota","Opisthokonta","Metazoa","Eumetazoa","Ctenophora","Tentaculata",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Opisthokonta","Metazoa","Ctenophora",NA,NA,NA,NA
 "Eukaryota","Opisthokonta","Metazoa","Eumetazoa","Bilateria","Deuterostomia","Chordata","Craniata","Vertebrata","Gnathostomata","Teleostomi","Euteleostomi",NA,NA,NA,NA,NA,NA,"Eukaryota","Archaeplastida","Rhodophyta","Florideophyceae","Ceramiales","Rhodomelaceae","Vertebrata",NA
 "Eukaryota","Opisthokonta","Metazoa","Eumetazoa","Cnidaria","Hydrozoa","Hydroidolina","Siphonophorae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Opisthokonta","Metazoa","Cnidaria","Cnidaria_X","Hydrozoa",NA,NA
-"Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta","Bacillariophyta_X",NA,NA,NA
+"Eukaryota","Stramenopiles","Bacillariophyta","Coscinodiscophyceae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Stramenopiles","Ochrophyta","Bacillariophyta",NA,NA,NA,NA
 "Eukaryota","Alveolata","Dinophyceae","Gonyaulacales","Lingulodinium",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Alveolata","Dinoflagellata","Dinophyceae","Gonyaulacales","Gonyaulacaceae","Lingulodinium",NA
 "Eukaryota","Alveolata","Dinophyceae","Noctilucales","Noctilucaceae","Noctiluca",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Alveolata","Dinoflagellata","Noctilucophyceae","Noctilucales","Noctilucaceae","Noctiluca",NA
 "Eukaryota","Alveolata","Dinophyceae","Thoracosphaerales","Thoracosphaeraceae",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,"Eukaryota","Alveolata","Dinoflagellata","Dinophyceae","Peridiniales","Thoracosphaeraceae",NA,NA
