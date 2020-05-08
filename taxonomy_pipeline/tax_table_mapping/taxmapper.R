@@ -15,34 +15,45 @@ taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
                       synonym.file = "tax_synonyms_FINAL.csv", 
                       outfilez = "none") {
   
-  findMapping <- function(taxonomy, tax2map2, ignore.format) {
-    cols <- rev(names(tax2map2))
-    if (ignore.format) {
-      no.hyphen <- strsplit(taxonomy, "_")
-      no.underscore <- strsplit(taxonomy, "-")
-      taxs <- c(no.hyphen[[1]], no.underscore[[1]], gsub("(_.*)", "", taxonomy), taxonomy)
-      taxs <- unique(taxs)
-      for (taxonomy in taxs) {
-        for (i in 1:length(cols)) {
-          matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
-          if (nrow(matchings) != 0) {
-            matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
-            colnames(matched.row) <- rev(cols)
-            matched.row[1:(length(cols)-i+1)] <- matchings[1, ][1:(length(cols)-i+1)]
-            return (matched.row)
-          }
-        }
-      }
+  createAlts <- function(taxs) {
+    result <- vector()
+    for (tax in taxs) {
+      a1 <- gsub("(phyta)", "phyceae", tax)
+      a2 <- gsub("(phyta)", "phyte", tax)
+      a3 <- gsub("(phyta)", "phytes", tax)
+      a4 <- gsub("(phyceae)", "phyta", tax)
+      a5 <- gsub("(phyceae)", "phyte", tax)
+      a6 <- gsub("(phyceae)", "phytes", tax)
+      a7 <- gsub("(phyte)", "phyta", tax)
+      a8 <- gsub("(phyte)", "phyceae", tax)
+      a9 <- gsub("(phyte)", "phytes", tax)
+      a10 <- gsub("(phytes)", "phyta", tax)
+      a11 <- gsub("(phytes)", "phyceae", tax)
+      a12 <- gsub("(phytes)", "phyte", tax)
+      result <- c(result, unique(c(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12)))
     }
-    else {
-      for (i in 1:length(cols)) {
-        matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
-        if (nrow(matchings) != 0) {
-          matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
-          colnames(matched.row) <- rev(cols)
-          matched.row[1:(length(cols)-i+1)] <- matchings[1, ][1:(length(cols)-i+1)]
-          return (matched.row)
-        }
+    return(unique(result))
+  }
+  
+  preprocessTax <- function(taxonomy) {
+    no.hyphen <- strsplit(taxonomy, "_")
+    no.underscore <- strsplit(taxonomy, "-")
+    taxs <- c(no.hyphen[[1]], no.underscore[[1]], gsub("(_.*)", "", taxonomy), taxonomy)
+    taxs <- unique(taxs)
+    no.upper <- tolower(taxs)
+    final.taxs <- createAlts(unique(c(taxs, no.upper)))
+    return(final.taxs)
+  }
+  
+  findMapping <- function(taxonomy, tax2map2) {
+    cols <- rev(names(tax2map2))
+    for (i in 1:length(cols)) {
+      matchings <- tax2map2[which(tax2map2[, cols[i]] == taxonomy), ]
+      if (nrow(matchings) != 0) {
+        matched.row <- data.frame(matrix(rep(NA, length(cols)), ncol = length(cols), nrow = 1))
+        colnames(matched.row) <- rev(cols)
+        matched.row[1:(length(cols)-i+1)] <- matchings[1, ][1:(length(cols)-i+1)]
+        return (matched.row)
       }
     }
     return (NA)
@@ -81,16 +92,26 @@ taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
     }
     else {
       for (col in 1:ncol(taxin.u)) {
-        tax <- taxin.u[row, taxin.cols[col]]
-        pos.taxs <- getSynonyms(tax, synonyms)
+        orig.tax <- taxin.u[row, taxin.cols[col]]
+        if (ignore.format) {
+          pos.taxs <- preprocessTax(orig.tax)
+          for(tax in pos.taxs) {
+            pos.taxs <- c(pos.taxs, getSynonyms(tax, synonyms))
+          }
+          pos.taxs <- unique(c(orig.tax, pos.taxs))
+        }
+        else {
+          pos.taxs <- getSynonyms(tax, synonyms)
+        }
         matched <- FALSE
+        counter <- 1
         for (taxonomy in pos.taxs) {
           last <- FALSE
-          if (match(taxonomy, pos.taxs) == length(pos.taxs)) {
+          if (counter == length(pos.taxs)) {
             last <- TRUE
           }
           if (!is.na(taxonomy)) {
-            match <- findMapping(taxonomy, tax2map2.u, ignore.format)
+            match <- findMapping(taxonomy, tax2map2.u)
             if (is.data.frame(match)) {
               combined <- cbind(taxin.u[row, ], match)
               mapped <- rbind(mapped, combined)
@@ -103,6 +124,7 @@ taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
               }
             }
           }
+          counter <- counter + 1
         }
         if (matched) {
           break
