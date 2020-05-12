@@ -785,7 +785,7 @@
 "Eukaryota","Arthropoda","Insecta","Psocoptera",NA,NA,"Eukaryota","Opisthokonta","Metazoa","Arthropoda","Hexapoda","Insecta",NA,NA
 "Eukaryota","Dinoflagellata","Dinophyceae","Peridiniales","Peridiniales_fa","Heterocapsa","Eukaryota","Alveolata","Dinoflagellata","Dinophyceae","Peridiniales","Heterocapsaceae","Heterocapsa",NA
 "Eukaryota","Tunicata","Appendicularia","Copelata","Oikopleuridae",NA,"Eukaryota","Opisthokonta","Metazoa","Urochordata","Urochordata_X","Appendicularia",NA,NA
-"Eukaryota","Phragmoplastophyta","Embryophyta",NA,NA,NA,"Eukaryota",NA,NA,NA,NA,NA,NA,NA
+"Eukaryota","Phragmoplastophyta","Embryophyta",NA,NA,NA,"Eukaryota","Archaeplastida","Streptophyta","Embryophyceae",NA,NA,NA,NA
 "Eukaryota","Dinoflagellata","Dinophyceae","Incertae Sedis_9","Incertae Sedis_9_fa","Sabulodinium","Eukaryota","Alveolata","Dinoflagellata","Dinophyceae","Peridiniales","Peridiniales_X","Sabulodinium",NA
 "Eukaryota","Retaria","Polycystinea","Spumellaria","Spumellaria_fa","Actinomma","Eukaryota","Rhizaria","Radiolaria","Polycystinea","Spumellarida","Spumellarida_X","Actinomma",NA
 "Eukaryota","Retaria","Polycystinea","Spumellaria","Spumellaria_fa","Cladococcus","Eukaryota","Rhizaria","Radiolaria","Polycystinea","Spumellarida","Spumellarida-Group-I","Cladococcus",NA
@@ -973,7 +973,7 @@
 "Eukaryota","Eukaryota_ph","Phaeophyceae","Ectocarpales","Ectocarpales_fa","Halothrix","Eukaryota","Stramenopiles","Ochrophyta","Phaeophyceae","Phaeophyceae_X","Phaeophyceae_XX","Halothrix",NA
 "Eukaryota","Eukaryota_ph","Phaeophyceae","Ectocarpales","Ectocarpales_fa","Tribonema","Eukaryota","Stramenopiles","Ochrophyta","Xanthophyceae","Xanthophyceae_X","Xanthophyceae_XX","Tribonema",NA
 "Eukaryota","MAST-2",NA,NA,NA,NA,"Eukaryota","Stramenopiles","Pseudofungi","MAST-2",NA,NA,NA,NA
-"Eukaryota","Cercozoa","Chlorarachniophyta","Chlorarachniophyta_or","Chlorarachniophyta_fa","NOR26","Eukaryota","Rhizaria","Cercozoa",NA,NA,NA,NA,NA
+"Eukaryota","Cercozoa","Chlorarachniophyta","Chlorarachniophyta_or","Chlorarachniophyta_fa","NOR26","Eukaryota","Rhizaria","Cercozoa","Chlorarachniophyceae",NA,NA,NA,NA
 "Eukaryota","Peronosporomycetes","Peronosporomycetes_cl","Peronosporomycetes_or","Peronosporomycetes_fa","Halodaphnea","Eukaryota","Stramenopiles","Pseudofungi","Oomycota","Oomycota_X","Haliphthorales","Halodaphnea",NA
 "Eukaryota","Retaria","Acantharia","SSRPB68",NA,NA,"Eukaryota",NA,NA,NA,NA,NA,NA,NA
 "Eukaryota","Apusomonadidae","Apusomonadidae_cl","Apusomonadidae_or","Apusomonadidae_fa","Amastigomonas","Eukaryota","Apusozoa","Apusomonadidae","Apusomonadidae_Group-1","Apusomonadidae_Group-1_X","Apusomonadidae_Group-1_XX","Amastigomonas",NA
