@@ -10,22 +10,41 @@ traitmapper_Ramond_fast <- function(taxin, map2,
                                                  "Hacrobia","Amoebozoa","Apusozoa","Eukaryota_X","Protalveolata","Terrabacteria"),
                                     filezout = "none") {
   
-  # finds the corresponding row in map2 to map to based on map2.taxnames
-  # the row mapped will be the row with the least number of NA's
-  # can be further sped up by arbitrarily taking the 1st row of the matchings
-  findMapping <- function(taxonomy, map2, map2.taxnames) {
+  # finds the corresponding rows in map2 to map to based on map2.taxnames
+  # for the taxs in map2.taxnames, the finalized row will be the tax if they all share the term and NA if not
+  # non tax name columns are compiled with their unique values separated by semicolons
+  findMatchings <- function(taxonomy, map2, map2.taxnames) {
     cols <- rev(map2.taxnames)
+    matched.rows <- vector()
     for (col in cols) {
-      matchings <- map2[which(map2[, col] == taxonomy), ]
-      if (nrow(matchings) != 0) {
-        matched.row <- data.frame(matrix(NA, ncol = ncol(map2) + 2), nrow = 1)
-        colnames(matched.row) <- c("name.mapped", "n.hitz", colnames(map2))
-        matched.row$name.mapped <- taxonomy
-        matched.row$n.hitz <- nrow(matchings)
-        #matched.row[3:(ncol(map2) + 2)] <- matchings[which.max(rowSums(!is.na(matchings))), ]
-        matched.row[3:(ncol(map2) + 2)] <- matchings[1,]
-        return (matched.row)
+      matched.rows <- c(matched.rows, which(map2[, col] == taxonomy))
+    }
+    matched.rows <- unique(matched.rows)
+    matchings <- map2[matched.rows, ]
+    if (nrow(matchings) != 0) {
+      matched.row <- data.frame(matrix(NA, ncol = ncol(map2) + 2), nrow = 1)
+      colnames(matched.row) <- c("name.mapped", "n.hitz", colnames(map2))
+      matched.row$name.mapped <- taxonomy
+      matched.row$n.hitz <- nrow(matchings)
+      
+      for (col in map2.taxnames) {
+        u.taxs <- unique(matchings[, col])
+        if (length(u.taxs) == 1) {
+          matched.row[, col] <- u.taxs[1]
+        }
+        else {
+          matched.row[, col] <- NA
+        }
       }
+      
+      nontax.cols <- setdiff(colnames(map2), map2.taxnames)
+      
+      for (col in nontax.cols) {
+        u.vals <- unique(matchings[, col])
+        matched.row[, col] <- paste(u.vals, collapse="; ")
+      }
+      
+      return (matched.row)
     }
     return (NA)
   }
@@ -47,7 +66,7 @@ traitmapper_Ramond_fast <- function(taxin, map2,
     for (col in taxin.cols) {
       tax <- taxin.u[row, col]
       if (!is.na(taxonomy)) {
-        match <- findMapping(tax, map2, map2.taxnames)
+        match <- findMatchings(tax, map2, map2.taxnames)
         if (is.data.frame(match)) {
           combined <- cbind(taxin.u[row, ], match)
           mapped <- rbind(mapped, combined)
