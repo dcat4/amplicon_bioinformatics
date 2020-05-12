@@ -65,7 +65,7 @@ traitmapper_Ramond_fast <- function(taxin, map2,
     counter <- 1
     for (col in taxin.cols) {
       tax <- taxin.u[row, col]
-      if (!is.na(taxonomy)) {
+      if (!is.na(tax) & !is.element(tax, dont.map)) {
         match <- findMatchings(tax, map2, map2.taxnames)
         if (is.data.frame(match)) {
           combined <- cbind(taxin.u[row, ], match)
