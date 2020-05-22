@@ -6,7 +6,7 @@
 # 3. analyze traitmapping results
 
 rm(list=ls())
-setwd("~/Documents/R/amplicon_bioinformatics/tax_pipe_Mar20/")
+setwd("~/Documents/R/amplicon_bioinformatics/mock_analysis/")
 source("~/Documents/R/amplicon_bioinformatics/package_deal/all_of_it.R")
 xx <- readRDS(file = "all_mapped_taxtabs_protistOnly.rds")
 
