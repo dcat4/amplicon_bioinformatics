@@ -1,26 +1,26 @@
 # this script mines pr2 and silva databases to assemble a large test data set of V9 and V4 sequences...
 
-# this assembles v9 amplicons and expected taxonomies from pr2 and silva independtently (more work needed to make combined mock data set)
-# migrating this analysis to the server b/c it's sooooo slooooooo
+# this assembles v9 amplicons from pr2 and silva independtently 
+# does not do expected taxnomies b/c R is too slow -- 
+# instead gonna save csv files of v9 asvs and try in matlab
 
 rm(list=ls())
 setwd("~/Documents/R/amplicon_bioinformatics/mock_analysis/")
 
-library("pr2database")
 library("DECIPHER")
 library("Biostrings")
 library("stringr")
 
-data("pr2")
+fastaFile <- readDNAStringSet("~/Documents/R/pr2_version_4.12.0_18S_dada2.fasta")
+seq_name = names(fastaFile)
+# assign local accession codes to each sequence in silva for later by appending to seq_name
+seq_name2 <- str_replace_all(seq_name, ";", "|")
+for (i in 1:length(seq_name)) {
+  seq_name[i] <- paste0("pr2.",toString(i),"|",seq_name2[i])
+}
+sequence = paste(fastaFile)
+pr2 <- data.frame(seq_name, sequence, stringsAsFactors = FALSE)
 
-# the fields are described here:
-# https://pr2-database.org/documentation/pr2-fields/
-
-# extract reference sequences (according to pr2 creator)
-refz <- pr2[!is.na(pr2$reference_sequence),]
-# this chex out:
-# > unique(refz$reference_sequence)
-# [1] 1
 fastaFile <- readDNAStringSet("~/Documents/R/silva_nr_v138_train_set.fa")
 seq_name = names(fastaFile)
 # assign local accession codes to each sequence in silva for later by appending to seq_name
@@ -30,40 +30,21 @@ for (i in 1:length(seq_name)) {
 }
 sequence = paste(fastaFile)
 silva <- data.frame(seq_name, sequence, stringsAsFactors = FALSE)
-
 silvaeuk <- silva[which(str_detect(silva$seq_name,"Eukaryota")),]
 hist(str_length(silvaeuk$sequence))
 
 silva <- silvaeuk
 # clear out unnecessary stuff:
-rm("pr2", "fastaFile", "seq_name", "sequence")
-
-# pull sequences from refz, fix up names to match silva, and combine silva/pr2
-# pr2 names should go 
-refz <- subset(refz, select = c("pr2_accession","species","kingdom","supergroup","division","class","order","family","genus","sequence"))
-
-df <- as.character(NA, ncol = 1, nrow = nrow(refz))
-for (i in 1:nrow(refz)) {
-  # xx <- paste0(refz$pr2_accession[i], " ", refz$kingdom[i], "; ", refz$supergroup[i], "; ", refz$division[i], "; ", refz$class[i], "; "
-  #              , refz$order[i], "; ", refz$family[i], "; ", refz$genus[i], "; ", refz$species[i])
-  xx <- paste0(refz$pr2_accession[i],"|", refz$kingdom[i],"|", refz$supergroup[i],"|", refz$division[i],"|", refz$class[i],"|",
-               refz$order[i],"|", refz$family[i],"|", refz$genus[i], "|",refz$species[i])
-  df[i] <- xx
-}
-# worked, hooray! now df is a character vector w/ pr2 accession and taxonomy. 
-
-pr2 <- data.frame(df, stringsAsFactors = FALSE)
-pr2$sequence <- refz$sequence
-colnames(pr2) <- colnames(silva)
+rm("fastaFile", "seq_name", "seq_name2", "sequence")
 
 # remove sequences in silva that are found in pr2 to make sure your ref data is all unique (this favors pr2)
 ii <- which(silva$sequence %in% pr2$sequence)
 i2 <- which(pr2$sequence %in% silva$sequence)
 
-# shockingly, there are no overlapping sequences between silva + pr2. there are a couple hundred duplicate sequences in each though.
-# remove duplicate sequences from each:
-pr2 <- pr2[!(duplicated(pr2$sequence) | duplicated(pr2$sequence, fromLast = TRUE)), ]
-silva <- silva[!(duplicated(silva$sequence) | duplicated(silva$sequence, fromLast = TRUE)), ]
+# # shockingly, there are no overlapping sequences between silva + pr2. there are a couple hundred duplicate sequences in each though.
+# # remove duplicate sequences from each:
+# pr2 <- pr2[!(duplicated(pr2$sequence) | duplicated(pr2$sequence, fromLast = TRUE)), ]
+# silva <- silva[!(duplicated(silva$sequence) | duplicated(silva$sequence, fromLast = TRUE)), ]
 
 # isolate v9, v4, and v4-5 regions
 # adapted from here: https://github.com/pr2database/pr2-primers/blob/master/PR2%20Primers%20pr2_match.R
@@ -177,17 +158,22 @@ for (i in 1:length(un)) {
     
   } else if (length(strt) == 1 && length(fin) > 1) {
     # account for multiple reverse hits
-    # use the amplicon who's size is closer to target
-    eh <- which((fin - strt) == min(fin - strt))
+    # use the amplicon who's size is closer to target (of 125)
+    x <- fin-strt
+    eh <- which(x > 0 & abs(x - 125) == min(abs(x - 125)))
     fin <- fin[eh]
     v9.pr2[i, c("start","stop","asv.len")] <- c(strt, fin, length(strt:fin))
     ss <- pr2v[un[i]]
     v9.pr2[i, "asv"] <- str_sub(ss, start = strt, end = fin)
     
   } else if (length(strt) > 1 && length(fin) == 1) {
-    shit
-    # account for multiple F hits
-    # this never happens here...
+    x <- fin-strt
+    eh <- which(x > 0 & abs(x - 125) == min(abs(x - 125)))
+    strt <- strt[eh]
+    v9.pr2[i, c("start","stop","asv.len")] <- c(strt, fin, length(strt:fin))
+    ss <- pr2v[un[i]]
+    v9.pr2[i, "asv"] <- str_sub(ss, start = strt, end = fin)
+    
   } else if (length(strt) > 1 && length(fin) > 1) {
     shyte
     # account for multiple F + R hits
@@ -310,6 +296,12 @@ if (length(which((duplicated(v9.silva.noR$acc.tax) | duplicated(v9.silva.noR$acc
   # v9.silva.noR <- v9.silva.noR[!(duplicated(v9.silva.noR$acc.tax) | duplicated(v9.silva.noR$acc.tax, fromLast = TRUE)), ]
 }
 
+# write out your v9 ASVs to csv files so you can put the expected taxonomies together in matlab
+# (otherwise it's mega-slow b/c R sux)
+write.csv(v9.pr2, file = "mock_data/pr2_v9amps_bothPrimers.csv")
+write.csv(v9.pr2.noR, file = "mock_data/pr2_v9amps_Fonly.csv")
+write.csv(v9.silva.noR, file = "mock_data/silva_v9amps_Fonly.csv")
+
 # loop thru and 
 # 1. compare each v9 amplicon with full-lengths (is v9 a perfect substring in full-lengths?) --> maybe do this as you did with primers and allow mismatches..?
 # 2. compare each with other v9 amplicons --> same as (1) --> don't need to do this as comparing to full pr2 will give you the relevant results already
@@ -318,86 +310,89 @@ if (length(which((duplicated(v9.silva.noR$acc.tax) | duplicated(v9.silva.noR$acc
 # v9.silva is empty so ignore it..
 
 # read in silva again so you get the full (w/ proks) coverage
-fastaFile <- readDNAStringSet("~/Documents/R/silva_nr_v138_train_set.fa")
-seq_name = names(fastaFile)
-# assign local accession codes to each sequence in silva for later by appending to seq_name
-seq_name2 <- str_replace_all(seq_name, ";", "|")
-for (i in 1:length(seq_name)) {
-  seq_name[i] <- paste0("silva",toString(i),"|",seq_name2[i])
-}
-sequence = paste(fastaFile)
-silva <- data.frame(seq_name, sequence, stringsAsFactors = FALSE)
-silvav <- as.character(silva)
-
-# for silva rank names of expected taxonomy
-nr <- max(str_count(names(silvav), "\\|"))
-rn <- c("asv")
-for (i in 2:nr){
-  rn[i] <- paste0("rank", toString(i)) 
-}
-
-uv9 <- unique(c(v9.pr2$asv, v9.pr2.noR$asv, v9.silva.noR$asv))
-exp.pr2 <- data.frame(asv = uv9, exp.kingdom = rep(NA, times = length(uv9)), exp.supergroup = rep(NA, times = length(uv9)), exp.division = rep(NA, times = length(uv9)),
-                      exp.class = rep(NA, times = length(uv9)), exp.order = rep(NA, times = length(uv9)), exp.family = rep(NA, times = length(uv9)),
-                      exp.genus = rep(NA, times = length(uv9)), exp.species = rep(NA, times = length(uv9)), stringsAsFactors = FALSE)
-exp.silva <- data.frame(matrix(NA, nrow = length(uv9), ncol = nr+1), stringsAsFactors = FALSE)
-colnames(exp.silva) <- rn
-exp.silva$asv <- uv9 
-feck
-for (i in 1:length(uv9)) {
-
-  # pr2-only expectations
-  inpr2 <- which(str_detect(pr2v, uv9[i]))
-  if (length(inpr2) > 0) {
-    allt <- names(pr2v)[inpr2]
-    if (length(allt) == 1) {
-      allt <- str_split(allt,"\\|", simplify = TRUE)
-      exp.pr2[i, 2:ncol(allt)] <- allt[2:ncol(allt)]
-    } else {
-      allt <- str_split(allt,"\\|", simplify = TRUE)
-      if (nrow(unique(allt[,2:ncol(allt)])) == 1) {
-        # one unique taxonomy so pop it into expected
-        allt <- unique(allt[,2:ncol(allt)])
-        exp.pr2[i, 2:ncol(exp.pr2)] <- allt
-      } else {
-        # find LCA
-        ll <- apply(allt, MARGIN = 2, FUN = unique)
-        llen <- unlist(lapply(ll, FUN = length))
-        ri <- max(which(llen == 1)) # index of lowest rank they have in common
-        addMe <- unique(allt[ , 2:ri])
-        exp.pr2[i, 2:ri] <- addMe
-      }
-    }
-  }
-
-  # need to go back and add prokaryotes into silva for a true control...
-  # silva-only expectations
-  insilva <- which(str_detect(silvav, uv9[i]))
-  if (length(insilva) > 0) {
-    allt <- names(silvav)[insilva]
-    if (length(allt) == 1) {
-      allt <- str_split(allt,"\\|", simplify = TRUE)
-      exp.silva[i, 2:ncol(allt)] <- allt[2:ncol(allt)]
-    } else {
-      allt <- str_split(allt,"\\|", simplify = TRUE)
-      if (nrow(unique(allt[,2:ncol(allt)])) == 1) {
-        # one unique taxonomy so pop it into expected
-        allt <- unique(allt[,2:ncol(allt)])
-        exp.silva[i, 2:ncol(exp.silva)] <- allt
-      } else {
-        # find LCA
-        ll <- apply(allt, MARGIN = 2, FUN = unique)
-        llen <- unlist(lapply(ll, FUN = length))
-        ri <- max(which(llen == 1)) # index of lowest rank they have in common
-        addMe <- unique(allt[ , 2:ri])
-        exp.silva[i, 2:ri] <- addMe
-      }
-    }
-  }
-}
-
-saveRDS(exp.pr2, "v9_mockdata_pr2_only.rds")
-saveRDS(exp.silva, "v9_mockdata_silva_only.rds")
+# fastaFile <- readDNAStringSet("~/Documents/R/silva_nr_v138_train_set.fa")
+# seq_name = names(fastaFile)
+# # assign local accession codes to each sequence in silva for later by appending to seq_name
+# seq_name2 <- str_replace_all(seq_name, ";", "|")
+# for (i in 1:length(seq_name)) {
+#   seq_name[i] <- paste0("silva",toString(i),"|",seq_name2[i])
+# }
+# sequence = paste(fastaFile)
+# silva <- data.frame(seq_name, sequence, stringsAsFactors = FALSE)
+# silvav <- as.character(silva)
+# 
+# # for silva rank names of expected taxonomy
+# nr <- max(str_count(names(silvav), "\\|"))
+# rn <- c("asv")
+# for (i in 2:nr){
+#   rn[i] <- paste0("rank", toString(i)) 
+# }
+# 
+# mutherfuuuuck
+# 
+# uv9 <- unique(c(v9.pr2$asv, v9.pr2.noR$asv, v9.silva.noR$asv))
+# exp.pr2 <- data.frame(asv = uv9, exp.kingdom = rep(NA, times = length(uv9)), exp.supergroup = rep(NA, times = length(uv9)), exp.division = rep(NA, times = length(uv9)),
+#                       exp.class = rep(NA, times = length(uv9)), exp.order = rep(NA, times = length(uv9)), exp.family = rep(NA, times = length(uv9)),
+#                       exp.genus = rep(NA, times = length(uv9)), exp.species = rep(NA, times = length(uv9)), stringsAsFactors = FALSE)
+# exp.silva <- data.frame(matrix(NA, nrow = length(uv9), ncol = nr+1), stringsAsFactors = FALSE)
+# colnames(exp.silva) <- rn
+# exp.silva$asv <- uv9 
+# 
+# for (i in 1:length(uv9)) {
+# 
+#   print(paste("sv", toString(i), "of", toString(length(uv9))))
+#   # pr2-only expectations
+#   inpr2 <- which(str_detect(pr2v, uv9[i]))
+#   if (length(inpr2) > 0) {
+#     allt <- names(pr2v)[inpr2]
+#     if (length(allt) == 1) {
+#       allt <- str_split(allt,"\\|", simplify = TRUE)
+#       exp.pr2[i, 2:ncol(allt)] <- allt[2:ncol(allt)]
+#     } else {
+#       allt <- str_split(allt,"\\|", simplify = TRUE)
+#       if (nrow(unique(allt[,2:ncol(allt)])) == 1) {
+#         # one unique taxonomy so pop it into expected
+#         allt <- unique(allt[,2:ncol(allt)])
+#         exp.pr2[i, 2:ncol(exp.pr2)] <- allt
+#       } else {
+#         # find LCA
+#         ll <- apply(allt, MARGIN = 2, FUN = unique)
+#         llen <- unlist(lapply(ll, FUN = length))
+#         ri <- max(which(llen == 1)) # index of lowest rank they have in common
+#         addMe <- unique(allt[ , 2:ri])
+#         exp.pr2[i, 2:ri] <- addMe
+#       }
+#     }
+#   }
+# 
+#   # need to go back and add prokaryotes into silva for a true control...
+#   # silva-only expectations
+#   insilva <- which(str_detect(silvav, uv9[i]))
+#   if (length(insilva) > 0) {
+#     allt <- names(silvav)[insilva]
+#     if (length(allt) == 1) {
+#       allt <- str_split(allt,"\\|", simplify = TRUE)
+#       exp.silva[i, 2:ncol(allt)] <- allt[2:ncol(allt)]
+#     } else {
+#       allt <- str_split(allt,"\\|", simplify = TRUE)
+#       if (nrow(unique(allt[,2:ncol(allt)])) == 1) {
+#         # one unique taxonomy so pop it into expected
+#         allt <- unique(allt[,2:ncol(allt)])
+#         exp.silva[i, 2:ncol(exp.silva)] <- allt
+#       } else {
+#         # find LCA
+#         ll <- apply(allt, MARGIN = 2, FUN = unique)
+#         llen <- unlist(lapply(ll, FUN = length))
+#         ri <- max(which(llen == 1)) # index of lowest rank they have in common
+#         addMe <- unique(allt[ , 2:ri])
+#         exp.silva[i, 2:ri] <- addMe
+#       }
+#     }
+#   }
+# }
+# 
+# saveRDS(exp.pr2, "v9_mockdata_pr2_only.rds")
+# saveRDS(exp.silva, "v9_mockdata_silva_only.rds")
 
 
 # even this simple one takes forever... 
