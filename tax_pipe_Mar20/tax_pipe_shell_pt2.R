@@ -1,21 +1,14 @@
-# picking up where the first one left off (after mapping all tax tables onto the pr2 taxonomy)
+# so far it does taxonomic filtering of proks and macroeuks from all taxtabs (not seqtab yet) with detailed summaries of these results written to file
 
-# scrapping the whole thing and finding macro's much more inteligently, lol. Line 190ish
-# ^nvm. wasn't accounting for NA's 
+# something is wrong w/ sumarrizing nasvs removed as macroEuk categories, but other than that this works great
 
-# Up next:
-# 1. go back and bring in corrected lca/bayes-silva arrays
-# 2. save prok results to .csvs
-# 3. figure out what to do with macroeuk's...
-# 3a. leaning -- if majority are non-protist, rm; if majority are protist or NA, keep til later...
-# 4. also would be wise to save ASV seqs that are removed and/or questionable for each categorization
-# 4a. this will make it easier to go back and analyze and/or remove them later
+# proceed to the pt3 script for next steps...
 
-rm(list=setdiff(ls(), c("xx")))
+rm(list=ls())
 setwd("~/Documents/R/amplicon_bioinformatics/tax_pipe_Mar20/")
 source("~/Documents/R/amplicon_bioinformatics/package_deal/all_of_it.R")
 library("stringr")
-# xx <- readRDS(file = "all_mapped_taxtabs.rds")
+xx <- readRDS(file = "all_mapped_taxtabs.rds")
 
 orderByASV <- function(x) {
   ii <- base::sort(x$svN, index.return = TRUE)
@@ -26,11 +19,11 @@ xx <- lapply(xx, orderByASV)
 nn <- names(xx)
 
 # use silva tables to ID prok's (consistently and inconsistently across tables)
-# silvas <- xx[str_which(nn,"silva")]
-# silva.compz <- compare_by_tax_name(silvas[[1]], silvas[[2]], silvas[[3]], 
-#                                    taxnames = c("Archaea", "Bacteria"),
-#                                    tablenames = names(silvas), return.conflix = FALSE)
-# arc.summary <- silva.compz[["Archaea"]][[1]]
+silvas <- xx[str_which(nn,"silva")]
+silva.compz <- compare_by_tax_name(silvas[[1]], silvas[[2]], silvas[[3]],
+                                   taxnames = c("Archaea", "Bacteria"),
+                                   tablenames = names(silvas), return.conflix = FALSE)
+arc.summary <- silva.compz[["Archaea"]][[1]]
 # there are no conflicts for Archaea classifications:
 # > arc.summary
 # bayes.silva idtax.silva lca.silva Freq
@@ -40,8 +33,8 @@ nn <- names(xx)
 # 4        <NA>        <NA>   Archaea    4
 # 6        <NA>     Archaea      <NA>    4
 # 7     Archaea        <NA>      <NA>    7
-# bac.summary <- silva.compz[["Bacteria"]][[1]]
-# there are 20 total conflicts (ASVs assigned to something else - Eukaryota) for Bacteria
+bac.summary <- silva.compz[["Bacteria"]][[1]]
+# there are 18 total conflicts (ASVs assigned to something else - Eukaryota) for Bacteria
 # > bac.summary
 # bayes.silva idtax.silva lca.silva Freq
 # 1     Bacteria    Bacteria  Bacteria 1729
@@ -57,61 +50,61 @@ nn <- names(xx)
 # 22    Bacteria   Eukaryota      <NA>    6
 # 25    Bacteria        <NA>      <NA>  243
 
-# bloop <- which((rowSums(bac.summary == "Bacteria", na.rm = TRUE) + rowSums(is.na(bac.summary))) < (ncol(bac.summary)-1))
-# bac.i <- silva.compz[["Bacteria"]][[2]]
-# bac.no.conflix.i <- unlist(bac.i[,-bloop]); bac.no.conflix.i <- bac.no.conflix.i[!is.na(bac.no.conflix.i)] # indices to remove as bacteria...
-# arc.i <- silva.compz[["Archaea"]][[2]]
-# arc.no.conflix.i <- unlist(arc.i[,-bloop]); arc.no.conflix.i <- arc.no.conflix.i[!is.na(arc.no.conflix.i)] # indices to remove as bacteria...
-# 
-# conflix.i <- unlist(bac.i[,bloop]); conflix.i <- conflix.i[!is.na(conflix.i)]
-# # compute relative abundances of conflix:
-# seqtab <- readRDS("seqtab_nochime_Mar20.rds")
-# getme <- silvas[[1]]$ASV[conflix.i]
-# 
-# seqtab.r <- seqtab/rowSums(seqtab)
-# conflix.ra <- seqtab.r[,getme]
-# n0 <- rowSums(conflix.ra == 0) # number of 0's in each row
-# conf.asvs.per.sample <- length(conflix.i) - n0
-# conf.ra.per.sample <- rowSums(conflix.ra)
-# # eh <- apply(conflix.ra, MARGIN = 2, FUN = max)
-# # eh2 <- rowSums(conflix.ra) # sum of conflicting ASVs by sample...
-# # # eh2[eh2 > 0]
-# 
-# prok.i.no.conflict <- c(bac.no.conflix.i,arc.no.conflix.i)
-# getme <- silvas[[1]]$ASV[prok.i.no.conflict]
-# # compute ASVs and reads removed x sample and x(sample x asv) by prok filter:
-# proksub.noconflict <- seqtab.r[,getme]
-# n0 <- rowSums(proksub.noconflict == 0) # number of 0's in each row
-# rmproks.asvs.per.sample <- length(prok.i.no.conflict) - n0
-# proks.ra.per.sample <- rowSums(proksub.noconflict)
-# 
-# # write the conflicting and conflicting + total prok results to .csv's for records
-# ml <- max(length(silvas[[1]]$ASV[prok.i.no.conflict]),
-#            length(silvas[[1]]$ASV[conflix.i]))
-# rm.prok.ASVs <- data.frame(proks.no.conflict = c(silvas[[1]]$ASV[prok.i.no.conflict],rep(NA,times = ml-length(prok.i.no.conflict))),
-#                            proks.w.conflict = c(silvas[[1]]$ASV[conflix.i],rep(NA,times = ml-length(conflix.i))))
-# write.csv(rm.prok.ASVs, file = "tax_filtering_results/ASVs_rm_as_prok.csv")
-# 
-# if ( all(names(rmproks.asvs.per.sample) == names(proks.ra.per.sample)) & 
-#      all(names(rmproks.asvs.per.sample) == names(conf.asvs.per.sample)) &
-#      all(names(rmproks.asvs.per.sample) == names(conf.ra.per.sample)) ){
-#   prok.summary <- cbind(rmproks.asvs.per.sample, conf.asvs.per.sample, 
-#                         rmproks.asvs.per.sample + conf.asvs.per.sample,
-#                         proks.ra.per.sample, conf.ra.per.sample,
-#                         proks.ra.per.sample + conf.ra.per.sample)
-#   colnames(prok.summary) <- c("rm.prok.asvs.no.conflict", "rm.prok.asvs.w.conflict", "total.rm.prok.asv",
-#                               "rm.prok.rel.ab.no.conflict", "rm.prok.rel.ab.w.conflict", "total.rm.prok.rel.ab")
-#   prok.summary <- as.data.frame(prok.summary, stringsAsFactors = FALSE)
-# }
-# write.csv(prok.summary, file = "tax_filtering_results/prok_per_sample_summary.csv")
-# 
-# # remove all potential proks
-# rm.prok <- c(silvas[[1]]$ASV[prok.i.no.conflict],silvas[[1]]$ASV[conflix.i])
-# # helper function to remove ASVs from each table in the list:
-# rmmer <- function(x){
-#   x <- x[!x$ASV %in% rm.prok,]
-# }
-# xx <- lapply(xx, FUN = rmmer)
+bloop <- which((rowSums(bac.summary == "Bacteria", na.rm = TRUE) + rowSums(is.na(bac.summary))) < (ncol(bac.summary)-1))
+bac.i <- silva.compz[["Bacteria"]][[2]]
+bac.no.conflix.i <- unlist(bac.i[,-bloop]); bac.no.conflix.i <- bac.no.conflix.i[!is.na(bac.no.conflix.i)] # indices to remove as bacteria...
+arc.i <- silva.compz[["Archaea"]][[2]]
+arc.no.conflix.i <- unlist(arc.i[,-bloop]); arc.no.conflix.i <- arc.no.conflix.i[!is.na(arc.no.conflix.i)] # indices to remove as bacteria...
+
+conflix.i <- unlist(bac.i[,bloop]); conflix.i <- conflix.i[!is.na(conflix.i)]
+# compute relative abundances of conflix:
+seqtab <- readRDS("seqtab_nochime_Mar20.rds")
+getme <- silvas[[1]]$ASV[conflix.i]
+
+seqtab.r <- seqtab/rowSums(seqtab)
+conflix.ra <- seqtab.r[,getme]
+n0 <- rowSums(conflix.ra == 0) # number of 0's in each row
+conf.asvs.per.sample <- length(conflix.i) - n0
+conf.ra.per.sample <- rowSums(conflix.ra)
+# eh <- apply(conflix.ra, MARGIN = 2, FUN = max)
+# eh2 <- rowSums(conflix.ra) # sum of conflicting ASVs by sample...
+# # eh2[eh2 > 0]
+
+prok.i.no.conflict <- c(bac.no.conflix.i,arc.no.conflix.i)
+getme <- silvas[[1]]$ASV[prok.i.no.conflict]
+# compute ASVs and reads removed x sample and x(sample x asv) by prok filter:
+proksub.noconflict <- seqtab.r[,getme]
+n0 <- rowSums(proksub.noconflict == 0) # number of 0's in each row
+rmproks.asvs.per.sample <- length(prok.i.no.conflict) - n0
+proks.ra.per.sample <- rowSums(proksub.noconflict)
+
+# write the conflicting and conflicting + total prok results to .csv's for records
+ml <- max(length(silvas[[1]]$ASV[prok.i.no.conflict]),
+           length(silvas[[1]]$ASV[conflix.i]))
+rm.prok.ASVs <- data.frame(proks.no.conflict = c(silvas[[1]]$ASV[prok.i.no.conflict],rep(NA,times = ml-length(prok.i.no.conflict))),
+                           proks.w.conflict = c(silvas[[1]]$ASV[conflix.i],rep(NA,times = ml-length(conflix.i))))
+write.csv(rm.prok.ASVs, file = "tax_filtering_results/ASVs_rm_as_prok.csv")
+
+if ( all(names(rmproks.asvs.per.sample) == names(proks.ra.per.sample)) &
+     all(names(rmproks.asvs.per.sample) == names(conf.asvs.per.sample)) &
+     all(names(rmproks.asvs.per.sample) == names(conf.ra.per.sample)) ){
+  prok.summary <- cbind(rmproks.asvs.per.sample, conf.asvs.per.sample,
+                        rmproks.asvs.per.sample + conf.asvs.per.sample,
+                        proks.ra.per.sample, conf.ra.per.sample,
+                        proks.ra.per.sample + conf.ra.per.sample)
+  colnames(prok.summary) <- c("rm.prok.asvs.no.conflict", "rm.prok.asvs.w.conflict", "total.rm.prok.asv",
+                              "rm.prok.rel.ab.no.conflict", "rm.prok.rel.ab.w.conflict", "total.rm.prok.rel.ab")
+  prok.summary <- as.data.frame(prok.summary, stringsAsFactors = FALSE)
+}
+write.csv(prok.summary, file = "tax_filtering_results/prok_per_sample_summary.csv")
+
+# remove all potential proks
+rm.prok <- c(silvas[[1]]$ASV[prok.i.no.conflict],silvas[[1]]$ASV[conflix.i])
+# helper function to remove ASVs from each table in the list:
+rmmer <- function(x){
+  x <- x[!x$ASV %in% rm.prok,]
+}
+xx <- lapply(xx, FUN = rmmer)
 
 # macro-euks:
 macro.names <- c("Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae")
@@ -182,19 +175,81 @@ for (i in 1:length(macro.compz)) {
 weird <- c(intersect(rm.macro.maj,rm.macro.all),
            intersect(rm.macro.maj,macro.minority),
            intersect(rm.macro.all,macro.minority))
+# save ASVs from weird to a file for your records
 yy <- lapply(xx, function(x) x <- x[weird,])
 y2 <- matrix(unlist(yy), nrow = length(weird), byrow = FALSE)
 View(y2) # you can look at the weird ones here...
+write.csv(y2, file = "tax_filtering_results/weird_ASVs_and_tax.csv")
+
 # after manual review, all the weird overlapping ones are majority [1:6] or all [7:end] non-protist 
 macro.minority <- macro.minority[!macro.minority %in% weird]
 rm.macro.maj <- rm.macro.maj[!rm.macro.maj %in% weird[7:length(weird)]]
 rm.macro.all <- rm.macro.all[!rm.macro.all %in% weird[1:6]]
 
-# this seems to work
+# summarize results and write to files
+seqtab.r <- seqtab/rowSums(seqtab)
+getme <- xx[[1]]$ASV[macro.minority]
+macmin.ra <- seqtab.r[,getme]
+n0 <- rowSums(macmin.ra == 0) # number of 0's in each row
+macmin.asvs.per.sample <- length(macro.minority) - n0
+macmin.ra.per.sample <- rowSums(macmin.ra)
+macmin.ASVs <- xx[[1]]$ASV[macro.minority]
+write.csv(macmin.ASVs, file = "tax_filtering_results/ASVs_flagged_macroEukMinority_Assigned.csv")
 
+if ( all(names(macmin.asvs.per.sample) == names(macmin.asvs.per.sample)) ) {
+  macmin.summary <- cbind(macmin.asvs.per.sample, macmin.ra.per.sample)
+  colnames(macmin.summary) <- c("minority.macroeuk.asvs", "minority.macroeuk.rel.ab")
+  macmin.summary <- as.data.frame(macmin.summary, stringsAsFactors = FALSE)
+}
+write.csv(macmin.summary, file = "tax_filtering_results/macroEuk_minorityAssigned_per_sample_summary.csv")
 
-# I thought this would be easier but it's not...
+getme <- xx[[1]]$ASV[rm.macro.all]
+# compute ASVs and reads removed x sample and x(sample x asv) by prok filter:
+rm.macro.all.ra <- seqtab.r[,getme]
+n0 <- rowSums(rm.macro.all.ra == 0) # number of 0's in each row
+rmmacro.all.asvs.per.sample <- length(rm.macro.all) - n0
+rmmacro.all.ra.per.sample <- rowSums(rm.macro.all.ra)
 
+getme <- xx[[1]]$ASV[rm.macro.maj]
+# compute ASVs and reads removed x sample and x(sample x asv) by prok filter:
+rm.macro.maj.ra <- seqtab.r[,getme]
+n0 <- rowSums(rm.macro.maj.ra == 0) # number of 0's in each row
+rmmacro.maj.asvs.per.sample <- length(rm.macro.maj) - n0
+rmmacro.maj.ra.per.sample <- rowSums(rm.macro.maj.ra)
+
+# write the conflicting and conflicting + total prok results to .csv's for records
+ml <- max(length(xx[[1]]$ASV[rm.macro.all]),
+          length(xx[[1]]$ASV[rm.macro.maj]))
+rm.macro.ASVs <- data.frame(rm.macro.all = c(xx[[1]]$ASV[rm.macro.all],rep(NA,times = ml-length(rm.macro.all))),
+                           rm.macro.maj = c(xx[[1]]$ASV[rm.macro.maj],rep(NA,times = ml-length(rm.macro.maj))))
+write.csv(rm.macro.ASVs, file = "tax_filtering_results/ASVs_rm_as_macroEuk.csv")
+
+if ( all(names(rmmacro.all.asvs.per.sample) == names(rmmacro.all.ra.per.sample)) &
+     all(names(rmmacro.all.asvs.per.sample) == names(rmmacro.maj.asvs.per.sample)) &
+     all(names(rmmacro.all.asvs.per.sample) == names(rmmacro.maj.ra.per.sample)) ){
+  macroeuk.summary <- cbind(rmmacro.all.asvs.per.sample, rmmacro.maj.asvs.per.sample,
+                        rmmacro.all.asvs.per.sample + rmmacro.maj.asvs.per.sample,
+                        rmmacro.all.ra.per.sample, rmmacro.maj.ra.per.sample,
+                        rmmacro.all.ra.per.sample + rmmacro.maj.ra.per.sample)
+  colnames(macroeuk.summary) <- c("rm.allmacro.asvs", "rm.majoritymacro.asvs", "total.rm.macroeuk.asv",
+                              "rm.allmacro.rel.ab", "rm.majoritymacro.rel.ab", "total.rm.macroeuk.rel.ab")
+  macroeuk.summary <- as.data.frame(macroeuk.summary, stringsAsFactors = FALSE)
+}
+write.csv(macroeuk.summary, file = "tax_filtering_results/macroEuk_per_sample_summary.csv")
+
+# combine ones you're going to rm:
+rm.macro <- c(rm.macro.all, rm.macro.maj)
+rm.macro <- xx[[1]]$ASV[rm.macro]
+# helper function to remove ASVs from each table in the list:
+rmmer <- function(x){
+  x <- x[!x$ASV %in% rm.macro,]
+}
+xx <- lapply(xx, FUN = rmmer)
+
+# write out the tax-filtered + mapped taxtabs for downstream analysis:
+saveRDS(xx, "all_mapped_taxtabs_protistOnly.rds")
+
+###OLD SHIIIT ----
 # macro.names <- c("Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae")
 # containMacro <- function(x) {
 #   macrows <- apply(x, MARGIN = 1, function(z) any(z %in% macro.names))
@@ -207,9 +262,6 @@ rm.macro.all <- rm.macro.all[!rm.macro.all %in% weird[1:6]]
 #   ff <- apply(x, MARGIN = 1, function(z) length(which(!z)))
 #   propo <- tt/(tt+ff)
 #   return(propo)
-# }
-# countNA <- function(x) {
-#   
 # }
 # eh <- lapply(xx, containMacro)
 # ci <- eh[[2]]
@@ -240,18 +292,5 @@ rm.macro.all <- rm.macro.all[!rm.macro.all %in% weird[1:6]]
 
 # remove macro's ID'ed as all and/or as majority
 
-feck
-# note that it doesn't really make sense to do this until after removing non-protists...
-# analyze the trait mapping results:
-trts <- c("Chloroplast", "Plast_Origin", "Ingestion", "Cover", "Shape")
-for (i in 1:length(xx)){
-  tt <- xx[[i]]
-  mr <- read.csv(paste0("unmappedtax_traitmap_results/",nn[i],"_mapout.csv"), stringsAsFactors = FALSE)
-  for (j in 1:length(trts)){
-    fout <- c(paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_ASV_plot.pdf"), 
-              paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_abundance_plot1.pdf"),
-              paste0("unmappedtax_traitmap_results/", nn[i], "_", trts[j], "_abundance_plot2.pdf"))
-    analyze_traitmap_byTrait(map.result = mr, trait.name = trts[j], otu.table = seqtab, pltfilez = fout)
-  }
-}
+
 

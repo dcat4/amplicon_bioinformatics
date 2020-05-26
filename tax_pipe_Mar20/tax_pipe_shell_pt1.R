@@ -1,11 +1,6 @@
 # DONE but will have to revisit
 
-# I did some exploration of boot-thresholds in bayes/idtax tables
-# did some prelim mapping of OG tax tables onto trait database
-# mapped all tax tables onto pr2 + then did trait-mapping on outputs
-# saved all the outputs and moving on to pt 2 to remove non-protists, analyze trait-mapping results
-
-# didnt quite get thru a full run, files will tell u what you can comment out
+# works fine - prob gonna move post-tax-mapped trait-mapping to pt3 post-tax-filtering to (hopefully) reduce computation time
 
 #### Starting point:
 # Starts with initial taxonomic assignments output by DADA2/idtaxa/BLAST-MEGAN-LCA, boot-strapping thresholds not set yet, with arrays/files as follows:
@@ -392,6 +387,7 @@ maptax <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_
                    stringsAsFactors = FALSE)
 mappedtt <- vector(mode = "list", length = length(xx)) # for storing the mapped tax tables
 names(mappedtt) <- nn
+maptax <- maptax[, colnames(maptax) %in% c("kingdom", "supergroup", "division", "class", "order", "family", "genus", "species")]
 # run it furreal and save the outputs:
 for (i in 1:length(xx)){
   tt <- xx[[i]]
@@ -408,14 +404,14 @@ for (i in 1:length(xx)){
 }
 saveRDS(mappedtt, file = "all_mapped_taxtabs.rds")
 
-mappedtt <- readRDS("all_mapped_taxtabs.rds")
-mm <- readRDS(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/Ramond_traitdb_clean.RDS")
-dm <- c("Eukaryota", "Archaea", "Bacteria", "Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae",
-                   "Alveolata","Opisthokonta","Archaeplastida","Excavata","Rhizaria","Stramenopiles",
-                   "Hacrobia","Amoebozoa","Apusozoa","Eukaryota_X","Protalveolata","Terrabacteria")
-for (i in 1:length(mappedtt)) {
-  tt <- mappedtt[[i]]
-  fout <- c(paste0("mappedtax_traitmap_results/",nn[i],"_mapout.csv"), 
-            paste0("mappedtax_traitmap_results/",nn[i],"_namesNotMapped.csv"))
-  traitmapper_Ramond(tt, mm, dont.map = dm, filezout = fout)
-}
+# moving post-tax-mapping trait mapping to pt3
+# mm <- readRDS(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/Ramond_traitdb_clean.RDS")
+# dm <- c("Eukaryota", "Archaea", "Bacteria", "Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae",
+#                    "Alveolata","Opisthokonta","Archaeplastida","Excavata","Rhizaria","Stramenopiles",
+#                    "Hacrobia","Amoebozoa","Apusozoa","Eukaryota_X","Protalveolata","Terrabacteria")
+# for (i in 1:length(mappedtt)) {
+#   tt <- mappedtt[[i]]
+#   fout <- c(paste0("mappedtax_traitmap_results/",nn[i],"_mapout.csv"), 
+#             paste0("mappedtax_traitmap_results/",nn[i],"_namesNotMapped.csv"))
+#   traitmapper_Ramond(tt, mm, dont.map = dm, filezout = fout)
+# }
