@@ -8,8 +8,8 @@ consensus_tax_mostCom2 <- function(..., tablenames = c("bayes", "idtax"), rankna
 
   consensus.tax <- data.frame(matrix(ncol=n.cols, nrow=0, dimnames=list(NULL, names(x[[1]]))))
   
-  tiebrekaer <- NA
-  if (tiebreakz == "none") {
+  tiebreaker <- NA
+  if (tiebreakz != "none") {
     tiebreaker <- data.frame(matrix(unlist(tiebreakz), nrow=length(tiebreakz), byrow=T, dimnames=list(NULL, c("table", "tax"))),stringsAsFactors=FALSE)
   }
   

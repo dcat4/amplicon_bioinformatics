@@ -95,65 +95,92 @@ head(lca.pr2, n = 10)
 head(lca.silva, n = 10)
 ```
 
+The algorithm expects that the ASV's in each taxonomy data frame are all in the same order. Before inputting our tables in the algorithm, we will standardize our `bayes.silva`, `idtax.silva`, and `lca.silva` taxonomies to pr2 using the taxonomy mapping function as well as sort them by svN and ASV's.
+
+```{r}
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/taxmapper.R")
+
+synonym.filepath <- "~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv"
+
+# Bacteria and Archaea doesn't exist in pr2
+nonexistent <- c('Bacteria', 'Archaea')
+
+pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv")
+pr2 <- pr2[,-1]
+
+bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=pr2, 
+                               exceptions=nonexistent,
+                               synonym.file=synonym.filepath)
+
+idtax.silva.2.pr2 <- taxmapper(taxin=idtax.silva, tax2map2=pr2, 
+                               exceptions=nonexistent,
+                               synonym.file=synonym.filepath)
+lca.silva.2.pr2 <- taxmapper(taxin=lca.silva, tax2map2=pr2, 
+                               exceptions=nonexistent,
+                               synonym.file=synonym.filepath)
+
+bayes <- bayes.silva.2.pr2[[3]]
+idtax <- idtax.silva.2.pr2[[3]]
+lca <- lca.silva.2.pr2[[3]]
+
+s.bayes <- bayes[sort(as.character(bayes$svN), index.return=TRUE)$ix, ]
+s.idtax <- idtax[sort(as.character(idtax$svN), index.return=TRUE)$ix, ]
+s.lca <- lca[sort(as.character(lca$svN), index.return=TRUE)$ix, ]
+```
+
+
 ### First run
 
-Our data should be good to go, so let's run the algorithm. We have to specify names for our taxonmy tables in a character vector. We won't specify rank names b/c the defaults work for us.
+Our data should be good to go, so let's run the algorithm. We have to specify names for our taxonmy tables in a character vector. We won't specify rank names b/c the defaults work for us. There is an option for the algorithm to count the term NA as part of the majority computation. In this case, we'll count it. 
 
 First we'll tell R where to find the algorithm and load it into our session. In our first run, we'll specify no tie-breakers, so that the algorithm will only assign consensus taxonomies to ASVs where a single taxonomy table has the most common taxonomy of our 3 datasets.
 
 ```{r}
-source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom2.R")
 
 tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
-test1 <- consensus_tax_mostCom(bayes.pr2, idtax.pr2, lca.pr2,
-                        tablenames = tblnam, 
+test1 <- consensus_tax_mostCom2(s.bayes, s.idtax, s.lca,
+                        tablenames = tblnam, count.na=TRUE,
                         tiebreakz = "none")
 ```
 
-The output is a list with 3 elements. The 1st element is the consensus taxonomy table, the 2nd element is a list of all the input taxonomies, and the third element is a numeric vector containing the row indices of all ASVs that still require tie-breaking. The below code chunk will manipulate the outputs to create a more manageable subset of outputs we can use for qualitative QC to ensure the algorithm works properly.
+The output is a list with 3 elements. The 1st element is the consensus taxonomy table, the 2nd element is a list of all the input taxonomies, and the third element is a numeric vector containing the row indices of all ASVs that still require tie-breaking. 
+
+In order to show different scenarios of our algorithm resolving the majorities, we've handpicked certain rows to build a subset data frame to showcase our algorithm. 
 
 ```{r}
-itb <- test1[[3]] # indices of rows needing tiebreakerz (none used above)
-allt <- test1[[2]] # all input taxonomy tables
-# assign same rank names to all input tables:
-ranknamez <- c("Kingdom","Supergroup","Division","Class","Order","Family","Genus","Species") 
-ah <- function(x) {
-  colnames(x) <- ranknamez
-  return(x)
-}
-subber <- 1:2000 
-allt <- lapply(allt, ah) 
-alltsub <- lapply(allt, function(x) x[subber,]) # subset a smaller number of rows for QC
-eh <- melt(alltsub) # pops it all into a dataframe...
-# adds table names to indicate which taxtable each row came from
-for (i in 1:length(tblnam)) {
-  eh$L1[eh$L1 == i] <- tblnam[i]
-}
+svs <- c("sv24097", "sv14101", "sv15679", "sv19788", "sv22921", "sv9968", "sv19154", "sv17559", "sv19589", "sv17897", "sv17874", "sv104", "sv5216", "sv5759", "sv6408", "sv5605", "sv12184", "sv16779", "sv15370", "sv20943", "sv23365", "sv1509", "sv4792", "sv22976", "sv20635", "sv17488", "sv17511", "sv22291", "sv8232", "sv15734", "sv5756", "sv14822", "sv21647", "sv4356", "sv9792", "sv5337", "sv11054", "sv5272")
 
-# add in merged tax to your QC df and write out a csv that you can QC manually...
-mt <- test1[[1]]
-mt$L1 <- "merged"
-QCer <- rbind(eh,mt[subber,],stringsAsFactors = FALSE)
-# below rearranges the combined df by ASV rather than by taxtable...
-tot <- max(subber)
-strt <- min(subber)
-yy <- c()
-for (i in strt:tot) {
-  xx <- seq(from = i, to = tot * (length(tblnam)+1), by = tot)
-  yy <- append(yy,xx)
-}
-QCer <- QCer[yy,]
+mini.b <- s.bayes[which(s.bayes$svN %in% svs), ]
+mini.i <- s.idtax[which(s.idtax$svN %in% svs), ]
+mini.l <- s.lca[which(s.lca$svN %in% svs), ]
+
+c.test <- consensus_tax_mostCom2(mini.b, mini.i, mini.l, 
+                                 tablenames = c("bayes", "idtax", "lca"), 
+                                 ranknamez = c("kingdom", "supergroup", "division", "class", "order", "family", "genus", "species"), 
+                                 tiebreakz = "none", count.na = TRUE)
 ```
 
-Above we've created a dataframe, QCer, that has chunked out each ASV's taxonomic assignments from each of our 6 input taxonomy tables, as well as our consensus taxonomy table, and put them in consecutive rows. This way, we can look at chunks of assignments for the same ASV to QC the algorithm and ensure it's doing what we think. I did this by saving QCer to a csv file and flipping through the outputs, as below:
+We've saved the result in a csv file called `bayes_idtax_lca_pr2_mapped.csv` that we will store into a data frame called `consensus.res`. We chunked out each ASV's taxonomic assignments from each of our 3 input taxonomy tables, as well as our consensus taxonomy table, and put them in consecutive rows. This way, we can look at chunks of assignments for the same ASV to `consensus.res` the algorithm and ensure it's doing what we think. 
+
+Here, we'll pop out a few good examples. 
 
 ```{r}
-write.csv(QCer, file = "~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar2020/QCme_6tables_none.csv")
+consensus.res[1:4, 4:12]
 ```
 
-Here I'll pop out a few good examples I found from my .csv file to demo the expected output of the tiebreakerz = "none"
+The output shows the taxonomic assignments for an arbitrary ASV in 3 of our initial taxonomy tables, as well as our consensus table. The last column shows the taxonomy table of each row for this arbitrary ASV. RESULT deontes our consensus taxonomy. We can see that all of the taxonomies are the same, so it's obvious that the resulting consensus taxonomy should be the same as well.
+
+Now let's look at one where some contain different taxonomies.
 
 ```{r}
-ii <- which(rownames(QCer) %in% "1")
-QCer[seq(ii,ii+6,1),]
+consensus.res[11:14, 4:12]
 ```
+
+Here, we can see that the taxonomies in bayes and idtax are the majority in each column compared to the NA taxonomy in LCA. Therefore, the resulting consensus taxonomy would be the taxonomies from bayes and idtax. 
+
+```{r}
+consensus.res[81:84, 4:12]
+```
+
+We can see that in the Order, Family, and Genus rankings, there is no majority as there is a three way tie between the taxonomy tables. Since we didn't specify a tiebreaker preference, the algorithm automatically assigns NA to that column as it wasn't able to conclude to a consensus. 
