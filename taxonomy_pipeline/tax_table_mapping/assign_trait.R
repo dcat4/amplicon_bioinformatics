@@ -5,23 +5,31 @@ assign_trait <- function(taxin, trait.map, traits=c("SizeMin", "SizeMax", "Cover
                                                      "Prey_Specialisation", "Mucilage", "Chemical_Signal", "Nutrient_Afinity", 
                                                      "Oxygen_Tolerance", "Salinity", "Temperature", "Depth", "Toxygenity", 
                                                      "Benthic_Phase", "Longevity", "Cyst_Spore", "Ploidy", "Genome_Size"), 
-                         num.traits=1, separate=TRUE) {
+                         binary=FALSE, want=rep(NA, length(traits)), separate=TRUE) {
   
-  finializeTrait <- function(x, n) {
+  searchTraits <- function(x, wanted) {
     # if there is a semicolon, resolve this
     if (grepl(";", x, fixed = TRUE)) {
-      # check if NA exists in the string, if it does, then you're done
-      if (str_detect(x, "NA")) {
-        return(NA)
-      } else {
-        # no need to split, just find the nth occurence of the semicolon and substring before that
-        idx <- gregexpr(";", x)[[1]]
-        if (n > length(idx)) {
-          return(x)
-        } else {
-          return(substr(x, 1, idx[n] - 1))
-        }
+      return (NA)
+    } else { # if not, just return whatever since it's a single item
+      if (is.na(x)) {
+        return (NA)
       }
+      else if (x == "NA") {
+        return (NA)
+      }
+      else if (x == wanted) {
+        return (TRUE)
+      } else {
+        return(FALSE)
+      }
+    }
+  }
+  
+  finializeTrait <- function(x) {
+    # if there is a semicolon, resolve this
+    if (grepl(";", x, fixed = TRUE)) {
+      return (NA) # if there are multiple possibilities, then can't be resolved with NA
     } else { # if not, just return whatever since it's a single item
       if (!is.na(x) && x == "NA") {
         return (NA)
@@ -34,9 +42,16 @@ assign_trait <- function(taxin, trait.map, traits=c("SizeMin", "SizeMax", "Cover
   trait.sub <- trait.map[, c("svN", "ASV", traits)]
   mapped <- merge(taxin[, c("svN", "ASV")], trait.sub, by=c("svN", "ASV"))
   
-  for (row in 1:nrow(mapped)) {
-    for (col in traits) {
-      mapped[row, col] <- finializeTrait(mapped[row, col], num.traits)
+  num.traits <- length(traits)
+  n.rows <- nrow(mapped)
+  
+  for (row in 1:n.rows) {
+    for (col in 1:num.traits) {
+      if (binary) {
+        mapped[row, traits[col]] <- searchTrait(mapped[row, traits[col]], want[col])
+      } else {
+        mapped[row, traits[col]] <- finializeTrait(mapped[row, traits[col]])
+      }
     }
   }
   
