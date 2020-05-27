@@ -15,3 +15,10 @@ blastn -db ~/Documents/R/desktop_ampData_processing/connie_taxonomy_stuff_Mar202
 
 
 ## I'm deleting raw blast xml's after running thru MEGAN b/c they're f*cking huge
+
+# from the synthtic dataset, remake blast db's:
+makeblastdb -in ~/Documents/R/pr2_version_4.12.0_18S_dada2.fasta -dbtype nucl 
+makeblastdb -in ~/Documents/R/silva_nr_v138_train_set.fa -dbtype nucl 
+
+blastn -db ~/Documents/R/pr2_version_4.12.0_18S_dada2.fasta -query ~/Documents/R/amplicon_bioinformatics/mock_analysis/mock_data/v9_mock_asvs_bothPrimers.fasta -out ~/Documents/R/amplicon_bioinformatics/mock_analysis/mock_data/raw_blast_mock_v9_pr2_May20.xml -outfmt "5 qseqid sseqid qstart qend sstart send evalue bitscore length pident mismatch gapopen" 
+blastn -db ~/Documents/R/silva_nr_v138_train_set.fa ~/Documents/R/amplicon_bioinformatics/mock_analysis/mock_data/v9_mock_asvs_bothPrimers.fasta -out ~/Documents/R/amplicon_bioinformatics/mock_analysis/mock_data/raw_blast_v9_silva_May20.xml -outfmt "5 qseqid sseqid qstart qend sstart send evalue bitscore length pident mismatch gapopen" 
