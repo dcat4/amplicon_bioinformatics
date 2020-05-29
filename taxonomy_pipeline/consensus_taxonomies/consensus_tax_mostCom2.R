@@ -99,5 +99,5 @@ consensus_tax_mostCom2 <- function(..., tablenames = c("bayes", "idtax"), rankna
     consensus.tax <- rbind(consensus.tax, c.row)
   }
   
-  return(consensus.tax)
+  return(data.frame(lapply(consensus.tax, as.character), stringsAsFactors=FALSE))
 }
