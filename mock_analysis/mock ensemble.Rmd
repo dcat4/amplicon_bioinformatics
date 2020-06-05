@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 Analysis of the Mock Data 
@@ -72,12 +74,20 @@ v9.mock.LCA.pr2 <- taxmapper(taxin=lca.mock, tax2map2=pr2,
                                ignore.format=TRUE)
 
 lca.mock.mapped <- v9.mock.LCA.pr2[[3]]
+
+lca.mock.sort <- lca.mock.mapped[order(lca.mock.mapped$svN), ]
 ```
 
 Reading in the Expected
 ```{r}
 exp.mock <- readRDS('~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/mock_analysis/mock_data/v9_mock_exptax_bothPrimers.rds')
 colnames(exp.mock) <- table.names
+
+make.NA <- function(x) if(is.character(x)||is.factor(x)){
+    is.na(x) <- x=="NaN"; x} else {
+      x}
+  
+exp.mock[] <- lapply(exp.mock, make.NA)
 ```
 
 Comparisons
@@ -118,7 +128,7 @@ compare_results <- function(exp, ref, compare.cols) {
         n.under <- n.under + 1
       }
       # exact match
-      else if (exp.tax == ref.tax) {
+      else if ((is.na(exp.tax) && is.na(ref.tax)) || (exp.tax == ref.tax)) {
         n.same <- n.same + 1
       }
       # mis classified
@@ -142,7 +152,7 @@ compare_results <- function(exp, ref, compare.cols) {
 ```{r}
 bayes.mock.exp.c1 <- compare_results(exp.mock, bayes.mock, table.names[-c(1:2)])
 idtax.mock.exp.c1 <- compare_results(exp.mock, idtax.mock, table.names[-c(1:2)])
-lca.mock.exp.c1 <- compare_results(exp.mock, lca.mock.mapped, table.names[-c(1:2)])
+lca.mock.exp.c1 <- compare_results(exp.mock, lca.mock.sort, table.names[-c(1:2)])
 ```
 
 
@@ -173,7 +183,7 @@ plot_results <- function(exp, ref, compare.cols) {
         break
       }
       # mis classified
-      else if (exp.tax != ref.tax) {
+      else if (!is.na(exp.tax) && !is.na(ref.tax) && (exp.tax != ref.tax)) {
         n.mis <- n.mis + 1
         break
       }
@@ -193,7 +203,7 @@ plot_results <- function(exp, ref, compare.cols) {
 ```{r}
 bayes.mock.exp.c2 <- plot_results(exp.mock, bayes.mock, table.names[-c(1:2)])
 idtax.mock.exp.c2 <- plot_results(exp.mock, idtax.mock, table.names[-c(1:2)])
-lca.mock.exp.c2 <- plot_results(exp.mock, lca.mock.mapped, table.names[-c(1:2)])
+lca.mock.exp.c2 <- plot_results(exp.mock, lca.mock.sort, table.names[-c(1:2)])
 ```
 
 

@@ -241,4 +241,16 @@ From eariler runs, we noticed that the ranks: order, family, and genus encounter
 
 Overall, a good tiebreak input would contain specific pairs of table and taxonomy and always contain a table to prioritize over in the end to avoid NA assignment. 
 
+### Fourth Run
 
+Finally, weights can be introduced into the algorithm to mitigate any ties. This is also another way to introduce bias toward taxonomy table when resolving a consensus taxonomy. Here, we'll introduce a greater weight on the bayes taxonomy table where it will be inputted twice in the pool of taxonomies to resolve a consensus to.
+
+```{r}
+consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       count.na=TRUE, weights=c(2,1,1)) 
+```
+
+Here, we noticed that the resolved taxonomic assignments is just the bayes table.
