@@ -184,3 +184,61 @@ consensus.res[81:84, 4:12]
 ```
 
 We can see that in the Order, Family, and Genus rankings, there is no majority as there is a three way tie between the taxonomy tables. Since we didn't specify a tiebreaker preference, the algorithm automatically assigns NA to that column as it wasn't able to conclude to a consensus. 
+
+### Second run
+
+Here we will introduce how our algorithm takes care of tie breakers set by the user input. Let's say we want to prioritize the bayes taxonomy table as the tie breaker. This is specified by introducing a list of pairs of (table name, taxonomy) in the order of priority. This means that the first element in the list will be prioritized the most while the last element in thel ist will be prioritized the least.
+
+```{r}
+consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       tiebreakz=list(c('bayes', NA)), count.na=TRUE) 
+```
+
+We can see that whenever there is a three way tie, the taxonomy from the bayes table is assigned as we specified for it to be the tie breaker. 
+
+The same thing can be applied if we want to prioritize the idtax table.
+
+```{r}
+consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       tiebreakz=list(c('idtax', NA)), count.na=TRUE) 
+```
+
+We can prioritize specific pairs of taxonomy and its correspnoding taxonomy table by replacing the NA with taxonomies we are interested in. If we want to prioritize the name "NA", we would put in "na".
+
+For example, we'll prioritize the bayes table whenever we encounter the taxonomy Cryptosporidiidae. One thing to note that the tiebreaking is done by exact name matching which means that it is also case sensitive.
+
+```{r}
+consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       tiebreakz=list(c('bayes', 'Cryptosporidiidae')), count.na=TRUE) 
+```
+
+We can see here that in the genus, family, and order ranks, we encourted three way ties. However, in the family rank, it contained the taxonomy Cryptosporidiidae in the ties, so we prioritized it to be the tiebreaker. There was no tiebreaking specified for the others, so by default, it resorted to NA. 
+
+### Third run
+
+Here, we'll introduce more complex tiebreaking inputs that the algorithm can execute. Remember that the priorities are expressed based on the order of the pairs of table name and taxonomy in the list. If a certain taxonomy table is prioritized, its pair would be (table name, NA). If the specific taxonomy name "NA" wants to be prioritized, then its pair would be (table name, "na").
+
+For example, let's build on what we had earlier and combine our tie breaking priorities. We will always prioritize the specific pair of ('bayes', 'Cryptosporidiidae') and then the idtax table itself.
+
+```{r}
+consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       tiebreakz=list(c('bayes', 'Cryptosporidiidae'), c('idtax', NA)), count.na=TRUE) 
+```
+
+From eariler runs, we noticed that the ranks: order, family, and genus encountered three way ties. The genus and order ranks got resolved by prioritizing the idtax table. On the other hand, in the family rank, since one of the ties was Cryptosporidiidae from the bayes table, it got prioritized over the idtax table due to the order of pairs we specified in the list. 
+
+Overall, a good tiebreak input would contain specific pairs of table and taxonomy and always contain a table to prioritize over in the end to avoid NA assignment. 
+
+

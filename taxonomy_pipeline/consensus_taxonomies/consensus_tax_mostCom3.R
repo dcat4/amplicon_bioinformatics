@@ -1,11 +1,11 @@
-consensus_tax_mostCom2 <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"),
-                                  tiebreakz = "none", count.na=FALSE, weights=rep(1, length(list(...)))) {
+consensus_tax_mostCom3 <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+                                   tiebreakz = "none", count.na=FALSE, weights=rep(1, length(list(...)))) {
   x <- list(...)
   n.rows <- nrow(x[[1]])
   n.cols <- ncol(x[[1]])
   threshold <- 0.5
   n.dfs <- length(x)
-
+  
   consensus.tax <- data.frame(matrix(ncol=n.cols, nrow=0, dimnames=list(NULL, names(x[[1]]))))
   
   tiebreaker <- NA
@@ -46,60 +46,60 @@ consensus_tax_mostCom2 <- function(..., tablenames = c("bayes", "idtax"), rankna
         # get the one with the greatest proportion aka the majority
         # see if the proportion of the majority is at least the threshold
         max.prop <- max(freq.df$prop)
-        if (max.prop >= threshold) {
-          c.tax <- as.character(freq.df[which(freq.df$prop == max.prop), "taxs"])
-          # if there are multiple taxs as the majority, we need to tie break it
-          if (length(c.tax) > 1) {
-            # see which data frame it is coming from
-            # check if the data frame chosen is an option
+
+        c.tax <- as.character(freq.df[which(freq.df$prop == max.prop), "taxs"])
+        # if there are multiple taxs as the majority, we need to tie break it
+        if (length(c.tax) > 1) {
+          # see which data frame it is coming from
+          # check if the data frame chosen is an option
+          
+          if (!is.na(tiebreaker)) {
+            # create a data frame with taxs and tablename it came from
+            pairs <- vector(mode="list", length=length(c.tax))
+            curr.idx <- 1
+            for (i in 1:length(c.tax)) {
+              # find the corresponding tablename of tax
+              tax <- c.tax[i]
+              idx <- match(tax, taxs)
+              if (tax == "NA") {
+                tax <- "na"
+              }
+              table <- df.idx[idx]
+              # append result to list
+              pairs[[curr.idx]] <- c(table, tax)
+              curr.idx <- curr.idx + 1
+            }
+            # data frame of ties
+            ties <- data.frame(matrix(unlist(pairs), nrow=length(pairs), byrow=T, dimnames=list(NULL, c("table", "tax"))),stringsAsFactors=FALSE)
             
-            if (!is.na(tiebreaker)) {
-              # create a data frame with taxs and tablename it came from
-              pairs <- vector(mode="list", length=length(c.tax))
-              curr.idx <- 1
-              for (i in 1:length(c.tax)) {
-                # find the corresponding tablename of tax
-                tax <- c.tax[i]
-                idx <- match(tax, taxs)
-                if (is.na(tax)) {
-                  tax <- "na"
-                }
-                table <- df.idx[idx]
-                # append result to list
-                pairs[[curr.idx]] <- c(table, tax)
-                curr.idx <- curr.idx + 1
-              }
-              # data frame of ties
-              ties <- data.frame(matrix(unlist(pairs), nrow=length(pairs), byrow=T, dimnames=list(NULL, c("table", "tax"))),stringsAsFactors=FALSE)
-              
-              # first assign exact matches
-              exact <- merge(ties, tiebreaker, by=c("table","tax"), all.x=TRUE)
-              
-              # go back and consider taxnames only with NA
-              all <- merge(exact, tiebreaker[which(is.na(tiebreaker[,"tax"])), c("table","priority")], by="table", all.x=TRUE)
-              
-              # resolve priorities
-              all$priority <- coalesce(all$priority.x, all$priority.y)
-              all$priority.x <- NULL
-              all$priority.y <- NULL
-              
-              # sort by priority to get tiebreaker at the top of the data frame
-              sorted <- all[order(all$priority), ]
-              
-              # assign top row as consensus
-              if (is.na(sorted[1, "priority"])) {
-                c.row[, col] <- NA
-              } else {
-                c.row[, col] <- sorted[1, "tax"]
-              }
-            } else {
-              # at this point just set it as NA
+            # first assign exact matches
+            exact <- merge(ties, tiebreaker, by=c("table","tax"), all.x=TRUE)
+            
+            # go back and consider taxnames only with NA
+            all <- merge(exact, tiebreaker[which(is.na(tiebreaker[,"tax"])), c("table","priority")], by="table", all.x=TRUE)
+            
+            # resolve priorities
+            all$priority <- coalesce(all$priority.x, all$priority.y)
+            all$priority.x <- NULL
+            all$priority.y <- NULL
+            
+            # sort by priority to get tiebreaker at the top of the data frame
+            sorted <- all[order(all$priority), ]
+            
+            # assign top row as consensus
+            if (is.na(sorted[1, "priority"])) {
               c.row[, col] <- NA
+            } else {
+              c.row[, col] <- sorted[1, "tax"]
             }
           } else {
-            c.row[, col] <- c.tax[1]
+            # at this point just set it as NA
+            c.row[, col] <- NA
           }
+        } else {
+          c.row[, col] <- c.tax[1]
         }
+
       }
     }
     # after iterating through the columns add the consensus row to the data frame
