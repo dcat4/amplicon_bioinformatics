@@ -75,7 +75,7 @@ v9.mock.LCA.pr2 <- taxmapper(taxin=lca.mock, tax2map2=pr2,
 
 lca.mock.mapped <- v9.mock.LCA.pr2[[3]]
 
-lca.mock.sort <- lca.mock.mapped[order(lca.mock.mapped$svN), ]
+lca.mock.sort <- lca.mock.mapped[order(nchar(as.character(lca.mock.mapped$svN)),lca.mock.mapped$svN), ]
 ```
 
 Reading in the Expected
@@ -98,7 +98,7 @@ Comparisons
 
 ```{r}
 all.equal(nrow(bayes.mock), nrow(idtax.mock), nrow(lca.mock.mapped))
-all.equal(ncol(bayes.mock), ncol(idtax.mock), ncol(lca.mock.mapped))
+all.equal(ncol(bayes.mock), ncol(idtax.mock), ncol(lca.mock.sort))
 ```
 
 Implement a function for this comparison
@@ -279,10 +279,11 @@ data
 ```
 
 
-```{r}
+```{r, fig.height=5, fig.width=8}
 library(ggplot2)
 ggplot(data, aes(fill=class, y=val, x=table)) +
   geom_bar(position=position_dodge(width=0.8), stat='identity') +
+  geom_text(aes(label=val), position=position_dodge(width=0.8), vjust=-0.25) +
   labs(x="taxonomy table", y='count') +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
           axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
@@ -294,7 +295,7 @@ ggplot(data, aes(fill=class, y=val, x=table)) +
           panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
                                           colour = "white"),
           axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) + 
-  scale_fill_discrete(name = "Rank")
+  scale_fill_discrete(name = "classification relative to expected")
 ```
 
 
