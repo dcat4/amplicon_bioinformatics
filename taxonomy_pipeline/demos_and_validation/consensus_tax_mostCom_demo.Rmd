@@ -20,6 +20,8 @@ We'll clear out our environment, load in the reshape2 package ofr later, set our
 You can do this with any taxonomy tables assuming you format them properly. To follow along with this demo, grab the taxonomy tables in the "test_data" directory of this repository and follow the code below.
 
 ```{r}
+library(dplyr)
+
 rm(list = ls())
 
 # load up reshape2:
@@ -136,15 +138,15 @@ Our data should be good to go, so let's run the algorithm. We have to specify na
 First we'll tell R where to find the algorithm and load it into our session. In our first run, we'll specify no tie-breakers, so that the algorithm will only assign consensus taxonomies to ASVs where a single taxonomy table has the most common taxonomy of our 3 datasets.
 
 ```{r}
-source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom2.R")
+source("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom3.R")
 
 tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
-test1 <- consensus_tax_mostCom2(s.bayes, s.idtax, s.lca,
+test1 <- consensus_tax_mostCom3(s.bayes, s.idtax, s.lca,
                         tablenames = tblnam, count.na=TRUE,
                         tiebreakz = "none")
 ```
 
-The output is a list with 3 elements. The 1st element is the consensus taxonomy table, the 2nd element is a list of all the input taxonomies, and the third element is a numeric vector containing the row indices of all ASVs that still require tie-breaking. 
+The output is just a consensus taxonomy table.
 
 In order to show different scenarios of our algorithm resolving the majorities, we've handpicked certain rows to build a subset data frame to showcase our algorithm. 
 
@@ -155,32 +157,54 @@ mini.b <- s.bayes[which(s.bayes$svN %in% svs), ]
 mini.i <- s.idtax[which(s.idtax$svN %in% svs), ]
 mini.l <- s.lca[which(s.lca$svN %in% svs), ]
 
-c.test <- consensus_tax_mostCom2(mini.b, mini.i, mini.l, 
+c.test <- consensus_tax_mostCom3(mini.b, mini.i, mini.l, 
                                  tablenames = c("bayes", "idtax", "lca"), 
                                  ranknamez = c("kingdom", "supergroup", "division", "class", "order", "family", "genus", "species"), 
                                  tiebreakz = "none", count.na = TRUE)
+head(c.test)
 ```
 
 We've saved the result in a csv file called `bayes_idtax_lca_pr2_mapped.csv` that we will store into a data frame called `consensus.res`. We chunked out each ASV's taxonomic assignments from each of our 3 input taxonomy tables, as well as our consensus taxonomy table, and put them in consecutive rows. This way, we can look at chunks of assignments for the same ASV to `consensus.res` the algorithm and ensure it's doing what we think. 
 
 Here, we'll pop out a few good examples. 
 
-```{r}
-consensus.res[1:4, 4:12]
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[1, c(1:2, 4:11)]),
+      cbind(consensus.res[1, 1:2], consensus.res[2, 4:11]),
+      cbind(consensus.res[1, 1:2], consensus.res[3, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[1, c(1:2, 4:11)]), 
+                       cbind(consensus.res[1, 1:2], consensus.res[2, 4:11]), 
+                       cbind(consensus.res[1, 1:2], consensus.res[3, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       tiebreakz='none', count.na=TRUE)),consensus.res[1:4, 12])
 ```
 
 The output shows the taxonomic assignments for an arbitrary ASV in 3 of our initial taxonomy tables, as well as our consensus table. The last column shows the taxonomy table of each row for this arbitrary ASV. RESULT deontes our consensus taxonomy. We can see that all of the taxonomies are the same, so it's obvious that the resulting consensus taxonomy should be the same as well.
 
 Now let's look at one where some contain different taxonomies.
 
-```{r}
-consensus.res[11:14, 4:12]
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[11, c(1:2, 4:11)]),
+      cbind(consensus.res[11, 1:2], consensus.res[12, 4:11]),
+      cbind(consensus.res[11, 1:2], consensus.res[13, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[11, c(1:2, 4:11)]), 
+                       cbind(consensus.res[11, 1:2], consensus.res[12, 4:11]), 
+                       cbind(consensus.res[11, 1:2], consensus.res[13, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       tiebreakz='none', count.na=TRUE)),consensus.res[11:14, 12])
 ```
 
 Here, we can see that the taxonomies in bayes and idtax are the majority in each column compared to the NA taxonomy in LCA. Therefore, the resulting consensus taxonomy would be the taxonomies from bayes and idtax. 
 
-```{r}
-consensus.res[81:84, 4:12]
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
+      cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
+      cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       tiebreakz='none', count.na=TRUE)),consensus.res[81:84, 12])
 ```
 
 We can see that in the Order, Family, and Genus rankings, there is no majority as there is a three way tie between the taxonomy tables. Since we didn't specify a tiebreaker preference, the algorithm automatically assigns NA to that column as it wasn't able to conclude to a consensus. 
@@ -189,36 +213,45 @@ We can see that in the Order, Family, and Genus rankings, there is no majority a
 
 Here we will introduce how our algorithm takes care of tie breakers set by the user input. Let's say we want to prioritize the bayes taxonomy table as the tie breaker. This is specified by introducing a list of pairs of (table name, taxonomy) in the order of priority. This means that the first element in the list will be prioritized the most while the last element in thel ist will be prioritized the least.
 
-```{r}
-consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
+      cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
+      cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
-                       tiebreakz=list(c('bayes', NA)), count.na=TRUE) 
+                       tiebreakz=list(c('bayes', NA)), count.na=TRUE)),consensus.res[81:84, 12])
 ```
 
 We can see that whenever there is a three way tie, the taxonomy from the bayes table is assigned as we specified for it to be the tie breaker. 
 
 The same thing can be applied if we want to prioritize the idtax table.
 
-```{r}
-consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
+      cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
+      cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
-                       tiebreakz=list(c('idtax', NA)), count.na=TRUE) 
+                       tiebreakz=list(c('idtax', NA)), count.na=TRUE)),consensus.res[81:84, 12])
 ```
 
 We can prioritize specific pairs of taxonomy and its correspnoding taxonomy table by replacing the NA with taxonomies we are interested in. If we want to prioritize the name "NA", we would put in "na".
 
 For example, we'll prioritize the bayes table whenever we encounter the taxonomy Cryptosporidiidae. One thing to note that the tiebreaking is done by exact name matching which means that it is also case sensitive.
 
-```{r}
-consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
+      cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
+      cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
-                       tiebreakz=list(c('bayes', 'Cryptosporidiidae')), count.na=TRUE) 
+                       tiebreakz=list(c('bayes', 'Cryptosporidiidae')), count.na=TRUE)),consensus.res[81:84, 12])
 ```
 
 We can see here that in the genus, family, and order ranks, we encourted three way ties. However, in the family rank, it contained the taxonomy Cryptosporidiidae in the ties, so we prioritized it to be the tiebreaker. There was no tiebreaking specified for the others, so by default, it resorted to NA. 
@@ -229,12 +262,16 @@ Here, we'll introduce more complex tiebreaking inputs that the algorithm can exe
 
 For example, let's build on what we had earlier and combine our tie breaking priorities. We will always prioritize the specific pair of ('bayes', 'Cryptosporidiidae') and then the idtax table itself.
 
-```{r}
-consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
+      cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
+      cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
-                       tiebreakz=list(c('bayes', 'Cryptosporidiidae'), c('idtax', NA)), count.na=TRUE) 
+                       tiebreakz=list(c('bayes', 'Cryptosporidiidae'), c('idtax', NA)),
+                       count.na=TRUE)),consensus.res[81:84, 12])
 ```
 
 From eariler runs, we noticed that the ranks: order, family, and genus encountered three way ties. The genus and order ranks got resolved by prioritizing the idtax table. On the other hand, in the family rank, since one of the ties was Cryptosporidiidae from the bayes table, it got prioritized over the idtax table due to the order of pairs we specified in the list. 
@@ -253,4 +290,30 @@ consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
                        count.na=TRUE, weights=c(2,1,1)) 
 ```
 
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
+      cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
+      cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
+                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       count.na=TRUE, weights=c(2,1,1))),consensus.res[81:84, 12])
+```
+
 Here, we noticed that the resolved taxonomic assignments is just the bayes table.
+
+### Fifth Run
+
+Lastly, we can make the algorithm not consider NA as a majority candidate. 
+
+```{r, warning=FALSE}
+cbind(rbind(as.data.frame(consensus.res[61, c(1:2, 4:11)]),
+      cbind(consensus.res[61, 1:2], consensus.res[62, 4:11]),
+      cbind(consensus.res[61, 1:2], consensus.res[63, 4:11]),
+      consensus_tax_mostCom3(as.data.frame(consensus.res[61, c(1:2, 4:11)]), 
+                       cbind(consensus.res[61, 1:2], consensus.res[62, 4:11]), 
+                       cbind(consensus.res[61, 1:2], consensus.res[63, 4:11]),
+                       tablenames=c('bayes', 'idtax', 'lca'), 
+                       count.na=FALSE)),consensus.res[61:64, 12])
+```

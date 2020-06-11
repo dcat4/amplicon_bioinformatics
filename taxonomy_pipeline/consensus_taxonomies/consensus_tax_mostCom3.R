@@ -61,7 +61,7 @@ consensus_tax_mostCom3 <- function(..., tablenames = c("bayes", "idtax"), rankna
               # find the corresponding tablename of tax
               tax <- c.tax[i]
               idx <- match(tax, taxs)
-              if (tax == "NA") {
+              if (is.na(tax)) {
                 tax <- "na"
               }
               table <- df.idx[idx]

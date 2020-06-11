@@ -249,6 +249,15 @@ all.c <- consensus_tax_mostCom2(bayes.mock, idtax.mock, lca.mock.mapped,
 ```
 
 ```{r}
+all.c.no.NA <- consensus_tax_mostCom2(bayes.mock, idtax.mock, lca.mock.mapped, 
+                                tablenames=tblnam, ranknamez=table.names,
+                                tiebreakz="none", count.na=FALSE, weights=c(1,1,1))
+
+all.c.no.NA.compare <- plot_results(exp.mock, all.c.no.NA, table.names[-c(1:2)])
+```
+
+
+```{r}
 all.c.compare <- plot_results(exp.mock, all.c, table.names[-c(1:2)])
 ```
 
@@ -261,12 +270,27 @@ vals
 ```
 
 ```{r}
+# create a data frame
+vals.noNA <- rbind(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.no.NA.compare)
+vals.noNA
+```
+
+```{r}
 data.frame(vals, row.names=c('exact', 'mis', 'over', 'under'))
+```
+
+```{r}
+data.frame(vals.noNA, row.names=c('exact', 'mis', 'over', 'under'))
 ```
 
 ```{r}
 df <- data.frame(matrix(vals, ncol=4, nrow = 4, dimnames=list(c('bayes', 'idtax', 'lca', 'consensus'), c('exact', 'mis', 'over', 'under'))))
 df
+```
+
+```{r}
+df.noNA <- data.frame(matrix(vals.noNA, ncol=4, nrow = 4, dimnames=list(c('bayes', 'idtax', 'lca', 'consensus'), c('exact', 'mis', 'over', 'under'))))
+df.noNA
 ```
 
 ```{r}
@@ -276,6 +300,15 @@ val <- c(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.compare)
 
 data <- data.frame(table, class, val)
 data
+```
+
+```{r}
+table <- c(rep('bayes', 4), rep('idtax', 4), rep('lca', 4), rep('consensus', 4))
+class <- c(rep(c('exact', 'mis', 'over', 'under'), 4))
+val.noNA <- c(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.no.NA.compare)
+
+data.noNA <- data.frame(table, class, val.noNA)
+data.noNA
 ```
 
 
@@ -298,7 +331,24 @@ ggplot(data, aes(fill=class, y=val, x=table)) +
   scale_fill_discrete(name = "classification relative to expected")
 ```
 
-
+```{r, fig.height=5, fig.width=8}
+library(ggplot2)
+ggplot(data.noNA, aes(fill=class, y=val.noNA, x=table)) +
+  geom_bar(position=position_dodge(width=0.8), stat='identity') +
+  geom_text(aes(label=val.noNA), position=position_dodge(width=0.8), vjust=-0.25) +
+  labs(x="taxonomy table", y='count') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
+          axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
+          panel.background = element_rect(fill = "white",
+                                          colour = "white",
+                                          linetype = "solid"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                          colour = "white"),
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                          colour = "white"),
+          axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) + 
+  scale_fill_discrete(name = "classification relative to expected")
+```
 
 
 
