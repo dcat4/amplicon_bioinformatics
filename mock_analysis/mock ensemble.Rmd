@@ -1,0 +1,361 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+Analysis of the Mock Data 
+
+Preprocessing Data
+
+```{r}
+# rubric for aligning ASV numbers and sequences across datasets
+library("DECIPHER")
+rubber <- readDNAStringSet("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/mock_analysis/mock_data/v9_mock_asvs_bothPrimers.fasta")
+```
+
+raw_LCA_out_mock_v9_pr2_May20.txt
+```{r}
+# svN and taxonomies separated by one comma
+v9.mock.LCA.pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/mock_analysis/mock_data/raw_LCA_out_mock_v9_pr2_May20.txt", header = FALSE)
+
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/helper_fcns/LCA2df.R")
+
+lca.mock <- LCA2df(v9.mock.LCA.pr2, rubber)
+```
+
+v9_mock_bothPrimers_idtax_pr2_0boot
+```{r}
+v9.mock.idtax.pr2 <- readRDS("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/mock_analysis/mock_data/v9_mock_bothPrimers_idtax_pr2_0boot.rds")
+
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/helper_fcns/idtax2df_pr2.R")
+
+idtax.mock <- idtax2df_pr2(v9.mock.idtax.pr2, boot=50, rubric=rubber)
+```
+
+v9_mock_bothPrimers_bayes_pr2_0boot
+```{r}
+v9.mock.bayes.pr2 <- readRDS("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/mock_analysis/mock_data/v9_mock_bothPrimers_bayes_pr2_0boot.rds")
+
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/helper_fcns/bayestax2df.R")
+
+bayes.mock <- bayestax2df(v9.mock.bayes.pr2, boot=60, rubric=rubber)
+```
+
+Setting table names for standardization
+```{r}
+# standardized table names for the pr2
+table.names <- c("svN", "ASV", "kingdom", "supergroup", "division", "class", "order", "family", "genus", "species")
+
+colnames(bayes.mock) <- table.names
+colnames(idtax.mock) <- table.names
+```
+
+
+Map the LCA data sets to pr2 using taxmapper.
+```{r}
+# getting the taxmapper function
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/taxmapper.R")
+
+# setting up the parameters
+synonym.filepath <- "~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv"
+
+
+# Bacteria and Archaea doesn't exist in pr2
+nonexistent <- c('Bacteria', 'Archaea')
+
+pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv")
+pr2 <- pr2[,-1]
+
+v9.mock.LCA.pr2 <- taxmapper(taxin=lca.mock, tax2map2=pr2,
+                               exceptions=nonexistent,
+                               synonym.file=synonym.filepath,
+                               ignore.format=TRUE)
+
+lca.mock.mapped <- v9.mock.LCA.pr2[[3]]
+
+lca.mock.sort <- lca.mock.mapped[order(nchar(as.character(lca.mock.mapped$svN)),lca.mock.mapped$svN), ]
+```
+
+Reading in the Expected
+```{r}
+exp.mock <- readRDS('~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/mock_analysis/mock_data/v9_mock_exptax_bothPrimers.rds')
+colnames(exp.mock) <- table.names
+
+make.NA <- function(x) if(is.character(x)||is.factor(x)){
+    is.na(x) <- x=="NaN"; x} else {
+      x}
+  
+exp.mock[] <- lapply(exp.mock, make.NA)
+```
+
+Comparisons
+- how many ASVs are perfect matches to expected, other names agree
+- mis-classified -> different names at any point 
+- over-classified -> name in tax table, NA in expected 
+- under-classified -> NA in tax table, other names agree
+
+```{r}
+all.equal(nrow(bayes.mock), nrow(idtax.mock), nrow(lca.mock.mapped))
+all.equal(ncol(bayes.mock), ncol(idtax.mock), ncol(lca.mock.sort))
+```
+
+Implement a function for this comparison
+This keeps track of the numbers for each row of the ASV
+```{r}
+compare_results <- function(exp, ref, compare.cols) {
+  # create a new data frame with the svN and ASV with the results
+  results <- data.frame(matrix(ncol=6,nrow=0, dimnames=list(NULL, c('svN', 'ASV', 'exact', 'mis', 'over', 'under'))))
+  
+  # iterate through each row 
+  # iterate from most general column to specific 
+  nrows <- nrow(exp)
+  for (row in 1:nrows) {
+    n.same <- 0
+    n.mis <- 0 
+    n.over <- 0
+    n.under <- 0
+    for (col in compare.cols) {
+      exp.tax <- exp[row, col]
+      ref.tax <- ref[row, col]
+      # over classified
+      if (is.na(exp.tax) && !is.na(ref.tax)) {
+        n.over <- n.over + 1
+      }
+      # under classified
+      else if (!is.na(exp.tax) && is.na(ref.tax)) {
+        n.under <- n.under + 1
+      }
+      # exact match
+      else if ((is.na(exp.tax) && is.na(ref.tax)) || (exp.tax == ref.tax)) {
+        n.same <- n.same + 1
+      }
+      # mis classified
+      else {
+        n.mis <- n.mis + 1
+      }
+    }
+    r.row <- data.frame(matrix(rep(NA, 6), ncol=6, nrow = 1, dimnames=list(NULL, names(results))))
+    r.row[, 'svN'] <- ref[row, 'svN']
+    r.row[, 'ASV'] <- ref[row, 'ASV']
+    r.row[, 'exact'] <- n.same
+    r.row[, 'mis'] <- n.mis
+    r.row[, 'over'] <- n.over
+    r.row[, 'under'] <- n.under
+    results <- rbind(results, r.row)
+  }
+  return(results)
+}
+```
+
+```{r}
+bayes.mock.exp.c1 <- compare_results(exp.mock, bayes.mock, table.names[-c(1:2)])
+idtax.mock.exp.c1 <- compare_results(exp.mock, idtax.mock, table.names[-c(1:2)])
+lca.mock.exp.c1 <- compare_results(exp.mock, lca.mock.sort, table.names[-c(1:2)])
+```
+
+
+
+```{r}
+plot_results <- function(exp, ref, compare.cols) {
+  n.same <- 0
+  n.mis <- 0 
+  n.over <- 0
+  n.under <- 0
+  
+  # iterate through each row 
+  # iterate from most general column to specific 
+  nrows <- nrow(exp)
+  for (row in 1:nrows) {
+    curr.col<- 0
+    for (col in compare.cols) {
+      exp.tax <- exp[row, col]
+      ref.tax <- ref[row, col]
+      # over classified
+      if (is.na(exp.tax) && !is.na(ref.tax)) {
+        n.over <- n.over + 1
+        break
+      }
+      # under classified
+      else if (!is.na(exp.tax) && is.na(ref.tax)) {
+        n.under <- n.under + 1
+        break
+      }
+      # mis classified
+      else if (!is.na(exp.tax) && !is.na(ref.tax) && (exp.tax != ref.tax)) {
+        n.mis <- n.mis + 1
+        break
+      }
+      # same
+      else {
+        curr.col <- curr.col + 1
+      }
+    }
+    if (curr.col == length(compare.cols)) {
+      n.same <- n.same + 1
+    }
+  }
+  return(c(n.same, n.mis, n.over, n.under))
+}
+```
+
+```{r}
+bayes.mock.exp.c2 <- plot_results(exp.mock, bayes.mock, table.names[-c(1:2)])
+idtax.mock.exp.c2 <- plot_results(exp.mock, idtax.mock, table.names[-c(1:2)])
+lca.mock.exp.c2 <- plot_results(exp.mock, lca.mock.sort, table.names[-c(1:2)])
+```
+
+
+```{r}
+# compute number of exact matches
+nrow(bayes.mock.exp.c1[which(bayes.mock.exp.c1$exact == 8), ]) == bayes.mock.exp.c2[1]
+nrow(idtax.mock.exp.c1[which(idtax.mock.exp.c1$exact == 8), ]) == idtax.mock.exp.c2[1]
+nrow(lca.mock.exp.c1[which(lca.mock.exp.c1$exact == 8), ]) == lca.mock.exp.c2[1]
+```
+
+```{r}
+# compute number of mismatches
+nrow(bayes.mock.exp.c1[which(bayes.mock.exp.c1$mis > 0), ]) == bayes.mock.exp.c2[2]
+nrow(idtax.mock.exp.c1[which(idtax.mock.exp.c1$mis > 0), ]) == idtax.mock.exp.c2[2]
+nrow(lca.mock.exp.c1[which(lca.mock.exp.c1$mis > 0), ]) == lca.mock.exp.c2[2]
+```
+
+```{r}
+# compute number of over
+nrow(bayes.mock.exp.c1[which(bayes.mock.exp.c1$over > 0 & bayes.mock.exp.c1$mis == 0), ]) == bayes.mock.exp.c2[3]
+nrow(idtax.mock.exp.c1[which(idtax.mock.exp.c1$over > 0 & idtax.mock.exp.c1$mis == 0), ]) == idtax.mock.exp.c2[3]
+nrow(lca.mock.exp.c1[which(lca.mock.exp.c1$over > 0 & lca.mock.exp.c1$mis == 0), ]) == lca.mock.exp.c2[3]
+```
+
+
+```{r}
+# compute number of under
+nrow(bayes.mock.exp.c1[which(bayes.mock.exp.c1$under > 0 & bayes.mock.exp.c1$mis == 0), ]) == bayes.mock.exp.c2[4]
+nrow(idtax.mock.exp.c1[which(idtax.mock.exp.c1$under > 0 & idtax.mock.exp.c1$mis == 0), ]) == idtax.mock.exp.c2[4]
+nrow(lca.mock.exp.c1[which(lca.mock.exp.c1$under > 0 & lca.mock.exp.c1$mis == 0), ]) == lca.mock.exp.c2[4]
+```
+
+
+Consensus Tax
+```{r}
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom2.R")
+
+tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
+
+all.c <- consensus_tax_mostCom2(bayes.mock, idtax.mock, lca.mock.mapped, 
+                                tablenames=tblnam, ranknamez=table.names,
+                                tiebreakz="none", count.na=TRUE, weights=c(1,1,1))
+```
+
+```{r}
+all.c.no.NA <- consensus_tax_mostCom2(bayes.mock, idtax.mock, lca.mock.mapped, 
+                                tablenames=tblnam, ranknamez=table.names,
+                                tiebreakz="none", count.na=FALSE, weights=c(1,1,1))
+
+all.c.no.NA.compare <- plot_results(exp.mock, all.c.no.NA, table.names[-c(1:2)])
+```
+
+
+```{r}
+all.c.compare <- plot_results(exp.mock, all.c, table.names[-c(1:2)])
+```
+
+
+Create a quad bar plot
+```{r}
+# create a data frame
+vals <- rbind(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.compare)
+vals
+```
+
+```{r}
+# create a data frame
+vals.noNA <- rbind(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.no.NA.compare)
+vals.noNA
+```
+
+```{r}
+data.frame(vals, row.names=c('exact', 'mis', 'over', 'under'))
+```
+
+```{r}
+data.frame(vals.noNA, row.names=c('exact', 'mis', 'over', 'under'))
+```
+
+```{r}
+df <- data.frame(matrix(vals, ncol=4, nrow = 4, dimnames=list(c('bayes', 'idtax', 'lca', 'consensus'), c('exact', 'mis', 'over', 'under'))))
+df
+```
+
+```{r}
+df.noNA <- data.frame(matrix(vals.noNA, ncol=4, nrow = 4, dimnames=list(c('bayes', 'idtax', 'lca', 'consensus'), c('exact', 'mis', 'over', 'under'))))
+df.noNA
+```
+
+```{r}
+table <- c(rep('bayes', 4), rep('idtax', 4), rep('lca', 4), rep('consensus', 4))
+class <- c(rep(c('exact', 'mis', 'over', 'under'), 4))
+val <- c(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.compare)
+
+data <- data.frame(table, class, val)
+data
+```
+
+```{r}
+table <- c(rep('bayes', 4), rep('idtax', 4), rep('lca', 4), rep('consensus', 4))
+class <- c(rep(c('exact', 'mis', 'over', 'under'), 4))
+val.noNA <- c(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.no.NA.compare)
+
+data.noNA <- data.frame(table, class, val.noNA)
+data.noNA
+```
+
+
+```{r, fig.height=5, fig.width=8}
+library(ggplot2)
+ggplot(data, aes(fill=class, y=val, x=table)) +
+  geom_bar(position=position_dodge(width=0.8), stat='identity') +
+  geom_text(aes(label=val), position=position_dodge(width=0.8), vjust=-0.25) +
+  labs(x="taxonomy table", y='count') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
+          axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
+          panel.background = element_rect(fill = "white",
+                                          colour = "white",
+                                          linetype = "solid"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                          colour = "white"),
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                          colour = "white"),
+          axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) + 
+  scale_fill_discrete(name = "classification relative to expected")
+```
+
+```{r, fig.height=5, fig.width=8}
+library(ggplot2)
+ggplot(data.noNA, aes(fill=class, y=val.noNA, x=table)) +
+  geom_bar(position=position_dodge(width=0.8), stat='identity') +
+  geom_text(aes(label=val.noNA), position=position_dodge(width=0.8), vjust=-0.25) +
+  labs(x="taxonomy table", y='count') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
+          axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
+          panel.background = element_rect(fill = "white",
+                                          colour = "white",
+                                          linetype = "solid"),
+          panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                          colour = "white"),
+          panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                          colour = "white"),
+          axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) + 
+  scale_fill_discrete(name = "classification relative to expected")
+```
+
+
+
+
+
+
+
+
+
+

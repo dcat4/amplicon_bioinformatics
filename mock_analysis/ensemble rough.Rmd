@@ -1,0 +1,178 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Create a consensus taxonomy from the 6 taxonomy tables above using your majority rules algorithm.
+
+Leave bayes-pr2, idtax-pr2 as is
+```{r}
+# standardized table names for the pr2
+table.names <- c("kingdom", "supergroup", "division", "class", "order", "family", "genus", "species")
+
+# renaming the bayes-pr2 and idtax-pr2
+colnames(bayes.pr2)[3:10] <- table.names
+colnames(idtax.pr2)[3:10] <- table.names
+```
+
+LCA-silva, LCA-pr2, bayes-silva, and idtax-silva mapped to pr2
+```{r}
+# getting the taxmapper function
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/taxmapper.R")
+
+# setting up the parameters
+synonym.filepath <- "~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv"
+
+
+# Bacteria and Archaea doesn't exist in pr2
+nonexistent <- c('Bacteria', 'Archaea')
+
+pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv")
+pr2 <- pr2[,-1]
+
+bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=pr2, 
+                               exceptions=nonexistent,
+                               synonym.file=synonym.filepath,
+                               ignore.format=TRUE)
+
+idtax.silva.2.pr2 <- taxmapper(taxin=idtax.silva, tax2map2=pr2, 
+                               exceptions=nonexistent,
+                               synonym.file=synonym.filepath,
+                               ignore.format=TRUE)
+
+lca.silva.2.pr2 <- taxmapper(taxin=lca.silva, tax2map2=pr2, 
+                             exceptions=nonexistent,
+                             synonym.file=synonym.filepath,
+                             ignore.format=TRUE)
+
+lca.pr2.2.pr2 <- taxmapper(taxin=lca.pr2, tax2map2=pr2, 
+                             exceptions=nonexistent,
+                             synonym.file=synonym.filepath,
+                             ignore.format=TRUE)
+
+bayes.silva.pr2 <- bayes.silva.2.pr2[[3]]
+idtax.silva.pr2 <- idtax.silva.2.pr2[[3]]
+lca.silva.pr2 <- lca.silva.2.pr2[[3]]
+lca.pr2.pr2 <- lca.pr2.2.pr2[[3]]
+```
+
+Checking for consistency.
+```{r}
+# same number of rows
+all.equal(nrow(bayes.pr2), nrow(idtax.pr2), nrow(bayes.silva.pr2), nrow(idtax.silva.pr2), nrow(lca.silva.pr2), nrow(lca.pr2.pr2))
+
+# same number of columns
+all.equal(ncol(bayes.pr2), ncol(idtax.pr2), ncol(bayes.silva.pr2), ncol(idtax.silva.pr2), ncol(lca.silva.pr2), ncol(lca.pr2.pr2))
+```
+
+Sort them by sVN and ASV for consistency.
+```{r}
+s.bayes.pr2 <- bayes.pr2[sort(as.character(bayes.pr2$svN), index.return=TRUE)$ix, ]
+s.idtax.pr2 <- idtax.pr2[sort(as.character(idtax.pr2$svN), index.return=TRUE)$ix, ]
+s.bayes.silva <- bayes.silva.pr2[sort(as.character(bayes.silva.pr2$svN), index.return=TRUE)$ix, ]
+s.idtax.silva <- idtax.silva.pr2[sort(as.character(idtax.silva.pr2$svN), index.return=TRUE)$ix, ]
+s.lca.silva <- lca.silva.pr2[sort(as.character(lca.silva.pr2$svN), index.return=TRUE)$ix, ]
+s.lca.pr2 <- lca.pr2.pr2[sort(as.character(lca.pr2.pr2$svN), index.return=TRUE)$ix, ]
+```
+
+Determining the OG consensus taxonomy.
+No tiebreaking and count the NA's and equal weights
+```{r}
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom2.R")
+
+tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2", "bayes-silva", "idtax-silva", "lca-silva")
+
+og.consensus <- consensus_tax_mostCom2(s.bayes.pr2, s.idtax.pr2, s.lca.pr2, 
+                                       s.bayes.silva, s.idtax.silva, s.lca.silva,
+                                       tablenames=tblnam, ranknamez=table.names,
+                                       tiebreakz="none", count.na=TRUE, weights=c(1,1,1,1,1,1))
+```
+
+Leave One Out Analysis
+```{r}
+no.bayes.pr2 <- consensus_tax_mostCom2(s.idtax.pr2, s.lca.pr2, 
+                                       s.bayes.silva, s.idtax.silva, s.lca.silva,
+                                       tablenames=tblnam[2:6], ranknamez=table.names,
+                                       tiebreakz="none", count.na=TRUE, weights=c(1,1,1,1,1,1))
+
+no.idtax.pr2 <- consensus_tax_mostCom2(s.bayes.pr2, s.lca.pr2, 
+                                       s.bayes.silva, s.idtax.silva, s.lca.silva,
+                                       tablenames=tblnam[c(1, 3:6)], ranknamez=table.names,
+                                       tiebreakz="none", count.na=TRUE, weights=c(1,1,1,1,1,1))
+
+no.lca.pr2 <- consensus_tax_mostCom2(s.bayes.pr2, s.idtax.pr2, 
+                                     s.bayes.silva, s.idtax.silva, s.lca.silva,
+                                     tablenames=tblnam[c(1:2, 4:6)], ranknamez=table.names,
+                                     tiebreakz="none", count.na=TRUE, weights=c(1,1,1,1,1,1))
+
+no.bayes.silva <- consensus_tax_mostCom2(s.bayes.pr2, s.idtax.pr2, s.lca.pr2, 
+                                         s.idtax.silva, s.lca.silva,
+                                         tablenames=tblnam[c(1:3, 5:6)], ranknamez=table.names,
+                                         tiebreakz="none", count.na=TRUE, weights=c(1,1,1,1,1,1))
+
+no.idtax.silva <- consensus_tax_mostCom2(s.bayes.pr2, s.idtax.pr2, s.lca.pr2, 
+                                         s.bayes.silva, s.lca.silva,
+                                         tablenames=tblnam[c(1:4, 6)], ranknamez=table.names,
+                                         tiebreakz="none", count.na=TRUE, weights=c(1,1,1,1,1,1))
+
+no.lca.silva <- consensus_tax_mostCom2(s.bayes.pr2, s.idtax.pr2, s.lca.pr2, 
+                                       s.bayes.silva, s.idtax.silva,
+                                       tablenames=tblnam[1:5], ranknamez=table.names,
+                                       tiebreakz="none", count.na=TRUE, weights=c(1,1,1,1,1,1))
+```
+
+Compare Assignments
+```{r}
+# getting the compare assignment function
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_comparisons/compare_assignments_2way.R")
+
+og.no.bayes.pr2 <- compare_assignments_2way(og.consensus, no.bayes.pr2, tablenames=c("og consensus", "no bayes-pr2"),ranknamez=table.names)
+
+og.no.idtax.pr2 <- compare_assignments_2way(og.consensus, no.idtax.pr2, tablenames=c("og consensus", "no idtax-pr2"),ranknamez=table.names)
+
+og.no.lca.pr2 <- compare_assignments_2way(og.consensus, no.lca.pr2, tablenames=c("og consensus", "no lca-pr2"),ranknamez=table.names)
+
+og.no.bayes.silva <- compare_assignments_2way(og.consensus, no.bayes.silva, tablenames=c("og consensus", "no bayes-silva"),ranknamez=table.names)
+
+og.no.idtax.silva <- compare_assignments_2way(og.consensus, no.idtax.silva, tablenames=c("og consensus", "no idtax-silva"),ranknamez=table.names)
+
+og.no.lca.silva <- compare_assignments_2way(og.consensus, no.lca.silva, tablenames=c("og consensus", "no lca-silva"),ranknamez=table.names)
+```
+
+```{r, fig.width=8, fig.height=20}
+grid.arrange(og.no.bayes.pr2[[3]], og.no.bayes.pr2[[4]], 
+             og.no.idtax.pr2[[3]], og.no.idtax.pr2[[4]], 
+             og.no.lca.pr2[[3]], og.no.lca.pr2[[4]],
+             og.no.bayes.silva[[3]], og.no.bayes.silva[[4]],
+             og.no.idtax.silva[[3]], og.no.idtax.silva[[4]],
+             og.no.lca.silva[[3]], og.no.lca.silva[[4]], 
+             ncol=2)
+```
+
+Compare Ranks
+```{r}
+# getting the compare assignment function
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_comparisons/compare_byRank_2way.R")
+
+og.no.bayes.pr2.r <- compare_byRank_2way(og.consensus, no.bayes.pr2, tablenames=c("og consensus", "no bayes-pr2"),ranknamez=table.names)
+
+og.no.idtax.pr2.r <- compare_byRank_2way(og.consensus, no.idtax.pr2, tablenames=c("og consensus", "no idtax-pr2"),ranknamez=table.names)
+
+og.no.lca.pr2.r <- compare_byRank_2way(og.consensus, no.lca.pr2, tablenames=c("og consensus", "no lca-pr2"),ranknamez=table.names)
+
+og.no.bayes.silva.r <- compare_byRank_2way(og.consensus, no.bayes.silva, tablenames=c("og consensus", "no bayes-silva"),ranknamez=table.names)
+
+og.no.idtax.silva.r <- compare_byRank_2way(og.consensus, no.idtax.silva, tablenames=c("og consensus", "no idtax-silva"),ranknamez=table.names)
+
+og.no.lca.silva.r <- compare_byRank_2way(og.consensus, no.lca.silva, tablenames=c("og consensus", "no lca-silva"),ranknamez=table.names)
+```
+
+```{r, fig.width=8, fig.height=20}
+grid.arrange(og.no.bayes.pr2.r[[3]], og.no.bayes.pr2.r[[4]], 
+             og.no.idtax.pr2.r[[3]], og.no.idtax.pr2.r[[4]], 
+             og.no.lca.pr2.r[[3]], og.no.lca.pr2.r[[4]],
+             og.no.bayes.silva.r[[3]], og.no.bayes.silva.r[[4]],
+             og.no.idtax.silva.r[[3]], og.no.idtax.silva.r[[4]],
+             og.no.lca.silva.r[[3]], og.no.lca.silva.r[[4]], 
+             ncol=2)
+```
