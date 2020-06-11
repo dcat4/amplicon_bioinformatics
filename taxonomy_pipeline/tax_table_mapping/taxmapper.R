@@ -101,7 +101,7 @@ taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
           pos.taxs <- unique(c(orig.tax, pos.taxs))
         }
         else {
-          pos.taxs <- getSynonyms(tax, synonyms)
+          pos.taxs <- getSynonyms(orig.tax, synonyms)
         }
         matched <- FALSE
         counter <- 1
@@ -120,7 +120,7 @@ taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
             }
             else {
               if (last) {
-                not.mapped <- c(not.mapped, tax)
+                not.mapped <- c(not.mapped, orig.tax)
               }
             }
           }
