@@ -1,191 +1,116 @@
-consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("Kingdom", "Supergroup", "Division","Class","Order","Family","Genus","Species"),
-                                  tiebreakz = "LCAlike", count.na=FALSE, weights=rep(1, length(list(...)))) {
+consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+                                   tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, weights=rep(1, length(list(...)))) {
   x <- list(...)
-  consensus.tax <- data.frame(matrix(ncol=(ncol(x[[1]])), nrow=0, dimnames=list(NULL, names(x[[1]]))))
   n.rows <- nrow(x[[1]])
   n.cols <- ncol(x[[1]])
   threshold <- 0.5
   n.dfs <- length(x)
-  ties <- vector()
   
-  # get the rows that are all NA's and pop them into the consensus.tax since they're all NA's
-  # think of ways to validate the mapping of consensus
+  consensus.tax <- data.frame(matrix(ncol=n.cols, nrow=0, dimnames=list(NULL, names(x[[1]]))))
   
+  tiebreaker <- NA
+  if (tiebreakz != "none") {
+    tiebreaker <- data.frame(matrix(unlist(tiebreakz), nrow=length(tiebreakz), byrow=T, dimnames=list(NULL, c("table", "tax"))),stringsAsFactors=FALSE)
+    tiebreaker$priority <- as.numeric(rownames(tiebreaker))
+  }
+  
+  # just iterate through each row and find the consensus of each row
   for (row in 1:n.rows) {
-    placed <- FALSE
-    for (col in rev(3:n.cols)) {
+    # initialize the consensus row 
+    c.row <- data.frame(matrix(rep(NA, n.cols), ncol=n.cols, nrow = 1, dimnames=list(NULL, names(consensus.tax))))
+    c.row[, "svN"] <- x[[1]][row, "svN"]
+    c.row[, "ASV"] <- x[[1]][row, "ASV"]
+    for (col in rev(ranknamez)) {
+      # collects the taxs from each data frame
       taxs <- vector()
+      # corresponding vector to know which df the tax came from
+      df.idx <- vector()
       for (i in 1:n.dfs) {
         df <- x[[i]]
+        # weights are represented by the amount of repeated taxs are
         taxs <- c(taxs, rep(df[row, col], weights[i]))
+        df.idx <- c(df.idx, rep(tablenames[i], weights[i]))
       }
+      # create a frequency table to determine which one is the majority
       freq.df <- as.data.frame(table(taxs), stringsAsFactors=FALSE)
-      # add NA freq here by counting NA in taxs
+      # automatically, the frequency table excludes NA
       if (count.na) {
-        freq.df <- as.data.frame(table(taxs, exclude=NULL), stringsAsFactors=FALSE)
-        # if the table only contains NA move to the next column
-        if (nrow(freq.df) == 1 & (is.na(freq.df[,1]))) {
-          next
-        }
+        # table parameter to count the NA's well
+        freq.df <- as.data.frame(table(taxs, exclude=NULL), strinsgAsFactors=FALSE)
       }
+      # if entires exist in the frequency table, determine the majority
+      # else that means the NA's wasn't counted but will be set to NA as default
       if (nrow(freq.df) > 0) {
-        # multiply the weight to the frequency and divide it by the normalized 
-        
-        # example of weighing (default vector of 1's)
-        # table1 -> Bacteria      table2 -> Bacteria      table3 -> Eukaryota 
-        # weighing scheme 1 1 2
-        
-        # freq -> 2 Euk and 2 Bacteria 
-        
-        
+        # determine the proportion to compare to threshold by majority
         freq.df$prop <- freq.df$Freq / sum(freq.df$Freq)
+        # get the one with the greatest proportion aka the majority
+        # see if the proportion of the majority is at least the threshold
         max.prop <- max(freq.df$prop)
-        if (max.prop >= threshold) {
-          c.tax <- freq.df[which(freq.df$prop == max.prop), "taxs"]
+        if (!trueMajority || max.prop >= threshold) {
+          c.tax <- as.character(freq.df[which(freq.df$prop == max.prop), "taxs"])
+          # if there are multiple taxs as the majority, we need to tie break it
           if (length(c.tax) > 1) {
-            ties <- c(ties, row)
-            placed <- TRUE
-            break
-          }
-          else {
-            # add NA downstream of the column found 
-            df <- x[[match(c.tax, taxs)]]
+            # see which data frame it is coming from
+            # check if the data frame chosen is an option
             
-            matched.row <- data.frame(matrix(rep(NA, n.cols), ncol = n.cols, nrow = 1))
-            colnames(matched.row) <- colnames(df)
-            matched.row[1:col] <- df[row, ][1:col]
-            
-            consensus.tax <- rbind(consensus.tax, matched.row)
-            placed <- TRUE
-            break
-          }
-        }
-      }
-    }
-    if(!placed) {
-      ties <- c(ties, row)
-    }
-  }
-  
-  # tie breaking
-  # tie for the highest proportion
-  # take the tables -> subset it and apply the tie breaking rules to the subset
-  
-  for (i in 1:length(ties)) {
-    matchz <- lapply(x, function(x) x[ties[i], ])
-    eh <- unique(matrix(unlist(matchz), nrow=length(matchz), byrow=TRUE))
-    if (nrow(eh) == 1) {
-      consensus.tax <- rbind(consensus.tax, eh)
-      ties[i] <- NA
-    }
-  }
-  ties <- ties[!is.na(ties)]
-  if (length(grep("none", tiebreakz)) > 0) {
-
-  } else if (identical("LCAlike", tiebreakz)) {
-    for (i in 1:length(ties)) {
-      eh <- lapply(x, function(z) z[ties[i],])
-      eh <- lapply(eh, function(z) z[, !is.na(z)])
-      durp <- x[[1]][ties[i],]
-      eh2 <- unlist(lapply(lapply(eh, intersect, durp), length))
-      lcai <- which(eh2 == min(eh2))
-      if (length(lcai) > 1) {
-        lcai <- min(lcai)
-      }
-      if (lcapathi > 0) {
-        matched.row <- data.frame(matrix(rep(NA, n.cols), ncol = n.cols, nrow = 1))
-        colnames(matched.row) <- colnames(df)
-        matched.row[,1:lcapathi] <- x[[lcai]][ties[i], 1:lcapathi]
-        consensus.tax <- rbind(consensus.tax, matched.row)
-        ties[i] <- NA
-      } else {
-        ties[i] <- NA
-      }
-    }
-  } else {
-    for (j in 1:length(tiebreakz)) {
-      pikl <- tiebreakz[[j]][1]
-      if (length(grep("LCAlike", pikl)) > 0) {
-        for (i in 1:length(ties)) {
-          eh <- lapply(x, function(z) z[ties[i],])
-          eh <- lapply(eh, function(z) z[,!is.na(z)])
-          durp <- x[[1]][ties[i],]
-          eh2 <- unlist(lapply(lapply(eh, intersect, durp), length))
-          lcai <- which(eh2 == min(eh2))
-          if (length(lcai) > 1) {
-            lcai <- min(lcai)
-          }
-          lcapathi <- min(eh2)
-          if (lcapathi > 0) {
-            matched.row <- data.frame(matrix(rep(NA, n.cols), ncol = n.cols, nrow = 1))
-            colnames(matched.row) <- colnames(df)
-            matched.row[,1:lcapathi] <- x[[lcai]][ties[i], 1:lcapathi]
-            consensus.tax <- rbind(consensus.tax, matched.row)
-            ties[i] <- NA
-          } else {
-            ties[i] <- NA
-          }
-        }
-      } else {
-        for (i in 1:length(ties)) {
-          eh <- which(tablenames %in% pikl)
-          pn <- tiebreakz[[j]][2]
-          if (length(eh) == 0) {
-            
-          } else if (length(eh) > 0 & is.na(pn)) {
-            consensus.tax <- rbind(consensus.tax, x[[eh]][ties[i],])
-            ties[i] <- NA
-          } else if (length(eh) > 0 & !is.na(pn)) {
-            if (pn %in% x[[eh]][ties[i],]) {
-              consensus.tax <- rbind(consensus.tax, x[[eh]][ties[i],])
-              ties[i] <- NA
-            } else {
+            if (!is.na(tiebreaker)) {
+              # create a data frame with taxs and tablename it came from
+              pairs <- vector(mode="list", length=length(c.tax))
+              curr.idx <- 1
+              for (i in 1:length(c.tax)) {
+                # find the corresponding tablename of tax
+                tax <- c.tax[i]
+                idx <- match(tax, taxs)
+                if (is.na(tax)) {
+                  tax <- "na"
+                }
+                table <- df.idx[idx]
+                # append result to list
+                pairs[[curr.idx]] <- c(table, tax)
+                curr.idx <- curr.idx + 1
+              }
+              # data frame of ties
+              ties <- data.frame(matrix(unlist(pairs), nrow=length(pairs), byrow=T, dimnames=list(NULL, c("table", "tax"))),stringsAsFactors=FALSE)
               
+              # first assign exact matches
+              exact <- merge(ties, tiebreaker, by=c("table","tax"), all.x=TRUE)
+              
+              # go back and consider taxnames only with NA
+              all <- merge(exact, tiebreaker[which(is.na(tiebreaker[,"tax"])), c("table","priority")], by="table", all.x=TRUE)
+              
+              # resolve priorities
+              all$priority <- coalesce(all$priority.x, all$priority.y)
+              all$priority.x <- NULL
+              all$priority.y <- NULL
+              
+              # sort by priority to get tiebreaker at the top of the data frame
+              sorted <- all[order(all$priority), ]
+              
+              # assign top row as consensus
+              if (is.na(sorted[1, "priority"])) {
+                c.row[, col] <- NA
+              } else {
+                c.row[, col] <- sorted[1, "tax"]
+              }
+            } else {
+              # at this point just set it as NA
+              c.row[, col] <- NA
             }
+          } else {
+            c.row[, col] <- c.tax[1]
           }
         }
       }
-      ties <- ties[!is.na(ties)]
     }
+    # after iterating through the columns add the consensus row to the data frame
+    consensus.tax <- rbind(consensus.tax, c.row)
   }
   
-  # add the tie breaking stuff -> user specified rules
-  # weighing option for each data frame for proportion calculation (numeric vector in order of df)
-  # option to treat NA's as a name
+  make.true.NA <- function(x) if(is.character(x)||is.factor(x)){
+    is.na(x) <- x=="NA"; x} else {
+      x}
   
-  return(list(consensus.tax, ties))
+  df[] <- lapply(consensus.tax, make.true.NA)
   
-  # NOTES
-  # majority rule system
-  # use the assignment that is in agreement in the most taxonomy tables
-  # row and rank wise basis majority rule system if the majority of the input taxonomy
-  
-  # try to avoid for loops (lapply?)
-  
-  # assume homoegenous ranking convention -> each input follow the same ranking
-  
-  # have an arbitrary number of input of taxonomy tables where they are all formatted the same way
-  # row 1 corresponds to row 1 of another table 
-  
-  # assuming that you have three input tables...
-  # for each table in table
-  # row 1 would be ASV1 and would have a series of assignments 
-  # for each of those name
-  # if this name is shared by two or more of the tables, retain the name (majority)
-  
-  # for each row, start at the highest column first and iterate backwards to first column
-  # check for equivalency -> if equal, pick one row and assign to the output
-  # if two of them are equal -> assign either 
-  # if > 50% of the matching  -> assign it to the upstream name 
-  # < 50% -> use tie breaking scheme in consensus -> copy/paste 
-  # store those row indicies and loop through a tie breaking loop 
-  
-  # consider A = tax, B = NA, C = NA 
-  # have another input if NA is considered as a NA
-  # -> if that input is true, value is NA
-  # have some input where you have one option as NA as standard name -> assign upstream names
-  
-  # start treating NA's as names
-  # do it by row
-  # store it for the tie breakers if anything downstream doesn't match or use NA
+  return(data.frame(lapply(df, as.character), stringsAsFactors=FALSE))
 }

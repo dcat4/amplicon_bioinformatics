@@ -291,10 +291,10 @@ taxonomy table has the most common taxonomy of our 3
 datasets.
 
 ``` r
-source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom3.R")
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom.R")
 
 tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
-test1 <- consensus_tax_mostCom3(s.bayes, s.idtax, s.lca,
+test1 <- consensus_tax_mostCom(s.bayes, s.idtax, s.lca,
                         tablenames = tblnam, count.na=TRUE,
                         tiebreakz = "none")
 head(test1)
@@ -375,7 +375,7 @@ mini.b <- s.bayes[which(s.bayes$svN %in% svs), ]
 mini.i <- s.idtax[which(s.idtax$svN %in% svs), ]
 mini.l <- s.lca[which(s.lca$svN %in% svs), ]
 
-c.test <- consensus_tax_mostCom3(mini.b, mini.i, mini.l, 
+c.test <- consensus_tax_mostCom(mini.b, mini.i, mini.l, 
                                  tablenames = c("bayes", "idtax", "lca"), 
                                  ranknamez = c("kingdom", "supergroup", "division", "class", "order", "family", "genus", "species"), 
                                  tiebreakz = "none", count.na = TRUE)
@@ -425,7 +425,7 @@ Here, we’ll pop out a few good examples.
 cbind(rbind(as.data.frame(consensus.res[1, c(1:2, 4:11)]),
       cbind(consensus.res[1, 1:2], consensus.res[2, 4:11]),
       cbind(consensus.res[1, 1:2], consensus.res[3, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[1, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[1, c(1:2, 4:11)]), 
                        cbind(consensus.res[1, 1:2], consensus.res[2, 4:11]), 
                        cbind(consensus.res[1, 1:2], consensus.res[3, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -461,7 +461,7 @@ Now let’s look at one where some contain different taxonomies.
 cbind(rbind(as.data.frame(consensus.res[11, c(1:2, 4:11)]),
       cbind(consensus.res[11, 1:2], consensus.res[12, 4:11]),
       cbind(consensus.res[11, 1:2], consensus.res[13, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[11, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[11, c(1:2, 4:11)]), 
                        cbind(consensus.res[11, 1:2], consensus.res[12, 4:11]), 
                        cbind(consensus.res[11, 1:2], consensus.res[13, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -498,7 +498,7 @@ idtax.
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -544,7 +544,7 @@ the last element in thel ist will be prioritized the least.
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -581,7 +581,7 @@ The same thing can be applied if we want to prioritize the idtax table.
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -621,7 +621,7 @@ done by exact name matching which means that it is also case sensitive.
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -672,7 +672,7 @@ breaking priorities. We will always prioritize the specific pair of
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -721,27 +721,10 @@ weight on the bayes taxonomy table where it will be inputted twice in
 the pool of taxonomies to resolve a consensus to.
 
 ``` r
-consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
-                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
-                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-                       tablenames=c('bayes', 'idtax', 'lca'), 
-                       count.na=TRUE, weights=c(2,1,1)) 
-```
-
-    ##       svN
-    ## 1 sv12184
-    ##                                                                                                                            ASV
-    ## 1 GCTCCTACCGATTGAATGATCCGGTGAATAATTCGGACTGGGAAATTTTTAGTTTCTATTCTTTTCACGGGAAGTTTAATAAACCTTATCATTTAGAGGAAGGAGAAGTCGTAACAAGGTTTCC
-    ##     kingdom supergroup division class               order            family
-    ## 1 Eukaryota  Alveolata     <NA>  <NA> Cryptogregarinorida Cryptosporidiidae
-    ##             genus species
-    ## 1 Cryptosporidium    <NA>
-
-``` r
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -781,7 +764,7 @@ candidate.
 cbind(rbind(as.data.frame(consensus.res[61, c(1:2, 4:11)]),
       cbind(consensus.res[61, 1:2], consensus.res[62, 4:11]),
       cbind(consensus.res[61, 1:2], consensus.res[63, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[61, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[61, c(1:2, 4:11)]), 
                        cbind(consensus.res[61, 1:2], consensus.res[62, 4:11]), 
                        cbind(consensus.res[61, 1:2], consensus.res[63, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 

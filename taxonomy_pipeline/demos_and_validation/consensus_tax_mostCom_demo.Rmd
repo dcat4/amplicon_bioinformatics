@@ -162,10 +162,10 @@ Our data should be good to go, so let's run the algorithm. We have to specify na
 First we'll tell R where to find the algorithm and load it into our session. In our first run, we'll specify no tie-breakers, so that the algorithm will only assign consensus taxonomies to ASVs where a single taxonomy table has the most common taxonomy of our 3 datasets.
 
 ```{r}
-source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom3.R")
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom.R")
 
 tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
-test1 <- consensus_tax_mostCom3(s.bayes, s.idtax, s.lca,
+test1 <- consensus_tax_mostCom(s.bayes, s.idtax, s.lca,
                         tablenames = tblnam, count.na=TRUE,
                         tiebreakz = "none")
 head(test1)
@@ -197,7 +197,7 @@ mini.b <- s.bayes[which(s.bayes$svN %in% svs), ]
 mini.i <- s.idtax[which(s.idtax$svN %in% svs), ]
 mini.l <- s.lca[which(s.lca$svN %in% svs), ]
 
-c.test <- consensus_tax_mostCom3(mini.b, mini.i, mini.l, 
+c.test <- consensus_tax_mostCom(mini.b, mini.i, mini.l, 
                                  tablenames = c("bayes", "idtax", "lca"), 
                                  ranknamez = c("kingdom", "supergroup", "division", "class", "order", "family", "genus", "species"), 
                                  tiebreakz = "none", count.na = TRUE)
@@ -212,7 +212,7 @@ Here, we'll pop out a few good examples.
 cbind(rbind(as.data.frame(consensus.res[1, c(1:2, 4:11)]),
       cbind(consensus.res[1, 1:2], consensus.res[2, 4:11]),
       cbind(consensus.res[1, 1:2], consensus.res[3, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[1, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[1, c(1:2, 4:11)]), 
                        cbind(consensus.res[1, 1:2], consensus.res[2, 4:11]), 
                        cbind(consensus.res[1, 1:2], consensus.res[3, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -227,7 +227,7 @@ Now let's look at one where some contain different taxonomies.
 cbind(rbind(as.data.frame(consensus.res[11, c(1:2, 4:11)]),
       cbind(consensus.res[11, 1:2], consensus.res[12, 4:11]),
       cbind(consensus.res[11, 1:2], consensus.res[13, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[11, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[11, c(1:2, 4:11)]), 
                        cbind(consensus.res[11, 1:2], consensus.res[12, 4:11]), 
                        cbind(consensus.res[11, 1:2], consensus.res[13, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -240,7 +240,7 @@ Here, we can see that the taxonomies in bayes and idtax are the majority in each
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -257,7 +257,7 @@ Here we will introduce how our algorithm takes care of tie breakers set by the u
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -272,7 +272,7 @@ The same thing can be applied if we want to prioritize the idtax table.
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -287,7 +287,7 @@ For example, we'll prioritize the bayes table whenever we encounter the taxonomy
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -306,7 +306,7 @@ For example, let's build on what we had earlier and combine our tie breaking pri
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -322,19 +322,11 @@ Overall, a good tiebreak input would contain specific pairs of table and taxonom
 
 Finally, weights can be introduced into the algorithm to mitigate any ties. This is also another way to introduce bias toward taxonomy table when resolving a consensus taxonomy. Here, we'll introduce a greater weight on the bayes taxonomy table where it will be inputted twice in the pool of taxonomies to resolve a consensus to.
 
-```{r}
-consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
-                       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
-                       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-                       tablenames=c('bayes', 'idtax', 'lca'), 
-                       count.na=TRUE, weights=c(2,1,1)) 
-```
-
 ```{r, warning=FALSE}
 cbind(rbind(as.data.frame(consensus.res[81, c(1:2, 4:11)]),
       cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]),
       cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[81, c(1:2, 4:11)]), 
                        cbind(consensus.res[81, 1:2], consensus.res[82, 4:11]), 
                        cbind(consensus.res[81, 1:2], consensus.res[83, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
@@ -351,7 +343,7 @@ Lastly, we can make the algorithm not consider NA as a majority candidate.
 cbind(rbind(as.data.frame(consensus.res[61, c(1:2, 4:11)]),
       cbind(consensus.res[61, 1:2], consensus.res[62, 4:11]),
       cbind(consensus.res[61, 1:2], consensus.res[63, 4:11]),
-      consensus_tax_mostCom3(as.data.frame(consensus.res[61, c(1:2, 4:11)]), 
+      consensus_tax_mostCom(as.data.frame(consensus.res[61, c(1:2, 4:11)]), 
                        cbind(consensus.res[61, 1:2], consensus.res[62, 4:11]), 
                        cbind(consensus.res[61, 1:2], consensus.res[63, 4:11]),
                        tablenames=c('bayes', 'idtax', 'lca'), 
