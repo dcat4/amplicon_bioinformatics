@@ -34,14 +34,14 @@ taxonomy to the ASVs where a single taxonomy provides the most common
 taxonomy, the algorithm uses a series of user-speicifed rules to break
 the remaining ties. Rules you may specify are demonstarted below.
 
-### Start ’er up:
+### Setting Things Up:
 
 We’ll clear out our environment, load in the reshape2 package ofr later,
 set our wd, and read in taxonomy tables: The taxonomy tables used here
 come from implementations of the RDP Bayesian classifer, the new idtaxa
-algorithm, and MEGAN’S LCA algorithm against both the Silva and pr2
-reference databases. Our amplicon data set is an 18S-V9 tag sequencing
-project from the coastal ocean.
+algorithm, and MEGAN’S LCA algorithm against the pr2 reference
+databases. Our amplicon data set is an 18S-V9 tag sequencing project
+from the coastal ocean.
 
 You can do this with any taxonomy tables assuming you format them
 properly. To follow along with this demo, grab the taxonomy tables in
@@ -49,132 +49,31 @@ the “test\_data” directory of this repository and follow the code below.
 
 ``` r
 library(dplyr)
-```
 
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 rm(list = ls())
+
 # setwd and read in your datasets:
 setwd("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/tax_pipe_Mar20/")
 dd <- "~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/package_deal/"
 
-# trait and tax mapping:
-source(paste0(dd,"traitmapper_Ramond.R"))
+# tax mapping:
 source(paste0(dd,"taxmapper.R"))
-source(paste0(dd,"pr2_tax_miner.R"))
-source(paste0(dd,"analyze_traitmap_byTrait.R"))
 
 # helper fcns:
-source(paste0(dd,"LCA2df.R"))
-source(paste0(dd,"idtax2df_pr2.R"))
 source(paste0(dd,"bayestax2df.R"))
-source(paste0(dd,"idtax2df_silva.R"))
-source(paste0(dd,"find_asvs_by_name.R"))
+source(paste0(dd,"idtax2df_pr2.R"))
 
-# ensemble tax algrithms:
-source(paste0(dd,"consensus_tax_LCAlike.R"))
-source(paste0(dd,"consensus_tax_bestRez.R"))
-source(paste0(dd,"compare_taxrez.R"))
 bayes.pr2 <- readRDS("initial_tax_tabs/bayes_pr2_0boot_Mar20.rds")
 idtax.pr2 <- readRDS("initial_tax_tabs/idtax_pr2_0boot_Mar20.rds")
-bayes.silva <- readRDS("initial_tax_tabs/bayes_silva_0boot_Mar20.rds")
-idtax.silva <- readRDS("initial_tax_tabs/idtax_silva_0boot_Mar20.rds")
 lca.pr2 <- readRDS("initial_tax_tabs/LCA_pr2_rawdf_Mar20.rds")
-lca.silva <- readRDS("initial_tax_tabs/LCA_silva_rawdf_Mar20.rds")
 ```
 
 ### Arranging and formating our taxonomy tables for running the algorithm:
 
-The data we’re using was pulled slightly haphazardly, so here we’ll use
-some bootstrapping estimates to NA-out low-confidence assignments,
-reformat our taxonomy tables as dataframes, and sort them alphabetically
-by ASV sequences so that the order of rows/ASVs is the same across all
-taxonomy
-tables.
-
 ``` r
 # here's the rubric for aligning ASV numbers and sequences across datasets:
 library("DECIPHER")
-```
 
-    ## Loading required package: Biostrings
-
-    ## Loading required package: BiocGenerics
-
-    ## Loading required package: parallel
-
-    ## 
-    ## Attaching package: 'BiocGenerics'
-
-    ## The following objects are masked from 'package:parallel':
-    ## 
-    ##     clusterApply, clusterApplyLB, clusterCall, clusterEvalQ,
-    ##     clusterExport, clusterMap, parApply, parCapply, parLapply,
-    ##     parLapplyLB, parRapply, parSapply, parSapplyLB
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     combine, intersect, setdiff, union
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     IQR, mad, sd, var, xtabs
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     anyDuplicated, append, as.data.frame, basename, cbind, colnames,
-    ##     dirname, do.call, duplicated, eval, evalq, Filter, Find, get, grep,
-    ##     grepl, intersect, is.unsorted, lapply, Map, mapply, match, mget,
-    ##     order, paste, pmax, pmax.int, pmin, pmin.int, Position, rank,
-    ##     rbind, Reduce, rownames, sapply, setdiff, sort, table, tapply,
-    ##     union, unique, unsplit, which, which.max, which.min
-
-    ## Loading required package: S4Vectors
-
-    ## Loading required package: stats4
-
-    ## 
-    ## Attaching package: 'S4Vectors'
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     first, rename
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     expand.grid
-
-    ## Loading required package: IRanges
-
-    ## 
-    ## Attaching package: 'IRanges'
-
-    ## The following objects are masked from 'package:dplyr':
-    ## 
-    ##     collapse, desc, slice
-
-    ## Loading required package: XVector
-
-    ## 
-    ## Attaching package: 'Biostrings'
-
-    ## The following object is masked from 'package:base':
-    ## 
-    ##     strsplit
-
-    ## Loading required package: RSQLite
-
-``` r
 setwd("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/tax_pipe_Mar20/")
 rubber <- readDNAStringSet("blaster/allASVs4blast.fasta")
 
@@ -184,15 +83,10 @@ rubber <- readDNAStringSet("blaster/allASVs4blast.fasta")
 xx <- bayestax2df(bayes.pr2, boot = 0, rubric = rubber, return.conf = TRUE)
 bayes.pr2 <- xx[[1]]
 bayes.pr2.conf <- xx[[2]]
-xx <- bayestax2df(bayes.silva, boot = 0, rubric = rubber, return.conf = TRUE)
-bayes.silva <- xx[[1]]
-bayes.silva.conf <- xx[[2]]
+
 xx <- idtax2df_pr2(idtax.pr2, boot = 0, rubric = rubber, return.conf = TRUE)
 idtax.pr2 <- xx[[1]]
 idtax.pr2.conf <- xx[[2]]
-xx <- idtax2df_silva(idtax.silva, boot = 0, rubric = rubber, return.conf = TRUE)
-idtax.silva <- xx[[1]]
-idtax.silva.conf <- xx[[2]]
 
 # re-order your 6 tables by sorting according to ASV:
 ii <- base::sort(bayes.pr2$ASV, index.return = TRUE)
@@ -203,27 +97,13 @@ idtax.pr2 <- idtax.pr2[ii$ix,]
 idtax.pr2.conf <- idtax.pr2.conf[ii$ix,]
 ii <- base::sort(lca.pr2$ASV, index.return = TRUE)
 lca.pr2 <- lca.pr2[ii$ix,]
-
-# no confidence for lca tax assignments...
-ii <- base::sort(bayes.silva$ASV, index.return = TRUE)
-bayes.silva <- bayes.silva[ii$ix,]
-bayes.silva.conf <- bayes.silva.conf[ii$ix,]
-ii <- base::sort(idtax.silva$ASV, index.return = TRUE)
-idtax.silva <- idtax.silva[ii$ix,]
-idtax.silva.conf <- idtax.silva.conf[ii$ix,]
-ii <- base::sort(lca.silva$ASV, index.return = TRUE)
-lca.silva <- lca.silva[ii$ix,]
 ```
 
 You can run this for a sanity check:
 
 ``` r
 # check that they're all in the same order
-identical(bayes.pr2$ASV, bayes.silva$ASV)
 identical(bayes.pr2$ASV, idtax.pr2$ASV)
-identical(idtax.pr2$ASV, idtax.silva$ASV)  
-identical(idtax.silva$ASV, lca.pr2$ASV)
-identical(lca.pr2$ASV, lca.silva$ASV)
 ```
 
 …and this to see what the data sets look like. These data sets are
@@ -231,105 +111,23 @@ available in the test-data directory.
 
 ``` r
 head(bayes.pr2)
-head(bayes.silva)
 head(idtax.pr2)
-head(idtax.silva)
 head(lca.pr2)
-head(lca.silva)
 ```
 
 The algorithm expects that the ASV’s in each taxonomy data frame are all
-in the same order. Before inputting our tables in the algorithm, we will
-standardize our `bayes.silva`, `idtax.silva`, and `lca.silva` taxonomies
-to pr2 using the taxonomy mapping function as well as sort them by svN
-and
+in the same order. Before inputting tables in the algorithm, we
+recommend standardizing the taxonomy tables to one refernece database
+using the taxonomy mapping function as well as sort them by svN and
 ASV’s.
 
-``` r
-source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/taxmapper.R")
-
-synonym.filepath <- "~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv"
-
-# Bacteria and Archaea doesn't exist in pr2
-nonexistent <- c('Bacteria', 'Archaea')
-
-pr2 <- read.csv("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv")
-pr2 <- pr2[,-1]
-
-bayes.silva.2.pr2 <- taxmapper(taxin=bayes.silva, tax2map2=pr2, 
-                               exceptions=nonexistent,
-                               synonym.file=synonym.filepath)
-
-idtax.silva.2.pr2 <- taxmapper(taxin=idtax.silva, tax2map2=pr2, 
-                               exceptions=nonexistent,
-                               synonym.file=synonym.filepath)
-lca.silva.2.pr2 <- taxmapper(taxin=lca.silva, tax2map2=pr2, 
-                               exceptions=nonexistent,
-                               synonym.file=synonym.filepath)
-
-bayes <- bayes.silva.2.pr2[[3]]
-idtax <- idtax.silva.2.pr2[[3]]
-lca <- lca.silva.2.pr2[[3]]
-
-s.bayes <- bayes[sort(as.character(bayes$svN), index.return=TRUE)$ix, ]
-s.idtax <- idtax[sort(as.character(idtax$svN), index.return=TRUE)$ix, ]
-s.lca <- lca[sort(as.character(lca$svN), index.return=TRUE)$ix, ]
-```
-
-### First run
-
-Our data should be good to go, so let’s run the algorithm. We have to
-specify names for our taxonmy tables in a character vector. We won’t
-specify rank names b/c the defaults work for us. There is an option for
-the algorithm to count the term NA as part of the majority computation.
-In this case, we’ll count it.
-
-First we’ll tell R where to find the algorithm and load it into our
-session. In our first run, we’ll specify no tie-breakers, so that the
-algorithm will only assign consensus taxonomies to ASVs where a single
-taxonomy table has the most common taxonomy of our 3
-datasets.
-
-``` r
-source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom.R")
-
-tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
-test1 <- consensus_tax_mostCom(s.bayes, s.idtax, s.lca,
-                        tablenames = tblnam, count.na=TRUE,
-                        tiebreakz = "none")
-head(test1)
-```
-
-    ##       svN
-    ## 1     sv1
-    ## 2    sv10
-    ## 3   sv100
-    ## 4  sv1000
-    ## 5 sv10000
-    ## 6 sv10001
-    ##                                                                                                                                   ASV
-    ## 1     GCTACTACCGATTGAACATTTTAGTGAGGTCCTCGGACTGTGAGCCAGGCGGGTCGCCCTGCCTGGTCTACGGGAAGACGACCAAACTGTAGTGTTTAGAGGAAGTAAAAGTCGTAACAAGGTTTCC
-    ## 2     GCACCTACCGATTGAATGGTCCGGTGAAGCCTCGGGATTGTGATTAGTTTCCTTTATTGGAAGGTAGTTATGAGAACCTGTCTAAACCTTATCATTTAGAGGAAGGTGAAGTCGTAACAAGGTTTCT
-    ## 3     GCTCCTACCGATTGAGTGGTCCGGTGAATAATTCGGACTGGTGCCGATTTCGGTTCTCCGAGTTCGGCGCTGGGAAGTCTAGTGAACCTTATCACTTAGAGGAAGGAGAAGTCGTAACAAGGTTTCC
-    ## 4 GCTCCTACCGATTGAATGGTCCGGTGAAGTGTTCGGATCGTGGCGACGTGGGCGGTTCGCTGCCTGCGACGTCGCGAGAAGTCCACTGAACCTTATCATTTAGAGGAAGGAGAAGTCGTAACAAGGTTTCC
-    ## 5                                  GTTTCTTCCGACTAATGCTTTATGTGAGTGTCACGGATTTTAAAGAAGTGCTGTGAACATTGAGTATCGGAGGAAGAAAAAGTCGTAACAAGGTTATC
-    ## 6      GCTGCTACCGATTGAGTGTCCTGGTGAATTATTTGGACCGGCAGTAATTCGAGTTTCTCGATTTACAGCTGGAAAATCTTGTAAACCCTGACACTTAGAGGAAGCAGAAGTCGTAACAAGGTTTCC
-    ##     kingdom    supergroup       division           class             order
-    ## 1 Eukaryota  Opisthokonta        Metazoa      Arthropoda         Crustacea
-    ## 2 Eukaryota Stramenopiles     Ochrophyta Bacillariophyta Bacillariophyta_X
-    ## 3 Eukaryota     Alveolata Dinoflagellata     Syndiniales              <NA>
-    ## 4 Eukaryota          <NA>           <NA>            <NA>              <NA>
-    ## 5      <NA>          <NA>           <NA>            <NA>              <NA>
-    ## 6 Eukaryota     Alveolata Dinoflagellata            <NA>              <NA>
-    ##           family            genus species
-    ## 1    Maxillopoda             <NA>    <NA>
-    ## 2 Raphid-pennate Pseudo-nitzschia    <NA>
-    ## 3           <NA>             <NA>    <NA>
-    ## 4           <NA>             <NA>    <NA>
-    ## 5           <NA>             <NA>    <NA>
-    ## 6           <NA>             <NA>    <NA>
-
-The output is just a consensus taxonomy table.
+We’ve created a test data set where we will read in that showcases the
+expected output of our algorithm. Within the test data set, it stores
+the taxonomic assignments from each taxonomic algoirthm for each ASV and
+its corresponding expected consensus result counting non-assignments as
+a majority candidate. In order to show different scenarios of our
+algorithm resolving the majorities, we’ve handpicked certain rows to
+build a subset data frame to showcase our algorithm.
 
 ``` r
 library(readxl)
@@ -363,65 +161,26 @@ head(consensus.res)
     ## 6 sv14… ACAC… NA    Bacter… <NA>       <NA>     <NA>  <NA>  <NA>   <NA>  <NA>   
     ## # … with 1 more variable: table <chr>
 
-In order to show different scenarios of our algorithm resolving the
-majorities, we’ve handpicked certain rows to build a subset data frame
-to showcase our
-algorithm.
+### First run
+
+Our data should be good to go, so let’s run the algorithm. We have to
+specify names for our taxonmy tables in a character vector. There is an
+option for the algorithm to count the term NA as part of the majority
+computation. In this case, we’ll count it.
+
+First we’ll tell R where to find the algorithm and load it into our
+session. In our first run, we’ll specify no tie-breakers, so that the
+algorithm will only assign consensus taxonomies to ASVs where a single
+taxonomy table has the most common taxonomy of our 3 datasets.
+
+The output is just a consensus taxonomy table.
+
+Here, we’ll pop out a few good
+examples.
 
 ``` r
-svs <- c("sv24097", "sv14101", "sv15679", "sv19788", "sv22921", "sv9968", "sv19154", "sv17559", "sv19589", "sv17897", "sv17874", "sv104", "sv5216", "sv5759", "sv6408", "sv5605", "sv12184", "sv16779", "sv15370", "sv20943", "sv23365", "sv1509", "sv4792", "sv22976", "sv20635", "sv17488", "sv17511", "sv22291", "sv8232", "sv15734", "sv5756", "sv14822", "sv21647", "sv4356", "sv9792", "sv5337", "sv11054", "sv5272")
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom.R")
 
-mini.b <- s.bayes[which(s.bayes$svN %in% svs), ]
-mini.i <- s.idtax[which(s.idtax$svN %in% svs), ]
-mini.l <- s.lca[which(s.lca$svN %in% svs), ]
-
-c.test <- consensus_tax_mostCom(mini.b, mini.i, mini.l, 
-                                 tablenames = c("bayes", "idtax", "lca"), 
-                                 ranknamez = c("kingdom", "supergroup", "division", "class", "order", "family", "genus", "species"), 
-                                 tiebreakz = "none", count.na = TRUE)
-head(c.test)
-```
-
-    ##       svN
-    ## 1   sv104
-    ## 2 sv11054
-    ## 3 sv12184
-    ## 4 sv14101
-    ## 5 sv14822
-    ## 6  sv1509
-    ##                                                                                                                                    ASV
-    ## 1                               GTTTCTTCCGACTGATACTCATTGTGAGTTGCAAGGACCTGTAATGGGAAATTGCTGCAAATGCTTTGTATTGGAGGAAGAAAAAGTCGTAACAAGGTTATC
-    ## 2    GCTACTACCGATTGAATGGCTCAGTGAGGCGTTCGGACTGGCCCAGGGAGGTCGGCAACGACCACCCAGGGCCGGAAAGTTCGTCAAACTTGGTCATTTAGAGGAAGTAAAAGTCGTAACAAGGTCTCC
-    ## 3         GCTCCTACCGATTGAATGATCCGGTGAATAATTCGGACTGGGAAATTTTTAGTTTCTATTCTTTTCACGGGAAGTTTAATAAACCTTATCATTTAGAGGAAGGAGAAGTCGTAACAAGGTTTCC
-    ## 4                             ACACCACGAGAGTTGGCCGTGCCCGATGTCGTGACTCCAACCCTTCGGGAGGGGAGCGCCTACGGCAAGGTCGGCGATTGGGGTGAAGTCGTAACAAGGTAGCC
-    ## 5        GTTGCTACCGATTGATCTGCTGGTAGAGATTGGCCGACTCGGGGATTTAGTGGCAACGCTACTTTTCTGGGGAAACCAATCAATATCGTCAGGTTAGAGGAAGCAAAAGTCGTAACAAGGTTGCT
-    ## 6 GCTACTACTGATTGAATTATTTAGTGAGGTCTCCGGACGTGATCACTGTGACGCTTCTAGTGTTACGGTTGTTTCGCAAAAGTTGACCGAACTTGATTATTTAGAGGAAGTAAAAGTCGTAACAAGGTTTCC
-    ##     kingdom   supergroup       division       class          order
-    ## 1 Eukaryota         <NA>           <NA>        <NA>           <NA>
-    ## 2 Eukaryota Opisthokonta          Fungi  Ascomycota Pezizomycotina
-    ## 3 Eukaryota    Alveolata Dinoflagellata Dinophyceae           <NA>
-    ## 4  Bacteria         <NA>           <NA>        <NA>           <NA>
-    ## 5 Eukaryota         <NA>           <NA>        <NA>           <NA>
-    ## 6 Eukaryota Opisthokonta        Metazoa  Arthropoda       Hexapoda
-    ##            family   genus species
-    ## 1            <NA>    <NA>    <NA>
-    ## 2 Dothideomycetes    <NA>    <NA>
-    ## 3            <NA>    <NA>    <NA>
-    ## 4            <NA>    <NA>    <NA>
-    ## 5            <NA>    <NA>    <NA>
-    ## 6         Insecta Diptera    <NA>
-
-We’ve saved the result in a csv file called
-`bayes_idtax_lca_pr2_mapped.csv` that we will store into a data frame
-called `consensus.res`. We chunked out each ASV’s taxonomic assignments
-from each of our 3 input taxonomy tables, as well as our consensus
-taxonomy table, and put them in consecutive rows. This way, we can look
-at chunks of assignments for the same ASV to `consensus.res` the
-algorithm and ensure it’s doing what we think.
-
-Here, we’ll pop out a few good examples.
-
-``` r
 cbind(rbind(as.data.frame(consensus.res[1, c(1:2, 4:11)]),
       cbind(consensus.res[1, 1:2], consensus.res[2, 4:11]),
       cbind(consensus.res[1, 1:2], consensus.res[3, 4:11]),
@@ -791,3 +550,13 @@ cbind(rbind(as.data.frame(consensus.res[61, c(1:2, 4:11)]),
     ## 2 Polar-centric-Mediophyceae Thalassiosira    <NA>  Idtax
     ## 3                       <NA>          <NA>    <NA>    LCA
     ## 4 Polar-centric-Mediophyceae Thalassiosira    <NA> RESULT
+
+Based on the parameters of our algorithm, the consensus taxonomic
+assignment may contain non-assignments in the middle of the ranks which
+may be undesired, so user should be cautious in what parameters they
+set. To reduce the occurrence of these resulting taxonomic assignments,
+we recommend include specific tiebreaks to avoid the algorithm setting a
+non-assignment whenever they encounter a tie it can’t resolve. Overall,
+a good tiebreak input would contain specific pairs of table and taxonomy
+and always contain a table to prioritize over in the end to avoid NA
+assignment.
