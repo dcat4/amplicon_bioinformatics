@@ -91,7 +91,7 @@ The algorithm expects that the ASV's in each taxonomy data frame are all in the 
 
 We've created a test data set where we will read in that showcases the expected output of our algorithm. Within the test data set, it stores the taxonomic assignments from each taxonomic algoirthm for each ASV and its corresponding expected consensus result counting non-assignments as a majority candidate. In order to show different scenarios of our algorithm resolving the majorities, we've handpicked certain rows to build a subset data frame to showcase our algorithm. 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(readxl)
 consensus.res <- read_excel("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_idtax_lca_pr2_mapped.xlsx")
 

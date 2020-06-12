@@ -132,13 +132,7 @@ build a subset data frame to showcase our algorithm.
 ``` r
 library(readxl)
 consensus.res <- read_excel("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/test_data/bayes_idtax_lca_pr2_mapped.xlsx")
-```
 
-    ## New names:
-    ## * `` -> ...3
-    ## * `` -> ...12
-
-``` r
 make.true.NA <- function(x) if(is.character(x)||is.factor(x)){
     is.na(x) <- x=="NA"; x} else {
       x}
