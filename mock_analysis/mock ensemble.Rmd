@@ -239,17 +239,17 @@ nrow(lca.mock.exp.c1[which(lca.mock.exp.c1$under > 0 & lca.mock.exp.c1$mis == 0)
 
 Consensus Tax
 ```{r}
-source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom2.R")
+source("~/Desktop/Taxonomic Sequencing/amplicon_bioinformatics/taxonomy_pipeline/consensus_taxonomies/consensus_tax_mostCom.R")
 
 tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
 
-all.c <- consensus_tax_mostCom2(bayes.mock, idtax.mock, lca.mock.mapped, 
+all.c <- consensus_tax_mostCom(bayes.mock, idtax.mock, lca.mock.mapped, 
                                 tablenames=tblnam, ranknamez=table.names,
                                 tiebreakz="none", count.na=TRUE, weights=c(1,1,1))
 ```
 
 ```{r}
-all.c.no.NA <- consensus_tax_mostCom2(bayes.mock, idtax.mock, lca.mock.mapped, 
+all.c.no.NA <- consensus_tax_mostCom(bayes.mock, idtax.mock, lca.mock.mapped, 
                                 tablenames=tblnam, ranknamez=table.names,
                                 tiebreakz="none", count.na=FALSE, weights=c(1,1,1))
 
@@ -316,10 +316,10 @@ data.noNA
 library(ggplot2)
 ggplot(data, aes(fill=class, y=val, x=table)) +
   geom_bar(position=position_dodge(width=0.8), stat='identity') +
-  geom_text(aes(label=val), position=position_dodge(width=0.8), vjust=-0.25) +
+  geom_text(aes(label=val), position=position_dodge(width=0.8), vjust=-0.25, size=6) +
   labs(x="taxonomy table", y='count') +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 12), axis.title.x = element_text(size = 12, face="bold"),
-          axis.text.y = element_text(size = 12), axis.title.y = element_text(size = 12, face="bold"),
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 25), axis.title.x = element_text(size = 25, face="bold"),
+          axis.text.y = element_text(size = 25), axis.title.y = element_text(size = 25, face="bold"),
           panel.background = element_rect(fill = "white",
                                           colour = "white",
                                           linetype = "solid"),
@@ -328,7 +328,9 @@ ggplot(data, aes(fill=class, y=val, x=table)) +
           panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
                                           colour = "white"),
           axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) + 
-  scale_fill_discrete(name = "classification relative to expected")
+  scale_fill_discrete(name = "classification relative to expected") +
+  theme(legend.text = element_text(size=20),
+           legend.title = element_text(size=20)  )
 ```
 
 ```{r, fig.height=5, fig.width=8}
