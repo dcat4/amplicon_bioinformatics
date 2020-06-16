@@ -1,16 +1,20 @@
 consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
                                    tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, weights=rep(1, length(list(...)))) {
-  x <- list(...)
-  n.rows <- nrow(x[[1]])
-  n.cols <- ncol(x[[1]])
-  threshold <- 0.5
-  n.dfs <- length(x)
+  x <- list(...) # grab everything in a list structure 
+  n.rows <- nrow(x[[1]]) # get the number of ASV's aka number of rows 
+  n.cols <- ncol(x[[1]]) # get the number of columns to recreate consensus taxonomy table 
+  threshold <- 0.5 # threshold preset
+  n.dfs <- length(x) # getting the number of taxonomy tables inputted 
   
+  # set up empty consensus taxonomy table to add by each row
   consensus.tax <- data.frame(matrix(ncol=n.cols, nrow=0, dimnames=list(NULL, names(x[[1]]))))
   
+  # determine if tiebreaks were specified
   tiebreaker <- NA
   if (tiebreakz != "none") {
+    # convert list of tiebreakers to a dataframe t
     tiebreaker <- data.frame(matrix(unlist(tiebreakz), nrow=length(tiebreakz), byrow=T, dimnames=list(NULL, c("table", "tax"))),stringsAsFactors=FALSE)
+    # set priority numbers
     tiebreaker$priority <- as.numeric(rownames(tiebreaker))
   }
   
@@ -106,6 +110,7 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
     consensus.tax <- rbind(consensus.tax, c.row)
   }
   
+  # convert all NA strings to actual NA's
   make.true.NA <- function(x) if(is.character(x)||is.factor(x)){
     is.na(x) <- x=="NA"; x} else {
       x}
