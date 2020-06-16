@@ -267,11 +267,6 @@ for (i in 1:length(un)) {
 # remove bloop (where reverse hit further 5' than fwd) --> these are NA's so just rm NA's
 v4.silva <- v4.silva[which(!is.na(v4.silva$asv)) , ]
 
-# got all the v4 shit done and stored in 4 datasets
-# cleaning should probably happen -- deal w/ 
-# 4. merging the 2 db's
-# 5. check that hypervariable ASVs are still unique and trim to a common taxonomy if not (like LCA style)...
-foooooooooook
 # check for NA's in your 4 data sets:
 if (any(is.na(v4.pr2)) || any(is.na(v4.silva))) {
   error("NA's present in one of your v4 datasets")
@@ -279,8 +274,8 @@ if (any(is.na(v4.pr2)) || any(is.na(v4.silva))) {
 
 # look at ASV lengths from the 4 data sets:
 boxplot(c(v4.pr2$asv.len, v4.silva$asv.len))
-v4.pr2 <- v4.pr2[v4.pr2$asv.len > 90 & v4.pr2$asv.len < 180 ,]
-v4.silva <- v4.silva[v4.silva$asv.len > 90 & v4.pr2$silva.len < 180 ,]
+v4.pr2 <- v4.pr2[v4.pr2$asv.len > 300 & v4.pr2$asv.len < 450 ,]
+v4.silva <- v4.silva[v4.silva$asv.len > 300 & v4.silva$asv.len < 450 ,]
 # check that it worked:
 boxplot(c(v4.pr2$asv.len, v4.silva$asv.len))
 
