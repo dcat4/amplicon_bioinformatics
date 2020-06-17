@@ -3,9 +3,9 @@
 % this script puts together expected taxonomies from isolated v4 amplicons
 % doing it in matlab b/c R is too slow
 
-% not sure how to subsample -- prob remove big stuff (silva will be hard to
-% do that since names aren't mapped...), then make a set of intersecting
-% amplicons from both? and create expected taxonomies from that?
+% I figured out how to subsample, randomly subsampling from the unique ASVs
+% of each database. Now what I don't know how to do is get expected if the
+% identical sequence is not found in the other database...
 
 clear; close all; 
 
@@ -19,16 +19,22 @@ pr2db = fastaread('~/Documents/R/pr2_version_4.12.0_18S_dada2.fasta');
 pr2db = struct2cell(pr2db)';
 
 silvadb = fastaread('~/Documents/R/silva_nr_v138_train_set.fa');
+xx = count(v4s,'|');
 
 v4p = unique(v4p(:,2));
 v4s = unique(v4s(:,2));
 
-v4p = v4p(1:100); % for testing the code
-exptax = cell(length(v4p),9);
-exptax(:,1) = v4p;
-for i = 1:length(v4p)
+% randomly select 2500 sequences from both silva and pr2 amplicons
+is = randperm(length(v4s),2500);
+ip = randperm(length(v4p),2500);
+
+us = [v4s(is);v4p(ip)];
+
+pexptax = cell(length(us),9);
+sexptax = cell(length(us),max(xx(:,1)));
+for i = 1:length(us)
     disp(['asv ',num2str(i), ' of ',num2str(length(v4p))]);
-    s = v4p{i};
+    s = us{i};
     inpr2 = contains(pr2db(:,2), s);
     idx = find(inpr2 == 1);
     if length(idx) == 1
