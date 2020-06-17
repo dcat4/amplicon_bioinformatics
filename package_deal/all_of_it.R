@@ -21,6 +21,7 @@ source(paste0(dd,"find_asvs_by_name.R"))
 # ensemble tax algrithms:
 source(paste0(dd,"consensus_tax_LCAlike.R"))
 source(paste0(dd,"consensus_tax_bestRez.R"))
+source(paste0(dd,"consensus_tax_mostCom.R"))
 
 # tax table comparison functions
 source(paste0(dd,"compare_byRank_2way.R"))
