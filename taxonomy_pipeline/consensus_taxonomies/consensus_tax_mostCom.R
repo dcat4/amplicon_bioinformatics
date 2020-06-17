@@ -1,5 +1,6 @@
 consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
-                                   tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, weights=rep(1, length(list(...)))) {
+                                  tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, weights=rep(1, length(list(...)))) {
+  library("dplyr")
   x <- list(...) # grab everything in a list structure 
   n.rows <- nrow(x[[1]]) # get the number of ASV's aka number of rows 
   n.cols <- ncol(x[[1]]) # get the number of columns to recreate consensus taxonomy table 
@@ -116,6 +117,19 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
       x}
   
   df[] <- lapply(consensus.tax, make.true.NA)
+  df <- data.frame(lapply(df, as.character), stringsAsFactors=FALSE)
+  # dylan's addition - checking and warning for non-optimal assignments:
+  # below returns TRUE where an NA is found in the middle of a heirarchical assignment for a particular ASV
+  qcer <- function(y) {
+    eh <- is.na(df)
+    ina <- apply(eh, MARGIN = 1, FUN = function(x) min(which(x)))
+    nna <- apply(eh, MARGIN = 1, FUN = function(x) max(which(!x)))
+    return(any(ina < nna))
+  }
   
-  return(data.frame(lapply(df, as.character), stringsAsFactors=FALSE))
+  qc1 <- qcer(df)
+  if (qc1) {
+    stop(c("Non-optimal taxonomic assignments detected in consensus. \nI advise re-computing with 'count.na = TRUE'"))
+  }
+  return()
 }

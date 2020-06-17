@@ -170,11 +170,21 @@ nrow(lca.mock.exp.c1[which(lca.mock.exp.c1$under > 0 & lca.mock.exp.c1$mis == 0)
 tblnam <- c("bayes-pr2", "idtax-pr2", "lca-pr2")
 all.c <- consensus_tax_mostCom(bayes, idtax, lca.mapped, 
                                tablenames=tblnam, ranknamez=table.names,
-                               tiebreakz=c("idtax-pr2", NA), count.na=TRUE, weights=c(1,1,1))
+                               tiebreakz=list(c("idtax-pr2", NA)), count.na=TRUE, weights=c(1,1,1))
 
-all.c.no.NA <- consensus_tax_mostCom(bayes.mock, idtax.mock, lca.mock.mapped, 
+all.c.no.NA <- consensus_tax_mostCom(bayes, idtax, lca.mapped, 
                                      tablenames=tblnam, ranknamez=table.names,
-                                     tiebreakz=c("idtax-pr2", NA), count.na=FALSE, weights=c(1,1,1))
+                                     tiebreakz=list(c("idtax-pr2", NA)), count.na=FALSE, weights=c(1,1,1))
+
+cbi <- consensus_tax_mostCom(bayes, idtax, 
+                             tablenames=tblnam, ranknamez=table.names,
+                              tiebreakz=list(c("idtax-pr2", NA)), count.na=TRUE, weights=c(1,1,1))
+cbi.no.NA <- consensus_tax_mostCom(bayes, idtax, 
+                             tablenames=tblnam, ranknamez=table.names,
+                             tiebreakz=list(c("idtax-pr2", NA)), count.na=FALSE, weights=c(1,1,1))
+
+# sv8163 looks odd...
+
 
 all.c.no.NA.compare <- plot_results(exp.mock, all.c.no.NA, table.names[-c(1:2)])
 
