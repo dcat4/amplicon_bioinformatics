@@ -1,5 +1,5 @@
 # need to check on trueMajority argument -- doesn't look like it actually got written in...
-# also frankenstein assignments are still possible when count.na = TRUE and not checked for in the error output
+# also frankenstein assignments are still possible when count.na = FALSE and not checked for in the error output
 
 consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
                                    tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, weights=rep(1, length(list(...)))) {
@@ -132,7 +132,7 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
   
   qc1 <- qcer(df)
   if (qc1) {
-    stop(c("Non-optimal taxonomic assignments detected in consensus. \nI advise re-computing with 'count.na = TRUE'"))
+    stop(c("Non-optimal taxonomic assignments detected in consensus. \n I advise re-computing with 'count.na = TRUE'"))
   }
-  return()
+  return(df)
 }
