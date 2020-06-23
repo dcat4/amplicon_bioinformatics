@@ -2,11 +2,8 @@
 
 # traitmap analysis works but results are pretty terrible...
 
-# 2. do comparisons across the mapped tables and save results
-# 3. analyze traitmapping results
-
 rm(list=ls())
-setwd("~/Documents/R/amplicon_bioinformatics/mock_analysis/")
+setwd("~/Documents/R/amplicon_bioinformatics/tax_pipe_Mar20/")
 source("~/Documents/R/amplicon_bioinformatics/package_deal/all_of_it.R")
 xx <- readRDS(file = "all_mapped_taxtabs_protistOnly.rds")
 
@@ -119,6 +116,14 @@ p.2way <- plot_grid(
   nrow = 3
 )
 ggsave("mapped_taxtab_comp_results/byAlgorithm_2way.pdf", p.2way, width = 13, height = 18, units = "in", device="pdf")
+
+feck
+# create 2 ensembles (NA or not) and compare with each individual table:
+# tblnam <- 
+all.c <- consensus_tax_mostCom(bayes, idtax, lca.mapped, 
+                               tablenames=tblnam, ranknamez=table.names,
+                               tiebreakz=list(c("idtax-pr2", NA)), count.na=TRUE, weights=c(1,1,1))
+
 
 ## add sample subsetting routine here...
 

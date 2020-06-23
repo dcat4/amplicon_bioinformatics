@@ -385,6 +385,14 @@ nn <- c("bayes-pr2", "bayes-silva", "idtax-pr2", "idtax-silva", "lca-pr2", "lca-
 # 
 maptax <- read.csv("~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv",
                    stringsAsFactors = FALSE)
+
+# the R package I harvested maptax from has more than pr2 v.4.12.0, so just move on
+# library("stringr")
+# fastaFile <- readDNAStringSet("~/Documents/R/pr2_version_4.12.0_18S_dada2.fasta")
+# seq_name = names(fastaFile)
+# bop <- as.data.frame(str_split_fixed(seq_name, ";", n=9), stringsAsFactors = FALSE)
+# 
+
 mappedtt <- vector(mode = "list", length = length(xx)) # for storing the mapped tax tables
 names(mappedtt) <- nn
 maptax <- maptax[, colnames(maptax) %in% c("kingdom", "supergroup", "division", "class", "order", "family", "genus", "species")]
@@ -397,7 +405,7 @@ for (i in 1:length(xx)){
   fout <- c(paste0("taxtab_map_results/map_key_",nn[i],"2pr2.csv"),
             paste0("taxtab_map_results/names_not_mapped_",nn[i],"2pr2.csv"),
             paste0("taxtab_map_results/mapped_taxtab",nn[i],"2pr2.csv"))
-  mm <- taxmapper(tt, maptax, exceptions = c("Archaea","Bacteria"),
+  mm <- taxmapper(tt, maptax, exceptions = c("Archaea","Bacteria"), ignore.format = TRUE,
                   synonym.file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv",
                   outfilez = fout)
   mappedtt[[i]] <- mm[[3]] # assign the mapped tables
