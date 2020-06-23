@@ -178,6 +178,10 @@ taxmapper <- function(taxin, tax2map2, exceptions, ignore.format = FALSE,
   
   colnames(mapped) <- gsub("tax2map2_", "", colnames(mapped))
   
+  zz <- apply(asv.mapped, MARGIN = 2, FUN = as.character)
+  df <- as.data.frame(zz, stringsAsFactors = FALSE)
+  asv.mapped <- df
+  
   if (outfilez != "none") {
     write.csv(mapped, outfilez[1], row.names=FALSE)
     not.mapped.df <- as.data.frame(not.mapped)
