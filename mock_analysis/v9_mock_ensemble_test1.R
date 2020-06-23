@@ -1,7 +1,8 @@
 # this is a script that takes the mock v9 data set and runs it through an "ensemble taxonomy workflow"
 # compares the 3 individual tax tables to the expected, creates a couple different ensembles and compares those
 
-# Kevin started this and I'm picking up where he left off
+# Kevin started this and I'm picking up where he left off -- I think I got it with a nice plot at the end, 
+# but not the result I wanted/expected....
 
 rm(list=ls())
 setwd("~/Documents/R/amplicon_bioinformatics/mock_analysis/")
@@ -172,45 +173,75 @@ all.c <- consensus_tax_mostCom(bayes, idtax, lca.mapped,
                                tablenames=tblnam, ranknamez=table.names,
                                tiebreakz=list(c("idtax-pr2", NA)), count.na=TRUE, weights=c(1,1,1))
 
-all.c.no.NA <- consensus_tax_mostCom(bayes, idtax, lca.mapped, 
-                                     tablenames=tblnam, ranknamez=table.names,
-                                     tiebreakz=list(c("idtax-pr2", NA)), count.na=FALSE, weights=c(1,1,1))
+# all.c.no.NA <- consensus_tax_mostCom(bayes, idtax, lca.mapped, 
+#                                      tablenames=tblnam, ranknamez=table.names,
+#                                      tiebreakz=list(c("idtax-pr2", NA)), count.na=FALSE, weights=c(1,1,1))
 
 cbi <- consensus_tax_mostCom(bayes, idtax, 
-                             tablenames=tblnam, ranknamez=table.names,
+                             tablenames=tblnam[1:2], ranknamez=table.names,
                               tiebreakz=list(c("idtax-pr2", NA)), count.na=TRUE, weights=c(1,1,1))
-cbi.no.NA <- consensus_tax_mostCom(bayes, idtax, 
-                             tablenames=tblnam, ranknamez=table.names,
+cbi.no.NA <- consensus_tax_mostCom(bayes, idtax,
+                             tablenames=tblnam[1:2], ranknamez=table.names,
                              tiebreakz=list(c("idtax-pr2", NA)), count.na=FALSE, weights=c(1,1,1))
 
-# sv8163 looks odd...
+cbl <- consensus_tax_mostCom(bayes, lca.mapped, 
+                             tablenames=tblnam[c(1,3)], ranknamez=table.names,
+                             tiebreakz=list(c("bayes-pr2", NA)), count.na=TRUE, weights=c(1,1,1))
+cbl.no.NA <- consensus_tax_mostCom(bayes, lca.mapped,
+                                   tablenames=tblnam[c(1,3)], ranknamez=table.names,
+                                   tiebreakz=list(c("bayes-pr2", NA)), count.na=FALSE, weights=c(1,1,1))
+cil <- consensus_tax_mostCom(idtax, lca.mapped, 
+                             tablenames=tblnam[2:3], ranknamez=table.names,
+                             tiebreakz=list(c("idtax-pr2", NA)), count.na=TRUE, weights=c(1,1,1))
+cil.no.NA <- consensus_tax_mostCom(idtax, lca.mapped, 
+                                   tablenames=tblnam[2:3], ranknamez=table.names,
+                                   tiebreakz=list(c("idtax-pr2", NA)), count.na=FALSE, weights=c(1,1,1))
 
-
-all.c.no.NA.compare <- plot_results(exp.mock, all.c.no.NA, table.names[-c(1:2)])
-
+cbi.compare <- plot_results(exp.mock, cbi, table.names[-c(1:2)])
+cbi.no.NA.compare <- plot_results(exp.mock, cbi.no.NA, table.names[-c(1:2)])
+cbl.compare <- plot_results(exp.mock, cbl, table.names[-c(1:2)])
+cbl.no.NA.compare <- plot_results(exp.mock, cbl.no.NA, table.names[-c(1:2)])
+cil.compare <- plot_results(exp.mock, cil, table.names[-c(1:2)])
+cil.no.NA.compare <- plot_results(exp.mock, cil.no.NA, table.names[-c(1:2)])
 all.c.compare <- plot_results(exp.mock, all.c, table.names[-c(1:2)])
 
 # create a data frame
-vals <- rbind(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.compare)
+vals <- rbind(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, 
+              cbi.compare, cbi.no.NA.compare, cbl.compare, cbl.no.NA.compare, 
+              cil.compare, cil.no.NA.compare, all.c.compare)
 vals
 
-# create a data frame
-vals.noNA <- rbind(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.no.NA.compare)
-vals.noNA
+dn <- list(c('bayes', 'idtax', 'lca', 'bayes+idtax', 'bayes+idtax-noNA', 'bayes+lca', 'bayes+lca-noNA', 'idtax+lca', 'idtax+lca-noNA', 'all 3'), 
+           c('exact', 'mis', 'over', 'under'))
+df <- data.frame(matrix(vals, ncol=ncol(vals), nrow = nrow(vals), dimnames=dn))
+df <- (df / rowSums(df)) * 100
 
-data.frame(vals, row.names=c('exact', 'mis', 'over', 'under'))
+bloop <- dn[[1]]
+table <- c()
+for (i in 1:length(bloop)) {
+  table <- append(table, rep(bloop[i], 4))
+}
+class <- c(rep(c('exact', 'mis', 'over', 'under'), length(bloop)))
 
-data.frame(vals.noNA, row.names=c('exact', 'mis', 'over', 'under'))
+library("reshape2")
+df$table <- rownames(df)
+data <- melt(df)
 
-df <- data.frame(matrix(vals, ncol=4, nrow = 4, dimnames=list(c('bayes', 'idtax', 'lca', 'consensus'), c('exact', 'mis', 'over', 'under'))))
-df
-
-df.noNA <- data.frame(matrix(vals.noNA, ncol=4, nrow = 4, dimnames=list(c('bayes', 'idtax', 'lca', 'consensus'), c('exact', 'mis', 'over', 'under'))))
-df.noNA
-
-table <- c(rep('bayes', 4), rep('idtax', 4), rep('lca', 4), rep('consensus', 4))
-class <- c(rep(c('exact', 'mis', 'over', 'under'), 4))
-val <- c(bayes.mock.exp.c2, idtax.mock.exp.c2, lca.mock.exp.c2, all.c.compare)
-
-data <- data.frame(table, class, val)
-data
+library("ggplot2")
+ggplot(data, aes(fill=variable, y=value, x=table)) +
+  geom_bar(position=position_dodge(width=0.8), stat='identity') +
+  geom_text(aes(label=round(value, digits = 2)), position=position_dodge(width=0.8), vjust=-0.25, size=6) +
+  labs(x="taxonomy table", y='% of ASVs') +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 25), axis.title.x = element_text(size = 25, face="bold"),
+        axis.text.y = element_text(size = 25), axis.title.y = element_text(size = 25, face="bold"),
+        panel.background = element_rect(fill = "white",
+                                        colour = "white",
+                                        linetype = "solid"),
+        panel.grid.major = element_line(size = 0.5, linetype = 'solid',
+                                        colour = "white"),
+        panel.grid.minor = element_line(size = 0.25, linetype = 'solid',
+                                        colour = "white"),
+        axis.line = element_line(size = 0.5, linetype = "solid", colour = "black")) + 
+  scale_fill_discrete(name = "classification relative to expected") +
+  theme(legend.text = element_text(size=20),
+        legend.title = element_text(size=20)  )
