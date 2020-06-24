@@ -1,5 +1,7 @@
-# need to check on trueMajority argument -- doesn't look like it actually got written in...
 # also frankenstein assignments are still possible when count.na = FALSE and not checked for in the error output
+# if trueMajority = FALSE
+
+# tie-breaking also doesn't work when you give a tax table name + NA... needs an entire re-write, it's so far off
 
 consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
                                    tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, weights=rep(1, length(list(...)))) {
@@ -46,6 +48,7 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
         # table parameter to count the NA's well
         freq.df <- as.data.frame(table(taxs, exclude=NULL), strinsgAsFactors=FALSE)
       }
+      
       # if entires exist in the frequency table, determine the majority
       # else that means the NA's wasn't counted but will be set to NA as default
       if (nrow(freq.df) > 0) {
@@ -63,23 +66,19 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
             
             if (!is.na(tiebreaker)) {
               # create a data frame with taxs and tablename it came from
-              pairs <- vector(mode="list", length=length(c.tax))
-              curr.idx <- 1
+              # Dylan's change:
+              pairs <- data.frame()
               for (i in 1:length(c.tax)) {
                 # find the corresponding tablename of tax
                 tax <- c.tax[i]
-                idx <- match(tax, taxs)
-                if (is.na(tax)) {
-                  tax <- "na"
-                }
-                table <- df.idx[idx]
-                # append result to list
-                pairs[[curr.idx]] <- c(table, tax)
-                curr.idx <- curr.idx + 1
+                # Dylan modified above commented section to actually work for the rest of the loop 
+                idx <- taxs %in% tax 
+                tbl <- df.idx[idx]
+                pairs <- rbind(pairs, cbind(tbl, rep(tax, times = length(tbl))))
               }
               # data frame of ties
-              ties <- data.frame(matrix(unlist(pairs), nrow=length(pairs), byrow=T, dimnames=list(NULL, c("table", "tax"))),stringsAsFactors=FALSE)
-              
+              colnames(pairs) <- c("table","tax")
+              ties <- pairs
               # first assign exact matches
               exact <- merge(ties, tiebreaker, by=c("table","tax"), all.x=TRUE)
               
@@ -93,7 +92,6 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
               
               # sort by priority to get tiebreaker at the top of the data frame
               sorted <- all[order(all$priority), ]
-              
               # assign top row as consensus
               if (is.na(sorted[1, "priority"])) {
                 c.row[, col] <- NA
@@ -105,7 +103,8 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
               c.row[, col] <- NA
             }
           } else {
-            c.row[, col] <- c.tax[1]
+            # c.row[, col] <- c.tax[1]
+            c.row[, col] <- c.tax
           }
         }
       }
