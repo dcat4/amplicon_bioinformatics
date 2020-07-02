@@ -1,5 +1,11 @@
 # uses the output from pt2 (the mapped, tax-filtered taxtabs) to:
 
+# Kevin's algorithm isn't working properly... sv10002 is a good example. maybe an issue with tie-breaking
+# issue appears to be at line 72ish - if the tax to favor is NA, it sets it to "na", which is the opposite of intended behavior
+
+# to fix the consensus bugs, you should just run it for sv10002, return in the middle to see what the data looks like, and rectify from there
+# or remove the tie-breaking and just weight tables differently
+
 # traitmap analysis works but results are pretty terrible...
 
 rm(list=ls())
@@ -79,51 +85,64 @@ bayes.2way.byRank <- compare_byRank_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
                                          pltfilez = "none",
                                          tablenames = tblnam,
                                          ranknamez = rn)
-bayes.2way.byAss <- compare_assignments_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
-                                         pltfilez = "none",
-                                         tablenames = tblnam,
-                                         ranknamez = rn)
+# bayes.2way.byAss <- compare_assignments_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
+#                                          pltfilez = "none",
+#                                          tablenames = tblnam,
+#                                          ranknamez = rn)
 tblnam <- c("idtax-pr2", "idtax-silva")
 idtax.2way.byRank <- compare_byRank_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
                                          pltfilez = "none",
                                          tablenames = tblnam,
                                          ranknamez = rn)
-idtax.2way.byAss <- compare_assignments_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
-                                             pltfilez = "none",
-                                             tablenames = tblnam,
-                                             ranknamez = rn)
+# idtax.2way.byAss <- compare_assignments_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
+#                                              pltfilez = "none",
+#                                              tablenames = tblnam,
+#                                              ranknamez = rn)
 tblnam <- c("lca-pr2", "lca-silva")
 lca.2way.byRank <- compare_byRank_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
                                          pltfilez = "none",
                                          tablenames = tblnam,
                                          ranknamez = rn)
-lca.2way.byAss <- compare_assignments_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
-                                             pltfilez = "none",
-                                             tablenames = tblnam,
-                                             ranknamez = rn)
+# lca.2way.byAss <- compare_assignments_2way(xx[[tblnam[1]]],xx[[tblnam[2]]],
+#                                              pltfilez = "none",
+#                                              tablenames = tblnam,
+#                                              ranknamez = rn)
 # cowplot dem 2-way fools:
-p.2way <- plot_grid(
-  bayes.2way.byRank[[4]] + ggtitle("by Rank\nbayes") + coord_cartesian(ylim = yl),
-  bayes.2way.byAss[[3]] + ggtitle("by Assignment\nbayes") + coord_cartesian(ylim = yl),
-  idtax.2way.byRank[[4]] + ggtitle("idtax") + coord_cartesian(ylim = yl),
-  idtax.2way.byAss[[3]] + ggtitle("idtax") + coord_cartesian(ylim = yl),
-  lca.2way.byRank[[4]] + ggtitle("LCA") + coord_cartesian(ylim = yl),
-  lca.2way.byAss[[3]] + ggtitle("LCA") + coord_cartesian(ylim = yl),
-  align = 'hv',
-  labels = c("A.", "B.", "C.","D.","E.","F."),
-  axis = 'l',
-  hjust=-1,
-  nrow = 3
-)
-ggsave("mapped_taxtab_comp_results/byAlgorithm_2way.pdf", p.2way, width = 13, height = 18, units = "in", device="pdf")
+# p.2way <- plot_grid(
+#   bayes.2way.byRank[[4]] + ggtitle("by Rank\nbayes") + coord_cartesian(ylim = yl),
+#   # bayes.2way.byAss[[3]] + ggtitle("by Assignment\nbayes") + coord_cartesian(ylim = yl),
+#   idtax.2way.byRank[[4]] + ggtitle("idtax") + coord_cartesian(ylim = yl),
+#   # idtax.2way.byAss[[3]] + ggtitle("idtax") + coord_cartesian(ylim = yl),
+#   lca.2way.byRank[[4]] + ggtitle("LCA") + coord_cartesian(ylim = yl),
+#   # lca.2way.byAss[[3]] + ggtitle("LCA") + coord_cartesian(ylim = yl),
+#   align = 'hv',
+#   # labels = c("A.", "B.", "C.","D.","E.","F."),
+#   axis = 'l',
+#   hjust=-1,
+#   nrow = 3
+# )
+# ggsave("mapped_taxtab_comp_results/byAlgorithm_2way.pdf", p.2way, width = 13, height = 18, units = "in", device="pdf")
 
-feck
+# a check for the frankenstein algorithm:
+# yy <- yy <- c(xx, xx[1])
+# names(yy) <- c(names(xx), "ensemble")
+# check4frankenstein(yy)
+# the above should print "no frankenstein assignments detected" and it does so u good bro
+
+# the below seems to work great/// frankenstein checking is slow but fine.
+
 # create 2 ensembles (NA or not) and compare with each individual table:
-# tblnam <- 
-all.c <- consensus_tax_mostCom(bayes, idtax, lca.mapped, 
-                               tablenames=tblnam, ranknamez=table.names,
-                               tiebreakz=list(c("idtax-pr2", NA)), count.na=TRUE, weights=c(1,1,1))
-
+all.c <- consensus_tax_mostCom2(xx[[1]],xx[[2]],xx[[3]],xx[[4]],xx[[5]],xx[[6]],
+                               tablenames=names(xx), 
+                               ranknamez=colnames(xx[[1]])[3:length(colnames(xx[[1]]))],
+                               tiebreakz=list(c("idtax-pr2", NA), c("idtax-silva", NA),c("bayes-pr2", NA), c("bayes-silva", NA),c("lca-pr2", NA)), 
+                               count.na=TRUE, 
+                               trueMajority=FALSE,
+                               weights=c(1,1,1,1,1,1))
+yy <- c(xx, list(all.c))
+names(yy) <- c(names(xx), "ensemble")
+check4frankenstein(yy)
+feck
 
 ## add sample subsetting routine here...
 
@@ -162,8 +181,6 @@ for (k in 1:ncol(samsubs)){
   }
 }
 
-
-feck
 # mapping tax-mapped and filtered tables to trait db
 # mm <- readRDS(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/Ramond_traitdb_clean.RDS")
 # dm <- c("Eukaryota", "Archaea", "Bacteria", "Metazoa", "Fungi", "Streptophyta", "Rhodophyta", "Ulvophyceae", "Phaeophyceae",

@@ -1,9 +1,12 @@
-# also frankenstein assignments are still possible when count.na = FALSE and not checked for in the error output
-# if trueMajority = FALSE
+# this is a re-write of Kevin's mostCom after finding the frankenstein assignments are possible for basically all of parameter spaces available
+# I think it should work now. Need to add in the Frankenstein checker, and then do some more tests.
 
-# tie-breaking also doesn't work when you give a tax table name + NA... 
+# The only parameters that (I think) will not work are:
+# 1. count.na = FALSE -- I think it will always count NA's ?
+# 2. tie-breaking where you want to specify the a tax name with table ; i think specifying a table will still work.
+# 3. test the count.na = FALSE
 
-consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+consensus_tax_mostCom2 <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
                                    tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, threshold = 0.5, weights=rep(1, length(list(...)))) {
   library("dplyr")
   x <- list(...) # grab everything in a list structure 
@@ -26,14 +29,23 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
   # just iterate through each row and find the consensus of each row
   for (row in 1:n.rows) {
     # initialize the consensus row 
+    # message("row = ", toString(row))
     c.row <- data.frame(matrix(rep(NA, n.cols), ncol=n.cols, nrow = 1, dimnames=list(NULL, names(consensus.tax))))
     c.row[, "svN"] <- x[[1]][row, "svN"]
     c.row[, "ASV"] <- x[[1]][row, "ASV"]
-    for (col in rev(ranknamez)) {
+    # create an alltax dataframe to track heirarchical assignments:
+    alltax <- data.frame(matrix(NA, nrow = n.dfs, ncol = n.cols, dimnames=list(names(x), names(consensus.tax))), stringsAsFactors = FALSE)
+    for (i in 1:n.dfs) {
+      df <- x[[i]]
+      alltax[i , ] <- df[row , ]
+    }
+    for (col in ranknamez) {
+      
       # collects the taxs from each data frame
       taxs <- vector()
       # corresponding vector to know which df the tax came from
       df.idx <- vector()
+      
       for (i in 1:n.dfs) {
         df <- x[[i]]
         # weights are represented by the amount of repeated taxs are
@@ -45,7 +57,7 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
       # automatically, the frequency table excludes NA
       if (count.na) {
         # table parameter to count the NA's well
-        freq.df <- as.data.frame(table(taxs, exclude=NULL), strinsgAsFactors=FALSE)
+        freq.df <- as.data.frame(table(taxs, exclude=NULL), stringsAsFactors=FALSE)
       }
       
       # if entires exist in the frequency table, determine the majority
@@ -62,7 +74,6 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
           if (length(c.tax) > 1) {
             # see which data frame it is coming from
             # check if the data frame chosen is an option
-            
             if (!is.na(tiebreaker)) {
               # create a data frame with taxs and tablename it came from
               pairs <- data.frame()
@@ -99,22 +110,34 @@ consensus_tax_mostCom <- function(..., tablenames = c("bayes", "idtax"), ranknam
               c.row[, col] <- NA
             }
           } else {
-            # c.row[, col] <- c.tax[1]
             c.row[, col] <- c.tax
           }
         }
       }
+      # if the assignment was NA, break (all downstream ranks are already NA)
+      if (is.na(c.row[, col])) {
+        break
+      }
     }
+    c.row <- data.frame(lapply(c.row, as.character), stringsAsFactors=FALSE)
+    
+    # The below ensures that the consensus is derived from the inputs and not 'frankensteined'
+    tmp1 <- c.row
+    tmp2 <- alltax
+    checker <- intersect(tmp1, tmp2)
+    while (nrow(checker) == 0){ 
+      tmp1 <- tmp1[, -ncol(tmp1)]
+      tmp2 <- tmp2[, -ncol(tmp2)]
+      checker <- intersect(tmp1, tmp2)
+    }
+    if (ncol(checker) < n.cols) {
+      c.row[, (ncol(checker)+1):n.cols] <- NA
+    }
+    
     # after iterating through the columns add the consensus row to the data frame
     consensus.tax <- rbind(consensus.tax, c.row)
   }
   
-  # convert all NA strings to actual NA's
-  make.true.NA <- function(x) if(is.character(x)||is.factor(x)){
-    is.na(x) <- x=="NA"; x} else {
-      x}
-  
-  df[] <- lapply(consensus.tax, make.true.NA)
   df <- data.frame(lapply(df, as.character), stringsAsFactors=FALSE)
   # dylan's addition - checking and warning for non-optimal assignments:
   # below returns TRUE where an NA is found in the middle of a heirarchical assignment for a particular ASV
