@@ -6,8 +6,8 @@
 # 2. tie-breaking where you want to specify the a tax name with table ; i think specifying a table will still work.
 # 3. test the count.na = FALSE
 
-consensus_tax_mostCom2 <- function(..., tablenames = c("bayes", "idtax"), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
-                                   tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, threshold = 0.5, weights=rep(1, length(list(...)))) {
+consensus_tax_mostCom2 <- function(..., tablenames = c(), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+                                   tiebreakz = "none", count.na=TRUE, trueMajority=TRUE, threshold = 0.5, weights=c()) {
   library("dplyr")
   x <- list(...) # grab everything in a list structure 
   n.rows <- nrow(x[[1]]) # get the number of ASV's aka number of rows 
@@ -124,11 +124,11 @@ consensus_tax_mostCom2 <- function(..., tablenames = c("bayes", "idtax"), rankna
     # The below ensures that the consensus is derived from the inputs and not 'frankensteined'
     tmp1 <- c.row
     tmp2 <- alltax
-    checker <- intersect(tmp1, tmp2)
+    checker <- dplyr::intersect(tmp1, tmp2)
     while (nrow(checker) == 0){ 
       tmp1 <- tmp1[, -ncol(tmp1)]
       tmp2 <- tmp2[, -ncol(tmp2)]
-      checker <- intersect(tmp1, tmp2)
+      checker <- dplyr::intersect(tmp1, tmp2)
     }
     if (ncol(checker) < n.cols) {
       c.row[, (ncol(checker)+1):n.cols] <- NA
@@ -150,7 +150,40 @@ consensus_tax_mostCom2 <- function(..., tablenames = c("bayes", "idtax"), rankna
   
   qc1 <- qcer(df)
   if (qc1) {
-    stop(c("Non-optimal taxonomic assignments detected in consensus. \n I advise re-computing with 'count.na = TRUE'"))
+    message("Frankenstein assignments detected. You should modify your ensemble parameters and try again.")
   }
+  tmp <- c(x, list(consensus.tax))
+  names(tmp) <- c(tablenames, "ensemble")
+  check4frankenstein(tmp, ranknames = ranknamez)
   return(df)
+}
+
+check4frankenstein <- function(tbl.list, ranknames = c("kingdom","supergroup","division","class","order","family","genus","species")) {
+  # pull out ensemble and the output of each individual algorithm:
+  ee <- tbl.list[["ensemble"]]
+  tt <- tbl.list[names(tbl.list) != "ensemble"]
+  tt <- bind_rows(tt)
+  # extract unique taxonomic paths from the ensemble and all individual tables:
+  uee <- unique(ee, MARGIN = 1)
+  tl <- unique(tt, MARGIN = 1)
+  
+  uee <- ee
+  tl <- tt
+  nchex <- nrow(uee)
+  for (row in 1:nchex) {
+    checker <- dplyr::intersect(uee[row , ], tl)
+    if (nrow(checker) == 0){
+      ee <- uee[row , ]
+      tmp <- tl
+      tmp <- tmp[, 1:max(which(!is.na(ee)))]
+      ee <- ee[, 1:max(which(!is.na(ee)))]
+      check2 <- dplyr::intersect(ee, tmp)
+      if (nrow(check2) == 0){
+        # this is a frankensteined assignment. throw an error and break
+        message("Frankenstein assignments detected. You should modify your ensemble parameters and try again.")
+      }
+    }
+  }
+  # if you make it here, there are no frankenstein assignments. print that and you're done
+  message("no Frankenstein assignments detected")
 }

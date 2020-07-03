@@ -1,0 +1,143 @@
+---
+title: "consensus_tax_mostCom2 Demo"
+author: "D Catlett"
+date: "7/2/2020"
+output: html_document
+---
+
+## Overview
+
+This is a demo showing the functionality of the re-written *consensus_tax_mostCom2* algorithm that creates consensus taxonomic assignments from multiple input taxonomy tables. 
+
+### consensus_tax_mostCom Algorithm Description
+
+consensus_tax_mostCom generates a consensus taxonomic assignment for each ASV/OTU in a data set by using the taxonomic assignment found in a majority (>50%) of independent input taxonomic assignment data sets (produced by different algorithms, reference databases, or both). The algorithm iterates from the root to the species rank and assigns taxonomic names found in a majority of input taxonomy tables. Non-assignments indicated by NA are considered in this calculation by default. 
+
+The algorithm offers several user-controllable parameters that make it's behavior more flexible. These are demonstrated below and include options to: 
+1. Relax the majority threshold to a user-specified value such that consensus assignments are determined by finding the taxonomic name with a frequency higher than a user-specified threshold. 
+2. Prioritize assignments of particular input taxonomy tables in the event where multiple taxonomic names have equivalent, maximal frequencies across the input taxonomy tables. 
+3. Weight the assignments of particular input taxonomy tables. Weights are applied in the frequency calculations. This is independent of the tie-breaking option in #2.
+4. Ignore non-assignemnts (NA) in the consensus calculation. 
+
+### Setting Things Up:
+
+To get started, we'll clear out our environment, load in the reshape2 package ofr later, set our wd, and read in taxonomy tables: The taxonomy tables used here come from implementations of the RDP Bayesian classifer, the new idtaxa algorithm, and MEGAN'S LCA algorithm against the pr2 reference databases. Our amplicon data set is an 18S-V9 tag sequencing project from the coastal ocean. 
+
+You can do this with any set of taxonomy tables assuming you format them properly. To follow along with this demo, grab the taxonomy tables in the directory listed below and run all the code you see below.
+
+We'll use the R packages dplyr and DECIPHER to get through this data, so go ahead and install those too.
+
+```{r, warning=FALSE, message=FALSE}
+rm(list = ls())
+library("dplyr")
+library("DECIPHER")
+
+# setwd and read in your datasets:
+setwd("~/Documents/R/amplicon_bioinformatics/tax_pipe_Mar20/")
+dd <- "~/Documents/R/amplicon_bioinformatics/package_deal/"
+
+# read in all our functions:
+source(paste0(dd,"all_of_it.R"))
+
+# read in  the data
+bayes.pr2 <- readRDS("initial_tax_tabs/bayes_pr2_0boot_Mar20.rds")
+idtax.pr2 <- readRDS("initial_tax_tabs/idtax_pr2_0boot_Mar20.rds")
+lca.pr2 <- readRDS("initial_tax_tabs/LCA_pr2_rawdf_Mar20.rds")
+```
+
+### Arranging and formating our taxonomy tables for running the algorithm:
+
+Here we'll reformat our taxonomy tables using some homebrewed helper functions, map the lca table (with NCBI's taxonomic nomenclature) onto pr2's taxonomic nomenclature using our *taxmapper* functions, and sort each taxonomy table by ASV sequences so they're all in the same order.
+
+```{r, warning=FALSE, message=FALSE}
+
+rubber <- readDNAStringSet(filepath = "~/Documents/R/amplicon_bioinformatics/tax_pipe_Mar20/blaster/allASVs4blast.fasta")
+# convert idtax and bayes to dataframes - keep boot = 0  and return conf for now...
+# note that for idtaxa, order of ASVs must be retrieved from dada2 seqtab - rubric represents that order
+# and adds ASV names and sequences to output dataframe:
+xx <- bayestax2df(bayes.pr2, boot = 60, rubric = rubber, return.conf = TRUE)
+bayes.pr2 <- xx[[1]]
+
+xx <- idtax2df_pr2(idtax.pr2, boot = 50, rubric = rubber, return.conf = TRUE)
+idtax.pr2 <- xx[[1]]
+
+# re-order your 6 tables by sorting according to ASV:
+ii <- base::sort(bayes.pr2$ASV, index.return = TRUE)
+bayes.pr2 <- bayes.pr2[ii$ix,]
+ii <- base::sort(idtax.pr2$ASV, index.return = TRUE)
+idtax.pr2 <- idtax.pr2[ii$ix,]
+
+tt <- read.csv(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv", stringsAsFactors = FALSE)
+tt <- tt[, -c(1)]
+# map lca.pr2 to pr2 taxonomy:
+lca.pr2 <- taxmapper(lca.pr2, tax2map2 = tt, 
+                     ignore.format = TRUE, exceptions = c("Bacteria", "Archaea"),
+                     synonym.file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv", outfilez = "none")
+lca.pr2 <- lca.pr2[[3]]
+ii <- base::sort(lca.pr2$ASV, index.return = TRUE)
+lca.pr2 <- lca.pr2[ii$ix,]
+
+
+```
+
+You can run this for a sanity check:
+
+```{r, eval=FALSE}
+# check that they're all in the same order
+identical(bayes.pr2$ASV, idtax.pr2$ASV)
+identical(bayes.pr2$ASV, lca.pr2$ASV)
+```
+
+...and this to see what the data sets look like. These data sets are available in the test-data directory.
+
+```{r, eval=FALSE}
+head(bayes.pr2)
+head(idtax.pr2)
+head(lca.pr2)
+```
+
+The algorithm expects that the ASV's in each taxonomy table are all in the same order and employ a common taxonomic nomenclature (naming and ranking convention). If your tables don't meet these requirements, we recommend standardizing taxonomic nomenclatures using our taxonomy mapping algorithm *taxmapper* and sorting the rows of each of your taxonomy tables according to the ASV sequences in your data set (see above for demo's).
+
+### First run
+
+We've pre-selected a few ASVs to illustrate some test cases. We'll set up our data to make the function calls a little more streamlined, then step through a series of algorithm runs and check the results.
+
+```{r, warning=FALSE}
+# set up the data:
+x <- list(bayes.pr2, idtax.pr2, lca.pr2)
+names(x) <- c("bayes.pr2", "idtax.pr2", "lca.pr2")
+nn <- c("svN", "ASV", "kingdom", "supergroup", "division","class","order","family","genus","species")
+for (i in 1:length(x)){
+  bloop <- x[[i]]
+  colnames(bloop) <- nn
+  x[[i]] <- bloop
+}
+# subset test cases
+testers <- c("sv20747", "sv20858", "sv14136", "sv17278", "sv20738","sv3579", "sv20673", "sv8382")
+x <- lapply(x, function(y) y[y$svN %in% testers , ])
+# run the algorithm
+ctax <- consensus_tax_mostCom2(x[[1]], x[[2]], x[[3]], 
+                               tablenames = names(x), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+                               tiebreakz = "none", count.na=TRUE, trueMajority=TRUE, threshold = 0.5, weights=rep(1, length(x)))
+# compile results for easy display later
+test.results <- rbind(cbind(data.frame(tbl = c(rep(names(x)[1], nrow(ctax))), stringsAsFactors = FALSE), x[[1]]),
+  cbind(data.frame(tbl = c(rep(names(x)[2], nrow(ctax))), stringsAsFactors = FALSE), x[[2]]),
+  cbind(data.frame(tbl = c(rep(names(x)[3], nrow(ctax))), stringsAsFactors = FALSE), x[[3]]),
+  cbind(data.frame(tbl = c(rep("consensus", nrow(ctax))), stringsAsFactors = FALSE), ctax))
+# helper function for subsetting particular test cases in the results:
+subsetter <- function(x, sv) {
+  x[x$svN == sv , ]
+}
+# Look at "sv20747" first:
+subsetter(test.results, "sv20747")
+
+```
+
+Now we have our first glimpse of the algorithms output. A message is displayed telling us no Frankenstein assignments were detected. This is just an internal QC and so this is a good thing.
+
+We also see that for this test case, all 3 input taxonomies perfectly agreed in their taxonomic assignments, so the consensus assignment is identical to all 3. Looking at another:
+
+```{r, warning=FALSE}
+subsetter(test.results, "sv3579")
+```
+
