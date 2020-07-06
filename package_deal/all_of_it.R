@@ -23,7 +23,6 @@ source(paste0(dd,"consensus_tax_LCAlike.R"))
 source(paste0(dd,"consensus_tax_bestRez.R"))
 source(paste0(dd,"consensus_tax_mostCom.R"))
 source(paste0(dd,"consensus_tax_mostCom2.R"))
-source(paste0(dd,"check4frankenstein.R"))
 
 # tax table comparison functions
 source(paste0(dd,"compare_byRank_2way.R"))

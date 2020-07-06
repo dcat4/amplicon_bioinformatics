@@ -2,7 +2,7 @@
 title: "consensus_tax_mostCom2 Demo"
 author: "D Catlett"
 date: "7/2/2020"
-output: html_document
+output: github_document
 ---
 
 ## Overview
@@ -13,10 +13,14 @@ This is a demo showing the functionality of the re-written *consensus_tax_mostCo
 
 consensus_tax_mostCom generates a consensus taxonomic assignment for each ASV/OTU in a data set by using the taxonomic assignment found in a majority (>50%) of independent input taxonomic assignment data sets (produced by different algorithms, reference databases, or both). The algorithm iterates from the root to the species rank and assigns taxonomic names found in a majority of input taxonomy tables. Non-assignments indicated by NA are considered in this calculation by default. 
 
-The algorithm offers several user-controllable parameters that make it's behavior more flexible. These are demonstrated below and include options to: 
+The algorithm offers several user-controllable parameters that make it's behavior more flexible. These are demonstrated below and include options to:
+
 1. Relax the majority threshold to a user-specified value such that consensus assignments are determined by finding the taxonomic name with a frequency higher than a user-specified threshold. 
+
 2. Prioritize assignments of particular input taxonomy tables in the event where multiple taxonomic names have equivalent, maximal frequencies across the input taxonomy tables. 
+
 3. Weight the assignments of particular input taxonomy tables. Weights are applied in the frequency calculations. This is independent of the tie-breaking option in #2.
+
 4. Ignore non-assignemnts (NA) in the consensus calculation. 
 
 ### Setting Things Up:
@@ -100,7 +104,7 @@ The algorithm expects that the ASV's in each taxonomy table are all in the same 
 
 ### First run
 
-We've pre-selected a few ASVs to illustrate some test cases. We'll set up our data to make the function calls a little more streamlined, then step through a series of algorithm runs and check the results.
+We've pre-selected a few ASVs to illustrate some test cases. Here we'll set up our data to make the function calls a little more streamlined, then step through a series of algorithm runs and check the results.
 
 ```{r, warning=FALSE}
 # set up the data:
@@ -113,7 +117,7 @@ for (i in 1:length(x)){
   x[[i]] <- bloop
 }
 # subset test cases
-testers <- c("sv20747", "sv20858", "sv14136", "sv17278", "sv20738","sv3579", "sv20673", "sv8382")
+testers <- c("sv20747", "sv20858", "sv14136", "sv17278", "sv20738","sv3579", "sv20673", "sv8382", "sv4298")
 x <- lapply(x, function(y) y[y$svN %in% testers , ])
 # run the algorithm
 ctax <- consensus_tax_mostCom2(x[[1]], x[[2]], x[[3]], 
@@ -125,8 +129,8 @@ test.results <- rbind(cbind(data.frame(tbl = c(rep(names(x)[1], nrow(ctax))), st
   cbind(data.frame(tbl = c(rep(names(x)[3], nrow(ctax))), stringsAsFactors = FALSE), x[[3]]),
   cbind(data.frame(tbl = c(rep("consensus", nrow(ctax))), stringsAsFactors = FALSE), ctax))
 # helper function for subsetting particular test cases in the results:
-subsetter <- function(x, sv) {
-  x[x$svN == sv , ]
+subsetter <- function(y, sv) {
+  y[y$svN == sv , ]
 }
 # Look at "sv20747" first:
 subsetter(test.results, "sv20747")
@@ -141,3 +145,90 @@ We also see that for this test case, all 3 input taxonomies perfectly agreed in 
 subsetter(test.results, "sv3579")
 ```
 
+In this scenario, because we set *count.na = TRUE*, we see that the consensus assignment is an unassigned Streptophyta. The lca.pr2 assignment was more resolved than this, but the overall majority assignment only extends to the Division rank. One more:
+
+```{r, warning=FALSE}
+subsetter(test.results, "sv4298")
+```
+
+Here, the consensus assignment is an unidentified Stramenopile, which is really all we can infer from these input taxonomy tables since they each have a different assignment at the Division rank. Now we'll explore the results for this ASV as we alter certain parameters in the consensus taxonomy algorithm...
+
+### Second run
+
+Here we'll run the algorithm again and look at our *sv4298* above, but we'll set *trueMajority=FALSE* so we don't need a name to occur >50% of the time for it to be assigned to the consensus. We'll alter the *threshold* required for the consensus assignment to *0.3* so that only one instance is needed for the name to be assigned. And finally, we'll specify a tie-breaker with *tiebreakz = list(c("bayes.pr2", NA))*. Altogether, this tells the algorithm to prioritize all assignments by the Bayes-pr2 taxonomy table in the event that those assignments occur at a proportion > 0.3 across all taxonomy tables and are tied for the maximal frequency of the assignments. This is a little redundant in this example but you could imagine a scenario with more input taxonomy tables where this would make more sense.
+
+```{r, warning=FALSE}
+# run the algorithm
+ctax <- consensus_tax_mostCom2(x[[1]], x[[2]], x[[3]], 
+                               tablenames = names(x), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+                               tiebreakz = list(c("bayes.pr2", NA)), count.na=TRUE, trueMajority=FALSE, threshold = 0.3, weights=rep(1, length(x)))
+# compile results for easy display later
+test.results <- rbind(cbind(data.frame(tbl = c(rep(names(x)[1], nrow(ctax))), stringsAsFactors = FALSE), x[[1]]),
+  cbind(data.frame(tbl = c(rep(names(x)[2], nrow(ctax))), stringsAsFactors = FALSE), x[[2]]),
+  cbind(data.frame(tbl = c(rep(names(x)[3], nrow(ctax))), stringsAsFactors = FALSE), x[[3]]),
+  cbind(data.frame(tbl = c(rep("consensus", nrow(ctax))), stringsAsFactors = FALSE), ctax))
+
+subsetter(test.results, "sv4298")
+```
+
+So now our consensus assignment matches the bayes input taxonomy table down to the family rank. This is because we had 3-way ties across the 3 input taxonomy tables at the division, class, and order ranks, and because we specified the bayes table as our tie-breaker, those assignments were used in the consensus. At the genus rank however, the non-assignments outnumber the bayes assignment 2:1. This means no tie-breaking was required, and the consensus is not assigned (or assigned NA).
+
+### Third run
+
+In this next run, we'll remove the tie-breaker, but we'll also set *count.na=FALSE*. This tells the algorithm not to consider NA's as an assignment. This would be used in situations where you can be a little less conservative in protecting against over-assignments. It's important to note that this does not necessarily result in no NA assignments in the consensus as there still must be a most-common assignment present to be included in the consensus.
+
+```{r, warning=FALSE}
+# run the algorithm
+ctax <- consensus_tax_mostCom2(x[[1]], x[[2]], x[[3]], 
+                               tablenames = names(x), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+                               tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, threshold = 0.3, weights=rep(1, length(x)))
+# compile results for easy display later
+test.results <- rbind(cbind(data.frame(tbl = c(rep(names(x)[1], nrow(ctax))), stringsAsFactors = FALSE), x[[1]]),
+  cbind(data.frame(tbl = c(rep(names(x)[2], nrow(ctax))), stringsAsFactors = FALSE), x[[2]]),
+  cbind(data.frame(tbl = c(rep(names(x)[3], nrow(ctax))), stringsAsFactors = FALSE), x[[3]]),
+  cbind(data.frame(tbl = c(rep("consensus", nrow(ctax))), stringsAsFactors = FALSE), ctax))
+
+subsetter(test.results, "sv4298")
+```
+
+And we see that our consensus is only assigned to the supergroup rank because there was a 1-1 tie at all lower ranks between the bayes and lca tables. Because we did not specify a tie-breaker or weight one of these tables, there was no most common taxonomic assignment that could be assigned as the consensus.
+
+### Fourth run
+
+So as you probably guessed, here we're weighting the bayes table double that of the other 2, and still not counting NA's. Let's see what that does:
+
+```{r, warning=FALSE}
+# run the algorithm
+ctax <- consensus_tax_mostCom2(x[[1]], x[[2]], x[[3]], 
+                               tablenames = names(x), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+                               tiebreakz = "none", count.na=FALSE, trueMajority=FALSE, threshold = 0.3, weights=c(2, 1, 1))
+# compile results for easy display later
+test.results <- rbind(cbind(data.frame(tbl = c(rep(names(x)[1], nrow(ctax))), stringsAsFactors = FALSE), x[[1]]),
+  cbind(data.frame(tbl = c(rep(names(x)[2], nrow(ctax))), stringsAsFactors = FALSE), x[[2]]),
+  cbind(data.frame(tbl = c(rep(names(x)[3], nrow(ctax))), stringsAsFactors = FALSE), x[[3]]),
+  cbind(data.frame(tbl = c(rep("consensus", nrow(ctax))), stringsAsFactors = FALSE), ctax))
+
+subsetter(test.results, "sv4298")
+```
+
+Now our consensus is assigned all the way to species! This is because at the ranks where idtax is NA, the bayes name is weighted 2x so the bayes assignment is counted twice and is thus the consensus, despite the fact that the LCA assignment is different.
+
+## Fifth run
+
+Now we'll remove the weights and prioritize the lca table just to give it some time to shine:
+
+```{r, warning=FALSE}
+# run the algorithm
+ctax <- consensus_tax_mostCom2(x[[1]], x[[2]], x[[3]], 
+                               tablenames = names(x), ranknamez = c("kingdom", "supergroup", "division","class","order","family","genus","species"),
+                               tiebreakz = list(c("lca.pr2", NA)), count.na=FALSE, trueMajority=FALSE, threshold = 0.3, weights=c(1, 1, 1))
+# compile results for easy display later
+test.results <- rbind(cbind(data.frame(tbl = c(rep(names(x)[1], nrow(ctax))), stringsAsFactors = FALSE), x[[1]]),
+  cbind(data.frame(tbl = c(rep(names(x)[2], nrow(ctax))), stringsAsFactors = FALSE), x[[2]]),
+  cbind(data.frame(tbl = c(rep(names(x)[3], nrow(ctax))), stringsAsFactors = FALSE), x[[3]]),
+  cbind(data.frame(tbl = c(rep("consensus", nrow(ctax))), stringsAsFactors = FALSE), ctax))
+
+subsetter(test.results, "sv4298")
+```
+
+And we see that the algorithm has correctly broken the ties. Sickarooni!!!

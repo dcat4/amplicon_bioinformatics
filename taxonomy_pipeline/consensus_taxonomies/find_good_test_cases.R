@@ -2,7 +2,7 @@
 
 rm(list=ls())
 library(dplyr)
-
+#
 # setwd and read in your datasets:
 setwd("~/Documents/R/amplicon_bioinformatics/tax_pipe_Mar20/")
 dd <- "~/Documents/R/amplicon_bioinformatics/package_deal/"
@@ -40,7 +40,7 @@ idtax.pr2.conf <- idtax.pr2.conf[ii$ix,]
 tt <- read.csv(file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/pr2_all_tax.csv", stringsAsFactors = FALSE)
 tt <- tt[, -c(1)]
 # map lca.pr2 to pr2 taxonomy:
-lca.pr2 <- taxmapper(lca.pr2, tax2map2 = tt, 
+lca.pr2 <- taxmapper(lca.pr2, tax2map2 = tt,
                      ignore.format = TRUE, exceptions = c("Bacteria", "Archaea"),
                      synonym.file = "~/Documents/R/amplicon_bioinformatics/taxonomy_pipeline/tax_table_mapping/tax_synonyms_FINAL.csv", outfilez = "none")
 lca.pr2 <- lca.pr2[[3]]
@@ -51,7 +51,7 @@ lca.pr2 <- lca.pr2[ii$ix,]
 colnames(idtax.pr2) <- colnames(bayes.pr2)
 colnames(lca.pr2) <- colnames(bayes.pr2)
 
-## just stepping thru different scenarios and manually curating a test set 
+## just stepping thru different scenarios and manually curating a test set
 # find equivalent rows across all 3:
 x <- dplyr::intersect(dplyr::intersect(bayes.pr2, idtax.pr2), lca.pr2)
 x <- x[!is.na(x$Division) , ]
@@ -76,3 +76,10 @@ all.dis <- c("sv3579", "sv20673", "sv8382")
 lca.pr2[lca.pr2$svN %in% all.dis , ]
 idtax.pr2[idtax.pr2$svN %in% all.dis , ]
 bayes.pr2[bayes.pr2$svN %in% all.dis , ]
+
+idx <- which(!is.na(lca.pr2$Division) & !is.na(bayes.pr2$Division) & is.na(idtax.pr2$Division) & 
+               lca.pr2$Division != bayes.pr2$Division)
+lca.pr2[idx , ]
+idtax.pr2[idx , ]
+bayes.pr2[idx , ]
+
